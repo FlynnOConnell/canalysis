@@ -35,14 +35,14 @@ def uniquify(path):
 
 def clean(df):
     accepted = np.where(df.loc[0, :] == ' accepted')[0]
+    df_clean = df.iloc[:, np.insert(accepted, 0, 0)]
+    df_clean = df_clean.drop(0)
+    df_clean = df_clean.astype(float)
+    df_clean = df_clean.rename(columns={' ': 'Time(s)'})
+    df_clean = df_clean.reset_index(drop=True)
+    df_clean.columns = [column.replace(' ', '') for column in df_clean.columns]
 
-    df = df.iloc[:, np.insert(accepted, 0, 0)]
-    df.drop(0)
-    df.rename(columns={' ': 'Time(s)'})
-    df.reset_index(drop=True)
-    df.columns = [column.replace(' ', '') for column in df.columns]
-
-    return df
+    return df_clean
 
 
 def get_peak_window(time, peak_time):

@@ -86,13 +86,13 @@ if not os.path.isdir(session_dir):
     os.mkdir(session_dir)
 
 # Populate main DataFrames.
-tracedata = pd.read_csv(traces, low_memory=False)
+raw_tracedata = pd.read_csv(traces, low_memory=False)
 eventdata = pd.read_csv(events)
 
 # Initialize lists.
 allstats, lickstats, statsummary = [], [], []
 
-tracedata = func.clean(tracedata)
+tracedata = func.clean(raw_tracedata)
 timestamps, allstim, drylicks, licktime, trial_times = func.pop_events(
     eventdata)
 time = np.array(tracedata.iloc[:, 0])
@@ -122,6 +122,7 @@ binsize = time[2] - time[1]
 numlicks = len(timestamps['Lick'])
 print('Number of Licks in this session:', numlicks)
 
+
 # %% Lick analysis
 
 lickStats = pd.DataFrame(columns=[
@@ -140,10 +141,8 @@ spont_intervs = np.column_stack((licktime[idxs], licktime[idxs + 1]))
 # Calculate stats
 cell_id = np.array(tracedata.columns[1:])
 for index, cell in enumerate(cell_id):
-
     if (bout_dff[index]) > ((sponts[index]) + ((stdevs[index]) * 2.58)):
         licktype = 'BOUT'
-
     elif (bout_dff[index]) < ((sponts[index]) - ((stdevs[index]) * 2.58)):
         licktype = 'ANTI-LICK'
     else:
@@ -237,7 +236,7 @@ if doPCA == 1:
     pca_df = tracedata.drop('Time(s)', axis=1)
 
     # Calculate PCA for cell components
-    pca_df_c = plot.get_pca(pca_df, pca_c)
+    pca_df_c, labels = plot.get_pca(pca_df, pca_c)
     pca_df_t = plot.get_pca(pca_df.T, pca_t)
 
     # PCA transformations / explained varience
@@ -356,3 +355,6 @@ if doPCA == 1:
     ax.add_collection(colored_lines)
     ax.autoscale_view()
     plt.show()
+
+# if __name__ == "__main__":
+#     main.main()
