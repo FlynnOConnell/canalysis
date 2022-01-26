@@ -8,6 +8,7 @@ Created on Wed Jan 19 21:28:23 2022
 
 import sys
 import easygui
+import Analysis.Func as func
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA
@@ -162,13 +163,16 @@ def plot_cell(allcells, singlecells):
 
     return plotcells, singlecells
 
+# TODO: Merge functions with similar parameters
+
 
 def line_session(nplot, tracedata, time, timestamps, lickshade, session, numlicks):
-    # create a series of plots with a shared x axis
+    # create a series of plots with a shared x-axis
     fig, axs = plt.subplots(nplot, 1, sharex=True)
     for i in range(nplot):
         # get calcium trace (y axis data)
         signal = list(tracedata.iloc[:, i + 1])
+        signal = func.get_signal(i, tracedata)
 
         # plot signal
         axs[i].plot(time, signal, 'k', linewidth=.8)
@@ -180,7 +184,7 @@ def line_session(nplot, tracedata, time, timestamps, lickshade, session, numlick
         axs[i].spines["right"].set_visible(False)
         axs[i].set_yticks([])  # no Y ticks
 
-        # add the cell name as a label for this graph's y axis
+        # add the cell name as a label for this graph's y-axis
         axs[i].set_ylabel(tracedata.columns[i + 1],
                           rotation='horizontal', labelpad=15, y=.1)
 
@@ -206,31 +210,23 @@ def line_session(nplot, tracedata, time, timestamps, lickshade, session, numlick
 
 
 def line_zoom(nplot, tracedata, time, timestamps, session, zoomshade, colors):
-    # create a series of plots with a shared x axis
+    # create a series of plots with a shared x-axis
     zoomfig, zaxs = plt.subplots(nplot, 1, sharex=True)
-
     zoombounding = [
         int(input('Enter start time for zoomed in graph (seconds):')),
         int(input('Enter end time for zoomed in graph (seconds):'))
     ]
 
     for i in range(nplot):
-
         signal = list(tracedata.iloc[:, i + 1])
 
         # plot signal
         zaxs[i].plot(time, signal, 'k', linewidth=.8)
-        # get outta here x axis
         zaxs[i].get_xaxis().set_visible(False)
-        # ew no top border pls
         zaxs[i].spines["top"].set_visible(False)
-        # same for bottom
         zaxs[i].spines["bottom"].set_visible(False)
-        # same for the right side
         zaxs[i].spines["right"].set_visible(False)
-        # no y-ticks either
         zaxs[i].set_yticks([])
-        # add the cell name as a label for this graph's y axis
         zaxs[i].set_ylabel(tracedata.columns[i + 1],
                            rotation='horizontal', labelpad=15, y=.1)
         # go through each set of timestamps and shade them accordingly
@@ -248,7 +244,6 @@ def line_zoom(nplot, tracedata, time, timestamps, session, zoomshade, colors):
     plt.xlabel('Time (s)')
     zoomfig.suptitle('Calcium Traces: {}'.format(session), y=.95)
 
-    # Want the ticks and the border for only the bottom x axis
     zaxs[-1].get_xaxis().set_visible(True)
     zaxs[-1].spines["bottom"].set_visible(True)
 

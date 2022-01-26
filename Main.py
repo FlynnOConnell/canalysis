@@ -43,6 +43,9 @@ test_dir = r"C:\Users\dilorenzo\Desktop\Calcium Plots"
 
 # %% Initialization
 
+# TODO: Merge Tracedata and Eventdata-derived variables (trial_times)
+
+
 # Defining the colors for each tastant, used on graphs and legends
 colors = {
     'ArtSal': 'blue',
@@ -121,7 +124,6 @@ nplot = tracedata.shape[1] - 1
 binsize = time[2] - time[1]
 numlicks = len(timestamps['Lick'])
 print('Number of Licks in this session:', numlicks)
-
 
 # %% Lick analysis
 
@@ -356,5 +358,5 @@ if doPCA == 1:
     ax.autoscale_view()
     plt.show()
 
-# if __name__ == "__main__":
-#     main.main()
+ # if __name__ == "__main__":
+ #     main()

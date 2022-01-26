@@ -33,16 +33,23 @@ def uniquify(path):
     return path
 
 
-def clean(df):
-    accepted = np.where(df.loc[0, :] == ' accepted')[0]
-    df_clean = df.iloc[:, np.insert(accepted, 0, 0)]
-    df_clean = df_clean.drop(0)
-    df_clean = df_clean.astype(float)
-    df_clean = df_clean.rename(columns={' ': 'Time(s)'})
-    df_clean = df_clean.reset_index(drop=True)
-    df_clean.columns = [column.replace(' ', '') for column in df_clean.columns]
+def get_signal(i, tracedata):
+    x = list(tracedata.iloc[:, i+1])
+    return x
 
-    return df_clean
+
+def clean(df):
+    df: pd.DataFrame
+
+    accepted = np.where(df.loc[0, :] == ' accepted')[0]
+    df = df.iloc[:, np.insert(accepted, 0, 0)]
+    df.drop(0)
+    df.astype(float)
+    df.rename(columns={' ': 'Time(s)'})
+    df.reset_index(drop=True)
+    df.columns = [column.replace(' ', '') for column in df.columns]
+
+    return df
 
 
 def get_peak_window(time, peak_time):
@@ -76,21 +83,24 @@ def get_matched_time(time, *argv):
     return return_index
 
 
-def pop_events(eventdata):
+def pop_events(df):
+    df: pd.DataFrame
+
     # Get timestamps
+    eventdata: pd.DataFrame
     timestamps = {}
     allstim = []
-    for stimulus in eventdata.columns[1:]:
+    for stimulus in df.columns[1:]:
         timestamps[stimulus] = list(
-            eventdata['Time(s)'].iloc[np.where(
-                eventdata[stimulus] == 1)[0]])
+            df['Time(s)'].iloc[np.where(
+                df[stimulus] == 1)[0]])
         if stimulus != 'Lick':
             allstim.extend(timestamps[stimulus])
 
     # Get drylicks
     drylicks = [x for x in timestamps['Lick'] if x not in allstim]
-    licktime = eventdata['Time(s)'].iloc[
-        np.where(eventdata['Lick'] == 1)[0]]
+    licktime = df['Time(s)'].iloc[
+        np.where(df['Lick'] == 1)[0]]
     licktime = licktime.reset_index(drop=True)
 
     # Populate trials
@@ -120,7 +130,12 @@ def pop_events(eventdata):
     return timestamps, allstim, drylicks, licktime, trial_times
 
 
-def get_bout(licktime, tracedata, time, nplot):
+def get_bout(licktime, df, time, nplot):
+    licktime: list
+    df: pd.DataFrame
+    time: list
+    nplot: int
+
     # Make bout intervals ----------------
     tmp, bout_intervs, boutstart, boutend, start_traces, end_traces = [], [], [], [], [], []
     for i, v in enumerate(licktime):
@@ -161,8 +176,8 @@ def get_bout(licktime, tracedata, time, nplot):
             start = bout[0]
             end = bout[1]
             this_bout = (np.where((
-                                          time > start) & (time < end))[0])
-            bout_signal = np.mean((tracedata.iloc[this_bout, i]))
+                time > start) & (time < end))[0])
+            bout_signal = np.mean((df.iloc[this_bout, i]))
             cell_traces.append(bout_signal)
         bout_dff.append(np.mean(cell_traces))
 
