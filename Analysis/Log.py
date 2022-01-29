@@ -1,6 +1,8 @@
+import logging
 from logging import Logger
 from typing import TypeVar, Generic
 
+logging.basicConfig(level=logging.INFO)
 T = TypeVar('T')
 
 

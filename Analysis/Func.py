@@ -6,9 +6,50 @@ Created on Wed Jan 19 18:55:34 2022
 """
 
 import os
+import sys
 import pandas as pd
 import numpy as np
 import math
+import contextlib
+from pathlib import Path
+from glob import glob
+
+
+@contextlib.contextmanager
+def working_directory(path):
+    """Changes working directory and returns to previous on exit."""
+    prev_cwd = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
+
+
+def get_dir(data_dir, _id, date):
+
+    session = (_id + '_' + date)
+    os.chdir(data_dir)
+    datapath = Path(data_dir) / _id / session
+    traces = Path(glob(os.path.join(datapath, 'traces'))[0])
+    events = Path(glob(os.path.join(datapath, 'processed'))[0])
+
+    if traces.exists() and events.exists():
+        print('Trace and event files located.')
+    # TODO : Raise exception for trace/eventfiles not existing
+    else:
+        if not traces.exists():
+            sys.exit
+            print('No trace files were found, or file was misnamed.')
+
+        if not events.exists():
+            sys.exit
+            print('nno event files were found, or file was misnamed.')
+
+    tracedata = pd.read_csv(traces, low_memory=False)
+    eventdata = pd.read_csv(events, low_memory=False)
+
+    return tracedata, eventdata, session
 
 
 def dup_check(signal, peak_signal):
@@ -43,10 +84,10 @@ def clean(df):
 
     accepted = np.where(df.loc[0, :] == ' accepted')[0]
     df = df.iloc[:, np.insert(accepted, 0, 0)]
-    df.drop(0)
-    df.astype(float)
-    df.rename(columns={' ': 'Time(s)'})
-    df.reset_index(drop=True)
+    df = df.drop(0)
+    df = df.rename(columns={' ': 'Time(s)'})
+    df = df.astype(float)
+    df = df.reset_index(drop=True)
     df.columns = [column.replace(' ', '') for column in df.columns]
 
     return df
@@ -243,7 +284,6 @@ def get_stats(tracedata, trial_times, time, session, raw_df):
         'File', 'Cell', 'Stimulus',
         'Trial', 'Baseline (mean)',
         'Baseline (st_dev)',
-        'Raw Signal (1s window)',
         'Signal Timestamps (start, stop)',
         'Baseline Timestamps (start, Stop)',
         'Shifted?',
