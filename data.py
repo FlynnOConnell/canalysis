@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Feb 20 02:16:25 2022
+#data.py
 
-@author: flynnoconnell
+Module: Classes for data processing.
 """
-import os 
+from __future__ import annotations
+from typing import Type, Optional
+
+import os
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.pipeline import Pipeline
 import logging
 import warnings
-import Func as func
-import Plots as plot
-from typing import Tuple
-import excepts as e
+
+from utils import funcs as func
+from utils import draw_plots as plot
+from utils import excepts as e
 
 logger = logging.getLogger(__name__)
 
-#%% 
+# %%
 
 colors_dict = {
     'ArtSal': 'dodgerblue',
@@ -31,61 +31,59 @@ colors_dict = {
     'Quinine': 'red',
     'Rinse': 'lightsteelblue',
     'Lick': 'darkgray'
-    }
+}
 
 tastant_colors_dict = {k: colors_dict[k] for k in list(colors_dict)[:]}
 
+
 class Data(object):
-    
-    def __init__(self, animal, date, tr_cells):
-        
+
+    def __init__(self, animal, date, tr_cells: Optional[any] = ''):
+
         # Session 
         self.animal = animal
         self.date = date
         self.session = animal + '_' + date
-        
+        self.tastant_colors_dict = tastant_colors_dict
         # Core
-        self.tracedata = Traces(self._get_data(trace=True))
-        self.eventdata = Events(self._get_data())
-                        
+        self.tracedata = Traces(self._get_data(trace=True), animal, date)
+        self.eventdata = Events(self._get_data(), animal, date)
+
         self.numlicks = self.eventdata.numlicks
 
         ## Taste Data
-        self.taste_trials = None
-        self.tr_colors = None
-        self.colors_dict = tastant_colors_dict
+        if tr_cells:
+            self.all_taste_trials: Type[pd.DataFrame] = pd.DataFrame  # All data for taste-trials
+            self.tr_colors = None  # Array of which color of tastant was presented
+            self.get_taste_trials()
 
-        self.get_taste_trials(NN=True)
-        
-        self.tastants = func._get_unique(
-            self.taste_trials.tastant)
-        self.tr_data = self.taste_trials.filter(tr_cells)
-        self.tr_cells = self.tr_data.columns
-        self.taste_signals = None
-        
+            self.tastants = func.get_unique(  # List of all tastants (not rinse or lick)
+                self.all_taste_trials.tastant)
+            self.tr_data = self.all_taste_trials.filter(tr_cells)  # Data for taste-responsive cells only
+            self.tr_cells = self.tr_data.columns
+
         logging.info('Data instantiated.')
-        
+
     def _get_data(self, trace=False):
-        
+
         if os.name == 'posix':
             datadir = '/Users/flynnoconnell/Documents/Work/Data'
         else:
             datadir = 'A:\\'
-        
+
         traces, events, _ = func.get_dir(
             datadir, self.animal, self.date)
-        
-        tracedata = traces 
+
+        tracedata = traces
         eventdata = events
-        
-        if trace: 
-            return tracedata 
-        else: 
+
+        if trace:
+            return tracedata
+        else:
             return eventdata
-            
-        
-    def get_taste_trials(self, NN: bool = False) -> Tuple[pd.DataFrame, np.ndarray, list]:
-        
+
+    def get_taste_trials(self) -> None:
+
         # Get timestamps of taste - trials only
         stamps = self.eventdata.timestamps.copy()
         stamps.pop('Lick')
@@ -93,36 +91,35 @@ class Data(object):
 
         taste_signals = pd.DataFrame(columns=self.tracedata.signals.columns)
         color_signals = pd.DataFrame(columns=self.tracedata.signals.columns)
+
         # Populate df with taste trials only
         for event, timestamp in stamps.items():
             taste_interval = func.interval(timestamp)
             for lst in taste_interval:
                 sig_time = func.get_matched_time(self.tracedata.time, *lst)
-                
+
                 sig = (self.tracedata.traces.loc[(
-                    self.tracedata.traces['Time(s)'] >= sig_time[0])
-                    & (self.tracedata.traces['Time(s)'] <= sig_time[1]), 'Time(s)'])
-                
-                holder = pd.DataFrame(columns=taste_signals.columns)
+                                                         self.tracedata.traces['Time(s)'] >= sig_time[0])
+                                                 & (self.tracedata.traces['Time(s)'] <= sig_time[1]), 'Time(s)'])
+
                 holder = (self.tracedata.traces.iloc[sig.index])
                 holder['tastant'] = event
                 taste_signals = pd.concat([taste_signals, holder])
-                
-                hol = pd.DataFrame(columns=taste_signals.columns)
+
+                pd.DataFrame(columns=taste_signals.columns)
                 hol = (self.tracedata.traces.iloc[sig.index])
-                hol['col'] = colors_dict[event]
+                hol['col'] = tastant_colors_dict[event]
                 color_signals = pd.concat([color_signals, hol])
-                
+
         taste_signals.sort_index(inplace=True)
-        self.taste_trials = taste_signals
+        self.all_taste_trials = taste_signals
         self.tr_colors = color_signals['col']
 
-        if func.has_duplicates(self.taste_trials['Time(s)']):
-            self.taste_trials.drop_duplicates(subset=['Time(s)'], inplace=True)
-            if not self.taste_trials['Time(s)'].is_unique:
+        if func.has_duplicates(self.all_taste_trials['Time(s)']):
+            self.all_taste_trials.drop_duplicates(subset=['Time(s)'], inplace=True)
+            if not self.all_taste_trials['Time(s)'].is_unique:
                 e.DataFrameError('Duplicate values found and not caught.')
-        
-                
+
     def plot_stim(self):
         plot.plot_stim(len(self.tracedata.cells),
                        self.tracedata.traces,
@@ -130,12 +127,11 @@ class Data(object):
                        self.eventdata.timestamps,
                        self.eventdata.trial_times,
                        self.session,
-                       colors_dict)
-        
-        
+                       tastant_colors_dict)
+
     def plot_session(self):
         plot.plot_session(self.tracedata.cells,
-                          self.tracedata,
+                          self.tracedata.traces,
                           self.tracedata.time,
                           self.session,
                           self.numlicks,
@@ -143,22 +139,22 @@ class Data(object):
 
 
 class Traces(Data):
-    
-    def __init__(self, df):
 
+    def __init__(self, df, animal, date):
+
+        super().__init__(animal, date)
         self._authenticate_input_data(df)
-        
+
         self.traces = df
-        self.cells = None
-        self.time = None
-        self.signals = None
-        self.binsize = None
+        self.cells = self.traces.columns[1:]
+        self.time = self.traces['Time(s)']
+        self.binsize = self.time[2] - self.time[1]
+        self.signals = self._set_signals()
 
         self.result = None
         self.tr_cells = None
         self._pipeline = None
         self._clean()
-        self._set_attr()
 
     @staticmethod
     def _authenticate_input_data(obj):
@@ -168,16 +164,13 @@ class Traces(Data):
         elif 'undecided' in obj.columns:
             warnings.warn('DataFrame contains undecided cells, double check that this was intentional.')
 
-    def _set_attr(self) -> None:
+    def _set_signals(self) -> pd.DataFrame:
 
-        self.cells = self.traces.columns[1:]
-        self.time = self.traces['Time(s)']
-        self.binsize = self.time[2] - self.time[1]
-        
         temp = self.traces.copy()
         temp.pop('Time(s)')
         self.signals = temp
-        
+        return temp
+
     def _clean(self) -> None:
 
         accepted = np.where(self.traces.loc[0, :] == ' accepted')[0]
@@ -187,20 +180,21 @@ class Traces(Data):
         self.traces = self.traces.astype(float)
         self.traces = self.traces.reset_index(drop=True)
         self.traces.columns = [column.replace(' ', '') for column in self.traces.columns]
-    
-            
+
+
 class Events(Data):
 
-    def __init__(self, df):
-        
+    def __init__(self, df, animal, date):
+
+        super().__init__(animal, date)
         self._authenticate_input_data(df)
-        
+
         self.events = df
         self.evtime = None
         self.timestamps = {}
         self.trial_times = {}
         self.drylicks = []
-        self.numlicks: int = None
+        self.numlicks: int | None = None
 
         self._set_attr()
         self._validate_attr()
@@ -216,9 +210,6 @@ class Events(Data):
     def _validate_attr(self):
         if not isinstance(self.events, pd.DataFrame):
             raise AttributeError('Event attributes not filled.')
-
-    def _getdata(self):
-        return self.df
 
     def _set_attr(self):
 
@@ -253,8 +244,3 @@ class Events(Data):
                     if last_drytime > last_stimtime:
                         times.append(ts)
                 self.trial_times[stim] = times
-        
-                
-        
-        
-

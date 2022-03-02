@@ -5,19 +5,24 @@ Created on Wed Feb 23 17:58:23 2022
 
 @author: flynnoconnell
 """
+from __future__ import annotations
+from typing import Tuple, Iterable, Optional
+
 
 import pandas as pd
 import numpy as np
 import logging
 from typing import Tuple
-import Func as func
-import data_utils as du
+from utils import funcs as func
+import data as du
 
 
 pd.set_option('chained_assignment', None)
 
 logger = logging.getLogger(__name__)
-logger.info( f'{__name__} module called.' )
+logger.info(f'{__name__} module called.')
+
+data = du.Data(animal_id, date, tr_cells)
 
 
 def get_antibouts(bouts_td_time: list) -> Tuple[list, list]:
@@ -26,7 +31,7 @@ def get_antibouts(bouts_td_time: list) -> Tuple[list, list]:
     k: int = 0
     cell: str
 
-    for _ in data.tracedata.traces.columns[1:]:
+    for _ in du.Traces.traces.columns[1:]:
         k += 1
         cell_antibouts = []
         for i in range(len(bouts_td_time) - 1):

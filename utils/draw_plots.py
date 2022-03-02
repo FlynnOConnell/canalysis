@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan 19 21:28:23 2022
+#draw_plots.py
 
-@author: flynnoconnell
+Module(util): Functions for drawing graphs.
+
 """
+from __future__ import annotations
+from typing import Tuple, Iterable, Optional
 
 import pandas as pd
 import numpy as np
-from typing import Type
+import logging
+
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.font_manager as fm
 from IPython.display import HTML
 import webbrowser
 
-import Func as func
-import logging
+from utils import funcs as func
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
@@ -25,86 +28,85 @@ logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
 def confusion_matrix(y_test,
                      y_fit,
                      labels: list,
-                     xaxislabel: str = None,
-                     yaxislabel: str = None,
-                     caption: str = '',
+                     xaxislabel: Optional[str] = None,
+                     yaxislabel: Optional[str] = None,
+                     caption: Optional[str] = '',
                      save_dir: str = None) -> np.array:
-    
-        import seaborn as sns; sns.set()
-        from sklearn.metrics import confusion_matrix
 
-        
-        mat = confusion_matrix(y_test, y_fit)
-        sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
-                    xticklabels=labels,
-                    yticklabels=labels)
-        
-        if xaxislabel: 
-            plt.xlabel(xaxislabel)
-        else: 
-            plt.xlabel('true label')
-            
-        if yaxislabel: 
-            plt.ylabel(yaxislabel);
-        else:
-            plt.ylabel('predicted label');
-            
-        if caption:
-            plt.text(0, -.03,
-                     caption,
-                     fontstyle='italic',
-                     fontsize='small')
-            
-        plt.show()
-        
-        if save_dir: 
-            plt.savefig(
-                save_dir 
-                +'_confusionMatrix.png',
-                Addbbox_inches='tight', dpi=300)
-        
-        return mat
+    import seaborn as sns
+    sns.set()
+    from sklearn.metrics import confusion_matrix
+
+    mat = confusion_matrix(y_test, y_fit)
+    sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+                xticklabels=labels,
+                yticklabels=labels)
+
+    if xaxislabel:
+        plt.xlabel(xaxislabel)
+    else:
+        plt.xlabel('true label')
+    if yaxislabel:
+        plt.ylabel(yaxislabel)
+    else:
+        plt.ylabel('predicted label')
+    if caption:
+        plt.text(0, -.03,
+                 caption,
+                 fontstyle='italic',
+                 fontsize='small')
+
+    plt.show()
+
+    if save_dir:
+        plt.savefig(
+            save_dir
+            + '_confusionMatrix.png',
+            Addbbox_inches='tight', dpi=300)
+
+    return mat
 
 
 def scatter(df: pd.DataFrame,
             color_dict: dict,
             df_colors,
-            three_dim: bool = False,
-            title: str = None,
-            plottype: str = 'PCA',
+            three_dim: Optional[bool] = False,
+            title: Optional[str] = None,
+            plottype: Optional[str] = 'PCA',
             size: int = 5,
             marker: str = 'o',
             alpha: int = 1,
-            save_dir: str = None,
-            msg: str = None,
-            caption: str = None
+            save_dir: Optional[str] = None,
+            msg: Optional[str] = None,
+            caption: Optional[str] = None
             ) -> None:
-    
     """
-        Plot 3D scatter plot with matplotlib.
+        Plot 2D/3D scatter plot with matplotlib.
 
         Args:
             df (pd.DataFrame): Input data for scatter plot. 
             color_dict (dict): Colors for graph.
+            df_colors (pd.Series): Colors for each scatter point.
+            three_dim (bool): Plot in 3D if True.
             title (str): Text to display as title.
+            plottype (str): Type of graph to insert into title.
             size (int): Size of graph markers. Default = 5.
             marker (str): Shape of marker. Default is circle.
             alpha (int): Alpha of markers.
             save_dir (str): Optional alternative location to save.
                 Default = Path(resultsdir)
             msg (str): Message to include if save_dir is given.
-            (Optional) *args: Optional arguments to include in scatter.
+            caption: Optional description box to place in graph.
 
         Returns:
             None
 
-    """    
-    
+    """
+
     if title is None:
         title = 'Scatter Plot'
-    
+
     fig = plt.figure()
-    
     if three_dim:
         ax = fig.gca(projection='3d')
         ax.set_xlabel(df.columns[0])
@@ -115,7 +117,7 @@ def scatter(df: pd.DataFrame,
                    c=df.Color, s=size,
                    marker=marker, alpha=alpha)
 
-    else: 
+    else:
         ax = fig.gca()
         ax.set_xlabel(df.columns[0])
         ax.set_ylabel(df.columns[1])
@@ -126,7 +128,6 @@ def scatter(df: pd.DataFrame,
     ax.set_title('{}'.format(title) + ' ' + plottype)
 
     proxy, label = func.get_handles(color_dict)
-
     ax.legend(handles=proxy,
               labels=label,
               loc='upper right',
@@ -134,6 +135,7 @@ def scatter(df: pd.DataFrame,
               bbox_to_anchor=(1, 1),
               ncol=2,
               numpoints=1)
+
     if caption:
         fig.text(0, -.03,
                  caption,
@@ -151,31 +153,32 @@ def scatter(df: pd.DataFrame,
 
     return None
 
-def plot_skree(var, lab) -> None:
-    
+
+def plot_skree(var: np.ndarray) -> None:
     lab = np.arange(len(var)) + 1
     plt.plot(lab, var, 'o-', linewidth=2, color='blue')
     plt.title('Scree Plot')
     plt.xlabel('Principal Component')
     plt.ylabel('Variance Explained (%)')
     leg = plt.legend(['Eigenvalues from SVD'],
-                     loc='best', 
+                     loc='best',
                      borderpad=0.3,
-                     shadow=False, 
+                     shadow=False,
                      prop=fm.FontProperties(size='small'),
                      markerscale=0.4)
-    
+
     leg.get_frame().set_alpha(0.4)
     leg.set_draggable(state=True)
     plt.show()
 
+
 def plot_3d_ani(session: str,
-                     df: pd.DataFrame,
-                     color_dict: dict,
-                     size: int = 5,
-                     marker: str = 'o',
-                     alpha: int = 1,
-                     save_dir: str = None) -> None:
+                df: pd.DataFrame,
+                color_dict: dict,
+                size: int = 5,
+                marker: str = 'o',
+                alpha: int = 1,
+                save_dir: Optional[str] = None) -> None:
     """
         Animated 3D Scatter plot.
         Plot gets saved to a temporary html file (location provided by save_dir).
@@ -232,7 +235,6 @@ def plot_3d_ani(session: str,
         url = save_dir
     else:
         url = r'C:/Users/dilorenzo/Desktop.htm'
-
     webbrowser.open(url, new=2)
 
     return None
@@ -245,6 +247,7 @@ def plot_session(nplot: int,
                  numlicks: int,
                  timestamps: dict = None,
                  lickshade: int = 1,
+
                  save_dir: str = None) -> None:
     # create a series of plots with a shared x-axis
     fig, axs = plt.subplots(nplot, 1, sharex=True)
@@ -298,7 +301,7 @@ def plot_zoom(nplot,
               session,
               colors,
               zoomshade: float = 0.2,
-              save_dir: str = None
+              save_dir: Optional[str] = None
               ) -> None:
     # create a series of plots with a shared x-axis
     fig, ax = plt.subplots(nplot, 1, sharex=True)
@@ -421,19 +424,18 @@ def plot_stim(nplot,
 
 
 def plot_cells(tracedata,
-                time,
-                timestamps,
-                trial_times,
-                session,
-                colors,
-                save_dir: str = None
-                ) -> None:
-    
+               time,
+               timestamps,
+               trial_times,
+               session,
+               colors,
+               save_dir: str = None
+               ) -> None:
     cells = tracedata.columns[1:]
     plot_cells = func.cell_gui(tracedata)
-    
+
     for cell in plot_cells:
-        
+
         # Create int used to index a column in tracedata.
         cell_index = {x: 0 for x in cells}
         cell_index.update((key, value) for value, key in enumerate(cell_index))
@@ -453,7 +455,7 @@ def plot_cells(tracedata,
                 minmax.append(norm_max)
             stim_min = min(minmax)
             stim_max = max(minmax)
-    
+
             if ntrial > 1:
                 fig, xaxs = plt.subplots(
                     ntrial, 1, sharex=False, squeeze=False)
@@ -461,38 +463,38 @@ def plot_cells(tracedata,
                 xaxs.flatten()
             for iteration, trial in enumerate(times):
                 i = int(iteration)
-    
+
                 data_ind = np.where(
                     (time > trial - 2) & (time < trial + 4))[0]
                 this_time = time[data_ind]
-    
+
                 # Get calcium trace.
                 signal = list(tracedata.iloc[data_ind, currcell + 1])
                 signal[:] = [number - stim_min for number in signal]
-    
+
                 l_bound = min(signal)
                 u_bound = max(signal)
                 center = 0
                 xaxs[i, 0].plot(this_time, signal, 'k', linewidth=.8)
                 xaxs[i, 0].tick_params(
                     axis='both', which='minor', labelsize=6)
-    
+
                 xaxs[i, 0].get_xaxis().set_visible(False)
-    
+
                 xaxs[i, 0].spines["top"].set_visible(False)
                 xaxs[i, 0].spines["bottom"].set_visible(False)
                 xaxs[i, 0].spines["right"].set_visible(False)
                 xaxs[i, 0].spines['left'].set_bounds(
                     (l_bound, stim_max))
-    
+
                 xaxs[i, 0].set_yticks((0, center, u_bound))
                 xaxs[i, 0].set_ylabel(' Trial {}     '.format(
                     i + 1), rotation='horizontal', labelpad=15, y=.3)
-    
+
                 xaxs[i, 0].set_ylim(bottom=0, top=max(signal))
-    
+
                 xaxs[i, 0].axhspan(0, 0, color='k', ls=':')
-    
+
                 # Add shading for licks, rinses  tastant delivery
                 for stimmy in ['Lick', 'Rinse', stim]:
                     done = 0
@@ -508,7 +510,7 @@ def plot_cells(tracedata,
                                 ts, ts + .15,
                                 color=colors[stimmy],
                                 label=label, lw=0)
-    
+
             plt.xlabel('Time (s)')
             fig.suptitle('Calcium Traces: {}\n{}: {}'.format(
                 cell, session, stim), y=1.0)
@@ -525,7 +527,3 @@ def plot_cells(tracedata,
                     bbox_inches='tight', dpi=300)
 
     return None
-
-
-
-

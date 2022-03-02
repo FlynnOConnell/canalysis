@@ -33,3 +33,17 @@ class ComponentError(Exception):
             return '{0} '.format(self.message)
         else:
             return 'Number components was chosen to be larger than the total number of cells (features).'
+
+
+class DuplicateError(Exception):
+    def __init__(self, *args):
+        if args:
+            self.message = args[0]
+        else:
+            self.message = None
+
+    def __str__(self):
+        if self.message:
+            return '{0} '.format(self.message)
+        else:
+            return 'A duplicate time may have been chosen for time of peak'
