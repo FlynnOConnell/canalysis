@@ -145,7 +145,7 @@ class Traces(Data):
         super().__init__(animal, date)
         self._authenticate_input_data(df)
 
-        self.traces = df
+        self.traces: pd.DataFrame = df
         self.cells = self.traces.columns[1:]
         self.time = self.traces['Time(s)']
         self.binsize = self.time[2] - self.time[1]

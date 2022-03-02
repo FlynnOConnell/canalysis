@@ -182,7 +182,8 @@ def get_dir(data_dir: str,
     return tracedata, eventdata, resultsdir
 
 
-def dup_check(signal: list, peak_signal: float | int) -> None:
+def dup_check(signal: list | np.ndarray,
+              peak_signal: float | int) -> None:
     """
     Check for duplicate peaks when analyzing cell signals.
     Args:
