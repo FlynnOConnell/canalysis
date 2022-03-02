@@ -184,8 +184,7 @@ def get_dir(data_dir: str,
 
 def dup_check(signal: list, peak_signal: float | int) -> None:
     """
-    Create intervals where there elements are separated by less than 1.
-    Used for bout creation.
+    Check for duplicate peaks when analyzing cell signals.
     Args:
         signal (list): Iterable to search.
         peak_signal (float): Time value where signal is at its largest value.
