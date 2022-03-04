@@ -19,13 +19,14 @@ pd.set_option('chained_assignment', None)
 logger = logging.getLogger(__name__)
 logger.info(f'{__name__} module called.')
 
+datadir = 'A:\\'
+
 animal_id = 'PGT13'
 date = '120221'
 target_date = '121021'
 
 session = animal_id + '_' + date
-
-data = du.Data(animal_id, date)
+data = du.Data(animal_id, date, datadir)
 
 
 def get_antibouts(bouts_td_time: list) -> Tuple[list, list]:
