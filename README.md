@@ -6,9 +6,6 @@ and machine learning.
 ---
 **To Do:** 
 
-models.py : train_test_split() parameter `stratify=True` breaking the split because "Singleton array array(True) 
-"is not a valid collection" ?? 
-
 
 **Machine Learning**: Currently the only implemented model for machine learning is _Support Vector Machine_. 
 This is due to the relatively small training data available; sessions only contain 4-8 trials of each tastant 

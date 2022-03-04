@@ -192,13 +192,12 @@ class NeuralNetwork(object):
         self.grid = model_selection.GridSearchCV(model, param_grid=param_grid)
 
         # TODO: Fix stratify parameter in train/test/split
-        # Setting stratify=True breaks the split due to "Singleton array(True)
-        # is not a valid collection?
         x_train, x_test, y_train, y_test = train_test_split(
             self.features,
             target_encoded,
             test_size=0.2,
-            random_state=40)
+            random_state=40,
+            stratify=target_encoded)
         logging.info('train_test_split completed')
 
         # Fit training data only
