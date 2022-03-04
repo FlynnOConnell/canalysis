@@ -18,6 +18,8 @@ from sklearn import preprocessing
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn import model_selection
+from sklearn.model_selection import train_test_split
+
 
 import data as du
 from utils import funcs, draw_plots
@@ -102,13 +104,11 @@ class NeuralNetwork(object):
             -SVM(Linear / rbf kernal)
 
         Args:
-            _data (Traces): Instance of data for session.
-            _eval (Traces): Instance of data for different session.
+            _data (Traces): Instance of Data class for model training.
+            _eval (Traces): Instance of Data class for model evaluation.
 
         Returns:
-            tracedata (pd.DataFrame): DataFrame of cell signals
-            eventdata (pd.DataFrame): DataFrame of event times.
-            session (str): Concatenated name of animalID_Date
+            None.
 
         """
 
@@ -118,7 +118,7 @@ class NeuralNetwork(object):
         ## Train/Validate Data ---------------------
 
         self.features = _data.tr_data  # x, [features]: taste responsive only 
-        self.target = _data.all_taste_trials.tastant  # y, [true]: class for dataset 
+        self.target = _data.all_taste_trials.tastant  # y, [true]: array of true values
 
         ## Evaluation Data -------------------------    
 
@@ -127,8 +127,6 @@ class NeuralNetwork(object):
 
         ## Model and Scores ------------------------
 
-        self.target_enc = None
-        self.enc = None
         self.grid = None
         self.train_scores: dict = {}
         self.eval_scores: dict = {}
@@ -144,33 +142,13 @@ class NeuralNetwork(object):
             raise AttributeError('Input data must be an instance of the du.Data class')
         if not isinstance(_eval, du.Data):
             raise AttributeError('Input data must be an instance of the du.Data class')
+        if not hasattr(_data, 'all_taste_trials'):
+            raise AttributeError('Taste responsive cells not included in data class')
+        if not hasattr(_data, 'all_taste_trials'):
+            raise AttributeError('Taste responsive cells not included in data class')
         else:
             logging.info('NeuralNetwork instantiated.')
 
-    def train_test(self,
-                   test_size: float = 0.2,
-                   random_state: int = 40
-                   ):
-        """
-        Split data into train/test groups
-        Args:
-            test_size (Optional[float]): Proportion of train:test group sizes.
-                -Default = 0.2, 80% training 20% testing.
-                -Note: possible to do 0.01 for 99% training size.
-            random_state (Optional[int]): int storage for state of split.
-                -Keeping default value of 40 for reproducibility, always using the same split.
-        """
-        from sklearn.model_selection import train_test_split
-
-        x_train, x_test, y_train, y_test = train_test_split(
-            self.features,
-            self.target,
-            test_size=test_size,
-            random_state=random_state,
-            stratify=True)
-        logging.info('train_test_split completed')
-
-        return x_train, x_test, y_train, y_test
 
     def SVM(self,
             kernel: str = 'linear',
@@ -194,12 +172,15 @@ class NeuralNetwork(object):
         """
 
         from sklearn.svm import SVC
-
+        
+        # SVM doesnt take categorical data, so we encode into integers
+        # 2 instances of LabelEncoder() class, so we can inverse_transform
+        # each dataset later
         le_train = preprocessing.LabelEncoder()
         le_eval = preprocessing.LabelEncoder()
 
-        self.enc, self.target_enc = get_encoder(self.target)
-        self.target_eval = le_eval.fit_transform(self.target_eval)
+        target_encoded = le_train.fit_transform(self.target)
+        target_eval_encoded = le_eval.fit_transform(self.target_eval)
 
         #### Build Model ####
         model = SVC(kernel=kernel)
@@ -208,20 +189,27 @@ class NeuralNetwork(object):
             param_grid = params
         else:
             param_grid = dict(C=c_range)
-        grid = model_selection.GridSearchCV(model, param_grid=param_grid)
+        self.grid = model_selection.GridSearchCV(model, param_grid=param_grid)
 
-        # Split dataset into training/testing data
-        x_train, x_test, y_train, y_test = self.train_test()
+        # TODO: Fix stratify parameter in train/test/split
+        # Setting stratify=True breaks the split due to "Singleton array(True)
+        # is not a valid collection?
+        x_train, x_test, y_train, y_test = train_test_split(
+            self.features,
+            target_encoded,
+            test_size=0.2,
+            random_state=40)
+        logging.info('train_test_split completed')
 
         # Fit training data only
         scalar = preprocessing.StandardScaler()
-        scalar.fit_transform(x_train)
+        scalar.fit(x_train)
 
         # Scale everything to the training data's fit
         scalar.transform(x_test)
         scalar.transform(self.features_eval)
 
-        self.grid.fit(x_train, y_train, cv=5)
+        self.grid.fit(x_train, y_train)
 
         print(
             f"The best parameters are {grid.best_params_},"

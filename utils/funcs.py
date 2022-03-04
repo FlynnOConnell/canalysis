@@ -21,7 +21,7 @@ from glob import glob
 import gc
 import logging
 
-import excepts as e
+from utils import excepts as e
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -137,6 +137,7 @@ def get_dir(data_dir: str,
             date: str
             ):
     """
+    
     From Home directory, set path to data files with pathlib object variable.
     
     Directory structure: 
@@ -157,29 +158,29 @@ def get_dir(data_dir: str,
         tracedata (pd.DataFrame): DataFrame of cell signals
         eventdata (pd.DataFrame): DataFrame of event times.
         session (str): Concatenated name of animalID_Date
+        
     """
+
     os.chdir(data_dir)
     datapath = Path(data_dir) / _id / date
+
+    files_trace = (glob(os.path.join(datapath, '*traces*')))
+    files_events = (glob(os.path.join(datapath, '*processed*')))
+
+    if not files_trace:
+        if not files_events:
+            raise FileNotFoundError('No trace or event files in this directory')
+        raise FileNotFoundError('No trace files in this directory')
+    if not files_events:
+        raise FileNotFoundError('No event files in this directory')
 
     tracepath = Path(glob(os.path.join(datapath, '*traces*'))[0])
     eventpath = Path(glob(os.path.join(datapath, '*processed*'))[0])
 
-    resultsdir = Path(data_dir + '/' + 'Results')
-    if not resultsdir.is_dir():
-        os.mkdir(resultsdir)
-
-    if not tracepath.exists():
-        print('No trace files were found, or file was misnamed.')
-        sys.exit()
-
-    if not eventpath.exists():
-        print('no event files were found, or file was misnamed.')
-        sys.exit()
-
     tracedata = pd.read_csv(tracepath, low_memory=False)
     eventdata = pd.read_csv(eventpath, low_memory=False)
 
-    return tracedata, eventdata, resultsdir
+    return tracedata, eventdata
 
 
 def dup_check(signal: list | np.ndarray,
@@ -335,3 +336,22 @@ def cell_gui(df: pd.DataFrame) -> list:
             break
 
     return plotcells
+
+
+# Main wrapper for testing
+if __name__ == "__main__":
+    pass
+    # animal_id = 'PGT13'
+    # date = '012222'
+    # target_date = '121021'
+    # session = animal_id + '_' + date
+    # data_dir = '/Users/flynnoconnell/Documents/Work/Data'
+    #
+    # os.chdir(data_dir)
+    # datapath = Path(data_dir) / animal_id / date
+    #
+    # find_trace = 'traces'
+    # files = (glob(os.path.join(datapath, find_trace)))
+    #
+    # if not files:
+    #     raise FileNotFoundError(f'No Files in this containing: {find_trace}')

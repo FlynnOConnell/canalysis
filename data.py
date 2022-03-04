@@ -67,15 +67,22 @@ class Data(object):
         self.numlicks: int | None = None
         self._set_event_attrs()
 
+        # Other
+        self.tastant_colors_dict = tastant_colors_dict
+
         ## (Optional) Taste-specific data
         if tr_cells:
-            self.all_taste_trials: Type[pd.DataFrame]  # All data for taste-trials
+            # Getting weird type errors between pd.DataFrame and pd.NDframeT
+            # pd.DataFrame is a subclass of NDframeT, so both should be valid, likely just
+            # an issue on pandas side. Will raise an issue request.
+
+            self.all_taste_trials: Type[pd.NDframeT]  # All data for taste-trials
             self.tr_colors = None  # Array of which color of tastant was presented
             self._get_taste_trials()
 
             self.tastants = func.get_unique(  # List of all tastants (not rinse or lick)
                 self.all_taste_trials.tastant)
-            self.tr_data = self.all_taste_trials.filter(tr_cells)  # Data for taste-responsive cells only
+            self.tr_data = self.all_taste_trials.filter(items=tr_cells)  # Data for taste-responsive cells only
             self.tr_cells = self.tr_data.columns
         logging.info('Data instantiated.')
 
