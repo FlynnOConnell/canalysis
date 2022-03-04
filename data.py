@@ -6,13 +6,11 @@
 Module: Classes for data processing.
 """
 from __future__ import annotations
-from typing import Type, Optional
+from typing import Type, Optional, Iterable
 
-import os
 import pandas as pd
 import numpy as np
 import logging
-import warnings
 
 from utils import funcs as func
 from utils import draw_plots as plot
@@ -38,76 +36,113 @@ tastant_colors_dict = {k: colors_dict[k] for k in list(colors_dict)[:]}
 
 class Data(object):
 
-    def __init__(self, animal, date, tr_cells: Optional[any] = ''):
+    def __init__(self,
+                 animal: str,
+                 date: str,
+                 data_dir: str,
+                 tr_cells: Optional[Iterable] = ''):
 
-        # Session 
+        # Session information
         self.animal = animal
         self.date = date
         self.session = animal + '_' + date
-        self.tastant_colors_dict = tastant_colors_dict
+        self.data_dir = data_dir
+
         # Core
-        self.tracedata = Traces(self._get_data(trace=True), animal, date)
-        self.eventdata = Events(self._get_data(), animal, date)
+        self.tracedata: Type[pd.DataFrame]
+        self.eventdata: Type[pd.DataFrame]
+        self._get_data()
+        self._authenticate_input_data(self)
 
-        self.numlicks = self.eventdata.numlicks
+        # Trace attributes
+        self.signals = self._set_trace_signals()
+        self.cells = np.array(self.tracedata.columns[1:])
+        self.time = self.tracedata['Time(s)']
+        self.binsize = self.time[2] - self.time[1]
 
-        ## Taste Data
+        # Event attributes
+        self.timestamps = {}
+        self.trial_times = {}
+        self.drylicks = []
+        self.numlicks: int | None = None
+        self._set_event_attrs()
+
+        ## (Optional) Taste-specific data
         if tr_cells:
-            self.all_taste_trials: Type[pd.DataFrame] = pd.DataFrame  # All data for taste-trials
+            self.all_taste_trials: Type[pd.DataFrame]  # All data for taste-trials
             self.tr_colors = None  # Array of which color of tastant was presented
-            self.get_taste_trials()
+            self._get_taste_trials()
 
             self.tastants = func.get_unique(  # List of all tastants (not rinse or lick)
                 self.all_taste_trials.tastant)
             self.tr_data = self.all_taste_trials.filter(tr_cells)  # Data for taste-responsive cells only
             self.tr_cells = self.tr_data.columns
-
         logging.info('Data instantiated.')
 
-    def _get_data(self, trace=False):
+    @staticmethod
+    def _authenticate_input_data(self):
 
-        if os.name == 'posix':
-            datadir = '/Users/flynnoconnell/Documents/Work/Data'
-        else:
-            datadir = 'A:\\'
+        if not isinstance(self.tracedata, pd.DataFrame):
+            raise e.DataFrameError('Trace data must be a dataframe')
+        if not isinstance(self.eventdata, pd.DataFrame):
+            raise e.DataFrameError('Event data must be a dataframe.')
+        if not any(x in self.tracedata.columns for x in ['C0', 'C00']):
+            raise AttributeError("No cells found in DataFrame")
 
-        traces, events, _ = func.get_dir(
-            datadir, self.animal, self.date)
+    def _get_data(self):
 
-        tracedata = traces
-        eventdata = events
+        traces, events = func.get_dir(
+            self.data_dir, self.animal, self.date)
 
-        if trace:
-            return tracedata
-        else:
-            return eventdata
+        self.tracedata = self._clean(traces)
+        self.eventdata = events
 
-    def get_taste_trials(self) -> None:
+    @staticmethod
+    def _clean(_df) -> pd.DataFrame:
+
+        # When CNMFe is run, we choose cells to "accept", but with manual ROI's every cell is accepted
+        # so often that step is skipped. Need some way to check (check_if_accepted)
+
+        def check_if_accepted(_df):
+            accepted_col = [col for col in _df.columns if ' accepted' in col]
+            return accepted_col
+        accept = check_if_accepted(_df)
+
+        if accept:
+            accepted = np.where(_df.loc[0, :] == ' accepted')[0]
+            _df = _df.iloc[:, np.insert(accepted, 0, 0)]
+        _df = _df.drop(0)
+        _df = _df.rename(columns={' ': 'Time(s)'})
+        _df = _df.astype(float)
+        _df = _df.reset_index(drop=True)
+        _df.columns = [column.replace(' ', '') for column in _df.columns]
+        return _df
+
+    def _get_taste_trials(self) -> None:
 
         # Get timestamps of taste - trials only
-        stamps = self.eventdata.timestamps.copy()
+        stamps = self.timestamps.copy()
         stamps.pop('Lick')
         stamps.pop('Rinse')
 
-        taste_signals = pd.DataFrame(columns=self.tracedata.signals.columns)
-        color_signals = pd.DataFrame(columns=self.tracedata.signals.columns)
+        taste_signals = pd.DataFrame(columns=self.signals.columns)
+        color_signals = pd.DataFrame(columns=self.signals.columns)
 
         # Populate df with taste trials only
         for event, timestamp in stamps.items():
             taste_interval = func.interval(timestamp)
             for lst in taste_interval:
-                sig_time = func.get_matched_time(self.tracedata.time, *lst)
+                sig_time = func.get_matched_time(self.time, *lst)
 
-                sig = (self.tracedata.traces.loc[(
-                                                         self.tracedata.traces['Time(s)'] >= sig_time[0])
-                                                 & (self.tracedata.traces['Time(s)'] <= sig_time[1]), 'Time(s)'])
+                sig = (self.tracedata.loc[(self.tracedata['Time(s)'] >= sig_time[0])
+                                          & (self.tracedata['Time(s)'] <= sig_time[1]), 'Time(s)'])
 
-                holder = (self.tracedata.traces.iloc[sig.index])
+                holder = (self.tracedata.iloc[sig.index])
                 holder['tastant'] = event
                 taste_signals = pd.concat([taste_signals, holder])
 
                 pd.DataFrame(columns=taste_signals.columns)
-                hol = (self.tracedata.traces.iloc[sig.index])
+                hol = (self.tracedata.iloc[sig.index])
                 hol['col'] = tastant_colors_dict[event]
                 color_signals = pd.concat([color_signals, hol])
 
@@ -120,104 +155,12 @@ class Data(object):
             if not self.all_taste_trials['Time(s)'].is_unique:
                 e.DataFrameError('Duplicate values found and not caught.')
 
-    def plot_stim(self):
-        plot.plot_stim(len(self.tracedata.cells),
-                       self.tracedata.traces,
-                       self.tracedata.time,
-                       self.eventdata.timestamps,
-                       self.eventdata.trial_times,
-                       self.session,
-                       tastant_colors_dict)
-
-    def plot_session(self):
-        plot.plot_session(self.tracedata.cells,
-                          self.tracedata.traces,
-                          self.tracedata.time,
-                          self.session,
-                          self.numlicks,
-                          self.eventdata.timestamps)
-
-
-class Traces(Data):
-
-    def __init__(self, df, animal, date):
-
-        super().__init__(animal, date)
-        self._authenticate_input_data(df)
-
-        self.traces: pd.DataFrame = df
-        self.cells = self.traces.columns[1:]
-        self.time = self.traces['Time(s)']
-        self.binsize = self.time[2] - self.time[1]
-        self.signals = self._set_signals()
-
-        self.result = None
-        self.tr_cells = None
-        self._pipeline = None
-        self._clean()
-
-    @staticmethod
-    def _authenticate_input_data(obj):
-        # verify input
-        if not any(x in obj.columns for x in [' C0', ' C00']):
-            raise AttributeError("No cells found in DataFrame")
-        elif 'undecided' in obj.columns:
-            warnings.warn('DataFrame contains undecided cells, double check that this was intentional.')
-
-    def _set_signals(self) -> pd.DataFrame:
-
-        temp = self.traces.copy()
-        temp.pop('Time(s)')
-        self.signals = temp
-        return temp
-
-    def _clean(self) -> None:
-
-        accepted = np.where(self.traces.loc[0, :] == ' accepted')[0]
-        self.traces = self.traces.iloc[:, np.insert(accepted, 0, 0)]
-        self.traces = self.traces.drop(0)
-        self.traces = self.traces.rename(columns={' ': 'Time(s)'})
-        self.traces = self.traces.astype(float)
-        self.traces = self.traces.reset_index(drop=True)
-        self.traces.columns = [column.replace(' ', '') for column in self.traces.columns]
-
-
-class Events(Data):
-
-    def __init__(self, df, animal, date):
-
-        super().__init__(animal, date)
-        self._authenticate_input_data(df)
-
-        self.events = df
-        self.evtime = None
-        self.timestamps = {}
-        self.trial_times = {}
-        self.drylicks = []
-        self.numlicks: int | None = None
-
-        self._set_attr()
-        self._validate_attr()
-
-    @staticmethod
-    def _authenticate_input_data(obj):
-        # verify input
-        if not hasattr(obj, "iloc"):
-            raise AttributeError('Input data must be a pandas DataFrame')
-        if 'Lick' not in obj.columns:
-            raise AttributeError("No cells found in DataFrame")
-
-    def _validate_attr(self):
-        if not isinstance(self.events, pd.DataFrame):
-            raise AttributeError('Event attributes not filled.')
-
-    def _set_attr(self):
-
+    def _set_event_attrs(self):
         allstim = []
-        for stimulus in self.events.columns[1:]:
+        for stimulus in self.eventdata.columns[1:]:
             self.timestamps[stimulus] = list(
-                self.events['Time(s)'].iloc[np.where(
-                    self.events[stimulus] == 1)[0]])
+                self.eventdata['Time(s)'].iloc[np.where(
+                    self.eventdata[stimulus] == 1)[0]])
             if stimulus != 'Lick':
                 allstim.extend(self.timestamps[stimulus])
         self.drylicks = [x for x in self.timestamps['Lick'] if x not in allstim]
@@ -244,3 +187,27 @@ class Events(Data):
                     if last_drytime > last_stimtime:
                         times.append(ts)
                 self.trial_times[stim] = times
+
+    def _set_trace_signals(self) -> pd.DataFrame:
+
+        temp = self.tracedata.copy()
+        temp.pop('Time(s)')
+        self.signals = temp
+        return temp
+
+    def plot_stim(self):
+        plot.plot_stim(len(self.cells),
+                       self.signals,
+                       self.time,
+                       self.timestamps,
+                       self.trial_times,
+                       self.session,
+                       tastant_colors_dict)
+
+    def plot_session(self):
+        plot.plot_session(len(self.cells),
+                          self.signals,
+                          self.time,
+                          self.session,
+                          self.numlicks,
+                          self.eventdata.timestamps)
