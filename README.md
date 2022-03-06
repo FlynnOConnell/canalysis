@@ -1,9 +1,37 @@
- Trace Analysis 
-====
+ # Trace Analysis 
+=================
 This project takes .csv files gathered from Inscopix Data Processing software for statistical analysis 
 and machine learning. 
 
----
+File handling assumes the following directory structure:
+
+```bash
+
+../data/
+├── Animal 1
+│   ├── Day 1
+│   │   ├── *Events.csv
+│   │   └── *Traces.csv
+│   └── Day 2
+│       ├── *Events.csv
+│       └── *Traces.csv
+├── Animal 2
+│   └── Day 1
+│       ├── *Events.csv
+│       └── *Traces.csv
+└── Animal 3
+    ├── Day 1
+    │   ├── *Events.csv
+    │   └── *Traces.csv
+    ├── Day 2
+    │   ├── *Events.csv
+    │   └── *Traces.csv
+    └── Day 3
+        ├── *Events.csv
+        └── *Traces.csv
+```
+
+============
 **To Do:** 
 
 

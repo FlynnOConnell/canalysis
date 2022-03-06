@@ -7,110 +7,50 @@
 
 Module: Classes/functions for NeuralNetwork module training.
 """
+
+from __future__ import division
+from typing import Optional, Generic
+from dataclasses import dataclass
+
 import pandas as pd
 import numpy as np
-from dataclasses import dataclass
 import logging
-from typing import Optional, Generic
 
-from pandas import DataFrame
 from sklearn import preprocessing
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn import model_selection
 from sklearn.model_selection import train_test_split
 
-
 import data as du
-from utils import funcs, draw_plots
+from utils import funcs
 
 logger = logging.getLogger(__name__)
 
 
 # %%
 
-def model_to_csv(df, name) -> None:
-    resultsdir = '/Users/flynnoconnell/Desktop'
-    with pd.ExcelWriter(resultsdir
-                        + '/'
-                        + name
-                        + '.xlsx') as writer:
-        df.to_excel(
-            writer, sheet_name=name, index=False)
-    return None
 
 
-# Issue here with design; Immutable vs mutable objects. Do we want an immutable, untouchable dataset
-# that we copy and manupulate to make new objects. Or do we want to change the object as we go and create 
-# a new instance with the original dataset if need be. With SVM being on the upper limit ofhow many models were going 
-# to implement, probably doesn't matter. Just needs to be consistent. 
-
-
-def get_encoder(y):
+class SupportVectorMachine(object):
     """
-    SVM() is not meant for categorical data.
-    We need to convert target sets from categories to integers:
-        Artsal : 1
-        MSG: 2
-        Quinine: 3 etc. 
-        Args:
-            y (np.ndarray): 1d array with categorical data to encode
-        Returns:
-             Generic[le]: Instance of preprocessing.LabelEncoder()
-             -This instance is used to inverse_transform() later on.
+    SVM Classifier.
+    Uses sklearn.svm SVC() 
+
+    Args:
+    -----------       
+    
+        _data (Traces): Instance of Data class for model training.
+        _eval (Traces): Instance of Data class for model evaluation.
+
+    Returns:
+    -----------
+        None.
+
     """
-    le = preprocessing.LabelEncoder()
-    le.fit_transform(y)
 
-    return le, y
-
-
-def pca(features,
-        color_dict,
-        scatter_colors,
-        graph: Optional[bool] = True):
-    scalar = preprocessing.StandardScaler()
-
-    scalar.fit_transform(features)
-    pca = PCA(n_components=0.95)
-    df = pca.fit_transform(features)
-    variance = np.round(
-        pca.explained_variance_ratio_ * 100, decimals=1)
-    labels = [
-        'PC' + str(x) for x in range(1, len(variance) + 1)]
-
-    df = pd.DataFrame(df, columns=labels)
-
-    if graph:
-        draw_plots.scatter(
-            df,
-            color_dict,
-            df_colors=scatter_colors,
-            title='Taste Responsive Cells',
-            caption='Datapoint include only taste-trials. Same data as used in SVM')
-    else:
-        return df, variance, labels
-
-
-class NeuralNetwork(object):
 
     def __init__(self, _data, _eval):
-        """
-        Instance of NeuralNetwork for machine learning.
-        Contains methods for training/testing, and models for ML.
-        Arguments are modified in-class. Create a new instance for new models.
-
-        Current models:
-            -SVM(Linear / rbf kernal)
-
-        Args:
-            _data (Traces): Instance of Data class for model training.
-            _eval (Traces): Instance of Data class for model evaluation.
-
-        Returns:
-            None.
-
-        """
 
         self._authenticate_input_data(_data, _eval)
         self.classes = _data.tastants
@@ -154,7 +94,9 @@ class NeuralNetwork(object):
             kernel: str = 'linear',
             params: Optional[str] = ''
             ) -> None:
+        
         """
+        
         Instance of NeuralNetwork for machine learning.
         Contains methods for training/testing, and models for ML.
 
@@ -169,6 +111,7 @@ class NeuralNetwork(object):
 
         Returns:
             Desired ML model.
+        
         """
 
         from sklearn.svm import SVC
@@ -176,6 +119,7 @@ class NeuralNetwork(object):
         # SVM doesnt take categorical data, so we encode into integers
         # 2 instances of LabelEncoder() class, so we can inverse_transform
         # each dataset later
+        
         le_train = preprocessing.LabelEncoder()
         le_eval = preprocessing.LabelEncoder()
 
@@ -189,7 +133,7 @@ class NeuralNetwork(object):
             param_grid = params
         else:
             param_grid = dict(C=c_range)
-        self.grid = model_selection.GridSearchCV(model, param_grid=param_grid)
+        grid = model_selection.GridSearchCV(model, param_grid=param_grid)
 
         # TODO: Fix stratify parameter in train/test/split
         x_train, x_test, y_train, y_test = train_test_split(
@@ -208,14 +152,14 @@ class NeuralNetwork(object):
         scalar.transform(x_test)
         scalar.transform(self.features_eval)
 
-        self.grid.fit(x_train, y_train)
+        grid.fit(x_train, y_train)
 
         print(
             f"The best parameters are {grid.best_params_},"
             f" with a score of {grid.best_score_}"
         )
 
-        model = self.grid.best_estimator_
+        model = grid.best_estimator_
 
         #### Fit model, get scores ###
         test_fit = model.predict(x_test)
@@ -268,7 +212,7 @@ class Scoring(object):
             logging.info('No descriptor')
             pass
 
-    def get_report(self) -> DataFrame:
+    def get_report(self) -> pd.DataFrame:
 
         from sklearn.metrics import classification_report
         if self.descriptor:

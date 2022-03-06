@@ -2,16 +2,14 @@
 """
 #funcs.py
 
-Module(util): General helper functions.
+Module(util): General getter/setter/checker functions.
 """
 from __future__ import annotations
 from typing import Tuple, Iterable, Optional, Sized
-
 import os
-import sys
 
 import matplotlib
-import easygui
+# import easygui
 import pandas as pd
 import numpy as np
 import math
@@ -68,6 +66,38 @@ def clear_all() -> None:
     return None
 
 
+def accuracy_score(y_true, y_pred):
+    """ Compare y_true to y_pred and return the accuracy """
+    accuracy = np.sum(y_true == y_pred, axis=0) / len(y_true)
+    return accuracy
+
+
+def flatten(lst: list) -> list:
+    return [item for sublist in lst for item in sublist]
+
+
+def shuffle_data(X, y, seed=None):
+    """ Random shuffle of the samples in X and y """
+    if seed:
+        np.random.seed(seed)
+    idx = np.arange(X.shape[0])
+    np.random.shuffle(idx)
+    return X[idx], y[idx]
+
+
+def train_test_split(X, y, test_size=0.5, shuffle=True, seed=None):
+    """ Split the data into train and test sets """
+    if shuffle:
+        X, y = shuffle_data(X, y, seed)
+    # Split the training data from test data in the ratio specified in
+    # test_size
+    split_i = len(y) - int(len(y) // (1 / test_size))
+    X_train, X_test = X[:split_i], X[split_i:]
+    y_train, y_test = y[:split_i], y[split_i:]
+
+    return X_train, X_test, y_train, y_test
+
+
 def count_unique(arr: Iterable[any], n: int) -> int:
     """
     Count number of unique values in an array.
@@ -114,6 +144,7 @@ def interval(lst: Iterable[any]) -> Iterable[list]:
     """
     Create intervals where there elements are separated by less than 1.
     Used for bout creation.
+    
     Args:
         lst (list): Iterable to search.
     Returns:
@@ -186,12 +217,18 @@ def get_dir(data_dir: str,
 def dup_check(signal: list | np.ndarray,
               peak_signal: float | int) -> None:
     """
-    Check for duplicate peaks when analyzing cell signals.
+    Check if multiple peak signals are present in taste-response moving window. 
+
     Args:
-        signal (list): Iterable to search.
-        peak_signal (float): Time value where signal is at its largest value.
+        signal (list | np.ndarray): Signal to validate.
+        peak_signal (float | int): Largest value in moving window of taste responses.
+
+    Raises:
+        exception: DuplicateError.
+
     Returns:
-         None
+        None.
+
     """
     checker = []
     for value in signal:
@@ -204,6 +241,16 @@ def dup_check(signal: list | np.ndarray,
 
 
 def has_duplicates(to_check: Sized | Iterable[set]):
+    '''
+      Check iterable for duplicates.
+      
+      Args:
+          to_check (Sized | Iterable[set]): Input iterable to check.
+      
+      Returns:
+          Bool: Truth value if duplicates are present.
+      
+      '''
     return len(to_check) != len(set(to_check))
 
 
@@ -216,10 +263,6 @@ def uniquify(path: str) -> str:
         path = filename + " (" + str(counter) + ")" + extension
         counter += 1
     return path
-
-
-def flatten(lst: list) -> list:
-    return [item for sublist in lst for item in sublist]
 
 
 def get_peak_window(time: list | pd.Series, peak_time) -> list:
@@ -299,43 +342,43 @@ def get_handles(color_dict: dict,
     return proxy, label
 
 
-def cell_gui(df: pd.DataFrame) -> list:
-    """
-    Popup GUI used for selecting cells when plotting individual cell signals.
+# def cell_gui(df: pd.DataFrame) -> list:
+#     """
+#     Popup GUI used for selecting cells when plotting individual cell signals.
 
-    Args:
-        df (pd.DataFrame): Dictionary of event:color k/v pairs.
+#     Args:
+#         df (pd.DataFrame): Dictionary of event:color k/v pairs.
 
-    Returns:
-        plotcells (list): List of cells to plot.
+#     Returns:
+#         plotcells (list): List of cells to plot.
 
-    """
+#     """
 
-    tmp, plotcells = [], []
-    cells = df.columns
-    for i, cell in enumerate(cells):
-        tmp.append(cell.replace(' ', ''))
-    tmp.remove('Time(s)')
-    plotcells = []
-    while True:
-        myplotcells = easygui.multchoicebox(
-            msg='Please select cell(s) to plot, or cancel to continue.',
-            choices=tmp)
-        if myplotcells is None:  # If no cells chosen
-            ynbox = easygui.ynbox(
-                msg=('No cells chosen, continue without'
-                     'plotting individual cells?'),
-                choices=(
-                    ['Yes', 'No, take me back']))
-            if ynbox is False:
-                continue
-            if ynbox is True:
-                break
-        else:
-            plotcells.append(myplotcells)
-            break
+#     tmp, plotcells = [], []
+#     cells = df.columns
+#     for i, cell in enumerate(cells):
+#         tmp.append(cell.replace(' ', ''))
+#     tmp.remove('Time(s)')
+#     plotcells = []
+#     while True:
+#         myplotcells = easygui.multchoicebox(
+#             msg='Please select cell(s) to plot, or cancel to continue.',
+#             choices=tmp)
+#         if myplotcells is None:  # If no cells chosen
+#             ynbox = easygui.ynbox(
+#                 msg=('No cells chosen, continue without'
+#                      'plotting individual cells?'),
+#                 choices=(
+#                     ['Yes', 'No, take me back']))
+#             if ynbox is False:
+#                 continue
+#             if ynbox is True:
+#                 break
+#         else:
+#             plotcells.append(myplotcells)
+#             break
 
-    return plotcells
+#     return plotcells
 
 
 # Main wrapper for testing
