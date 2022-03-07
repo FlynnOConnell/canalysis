@@ -81,8 +81,8 @@ class Data(object):
             self.all_taste_trials: Type[pd.NDframeT]  # All data for taste-trials
             self._get_taste_trials()
             
-            self.taste_event = self.all_taste_trials.event  # Array of which event was presented 
-            self.taste_color = self.all_taste_trials.color  # Array of which color of tastant was presented
+            self.taste_events = self.all_taste_trials.events  # Array of which event was presented 
+            self.taste_colors = self.all_taste_trials.colors  # Array of which color of tastant was presented
             self.tastants = tastant_colors_dict.keys()
             self.tr_data = self.all_taste_trials.filter(items=tr_cells)  # Data for taste-responsive cells only
             self.tr_cells = self.tr_data.columns
@@ -147,8 +147,8 @@ class Data(object):
                                           & (self.tracedata['Time(s)'] <= sig_time[1]), 'Time(s)'])
 
                 holder = (self.tracedata.iloc[sig.index])
-                holder['event'] = event
-                holder['color'] = tastant_colors_dict[event]
+                holder['events'] = event
+                holder['colors'] = tastant_colors_dict[event]
                 taste_signals = pd.concat([taste_signals, holder])
 
         taste_signals.sort_index(inplace=True)

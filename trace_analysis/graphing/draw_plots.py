@@ -52,7 +52,8 @@ class Plot():
         return X_transformed
 
 
-    def plot_regression(self, lines, title, axis_labels=None, mse=None, scatter=None, legend={"type": "lines", "loc": "lower right"}):
+    def plot_regression(self, lines, title, axis_labels=None, mse=None, scatter=None,
+                        legend={"type": "lines", "loc": "lower right"}):
         
         if scatter:
             scatter_plots = scatter_labels = []
@@ -84,7 +85,7 @@ class Plot():
 
 
     # Plot the dataset X and the corresponding labels y in 2D using PCA.
-    def plot_in_2d(self, X, y=None, title=None, accuracy=None, legend_labels=None):
+    def plot_in_2d(self, X, y=None, caption: str='', title=None, accuracy=None, legend_labels=None):
         X_transformed = self._transform(X, dim=2)
         x1 = X_transformed[:, 0]
         x2 = X_transformed[:, 1]
@@ -104,13 +105,19 @@ class Plot():
         # Plot legend
         if not legend_labels is None: 
             plt.legend(class_distr, legend_labels, loc=1)
+            
+        if caption:
+            plt.text(-.05, -.08,
+                     caption,
+                     fontstyle='italic',
+                     fontsize='small')
 
         # Plot title
         if title:
             if accuracy:
                 perc = 100 * accuracy
                 plt.suptitle(title)
-                plt.title("Accuracy: %.1f%%" % perc, fontsize=10)
+                plt.title(f"Accuracy: {perc}", fontsize=10)
             else:
                 plt.title(title)
 
