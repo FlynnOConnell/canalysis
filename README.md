@@ -1,12 +1,12 @@
- # Trace Analysis 
-=================
+ # Trace Analysis
+ 
+
 This project takes .csv files gathered from Inscopix Data Processing software for statistical analysis 
 and machine learning. 
 
 File handling assumes the following directory structure:
 
 ```bash
-
 ../data/
 ├── Animal 1
 │   ├── Day 1
