@@ -14,7 +14,7 @@ import numpy as np
 import logging
 
 from utils import funcs as func
-from graphing.draw_plots import Plot
+from trace_analysis.utils.draw_plots import Plot
 from utils import excepts as e
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,7 @@ colors_dict = {
 
 tastant_colors_dict = {k: colors_dict[k] for k in list(colors_dict)[:6]}
 
+
 @dataclass
 class Data(object):
 
@@ -52,7 +53,7 @@ class Data(object):
         # Core
         self.tracedata: Type[pd.DataFrame]
         self.eventdata: Type[pd.DataFrame]
-        
+
         self._get_data()
         self._authenticate_input_data(self)
 
@@ -80,13 +81,13 @@ class Data(object):
 
             self.all_taste_trials: Type[pd.NDframeT]  # All data for taste-trials
             self._get_taste_trials()
-            
+
             self.taste_events = self.all_taste_trials.events  # Array of which event was presented 
             self.taste_colors = self.all_taste_trials.colors  # Array of which color of tastant was presented
             self.tastants = tastant_colors_dict.keys()
             self.tr_data = self.all_taste_trials.filter(items=tr_cells)  # Data for taste-responsive cells only
             self.tr_cells = self.tr_data.columns
-            
+
         logging.info('Data instantiated.')
 
     @staticmethod
@@ -116,6 +117,7 @@ class Data(object):
         def check_if_accepted(_df):
             accepted_col = [col for col in _df.columns if ' accepted' in col]
             return accepted_col
+
         accept = check_if_accepted(_df)
 
         if accept:
