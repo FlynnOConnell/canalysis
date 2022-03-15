@@ -7,13 +7,14 @@ Module: Classes for data processing.
 """
 from __future__ import annotations
 from typing import Type, Optional, Iterable
+from dataclasses import dataclass
 
 import pandas as pd
 import numpy as np
 import logging
 
+from core.draw_plots import Plot
 from utils import funcs as func
-from utils import draw_plots as plot
 from utils import excepts as e
 
 logger = logging.getLogger(__name__)
@@ -31,10 +32,11 @@ colors_dict = {
     'Lick': 'darkgray'
 }
 
-tastant_colors_dict = {k: colors_dict[k] for k in list(colors_dict)[:]}
+tastant_colors_dict = {k: colors_dict[k] for k in list(colors_dict)[:6]}
 
 
-class Data(object):
+@dataclass
+class CalciumData(object):
 
     def __init__(self,
                  animal: str,
@@ -51,6 +53,7 @@ class Data(object):
         # Core
         self.tracedata: Type[pd.DataFrame]
         self.eventdata: Type[pd.DataFrame]
+
         self._get_data()
         self._authenticate_input_data(self)
 
@@ -77,13 +80,14 @@ class Data(object):
             # an issue on pandas side. Will raise an issue request.
 
             self.all_taste_trials: Type[pd.NDframeT]  # All data for taste-trials
-            self.tr_colors = None  # Array of which color of tastant was presented
             self._get_taste_trials()
 
-            self.tastants = func.get_unique(  # List of all tastants (not rinse or lick)
-                self.all_taste_trials.tastant)
+            self.taste_events = self.all_taste_trials.events  # Array of which event was presented 
+            self.taste_colors = self.all_taste_trials.colors  # Array of which color of tastant was presented
+            self.tastants = tastant_colors_dict.keys()
             self.tr_data = self.all_taste_trials.filter(items=tr_cells)  # Data for taste-responsive cells only
             self.tr_cells = self.tr_data.columns
+
         logging.info('Data instantiated.')
 
     @staticmethod
@@ -113,6 +117,7 @@ class Data(object):
         def check_if_accepted(_df):
             accepted_col = [col for col in _df.columns if ' accepted' in col]
             return accepted_col
+
         accept = check_if_accepted(_df)
 
         if accept:
@@ -133,7 +138,6 @@ class Data(object):
         stamps.pop('Rinse')
 
         taste_signals = pd.DataFrame(columns=self.signals.columns)
-        color_signals = pd.DataFrame(columns=self.signals.columns)
 
         # Populate df with taste trials only
         for event, timestamp in stamps.items():
@@ -145,17 +149,12 @@ class Data(object):
                                           & (self.tracedata['Time(s)'] <= sig_time[1]), 'Time(s)'])
 
                 holder = (self.tracedata.iloc[sig.index])
-                holder['tastant'] = event
+                holder['events'] = event
+                holder['colors'] = tastant_colors_dict[event]
                 taste_signals = pd.concat([taste_signals, holder])
-
-                pd.DataFrame(columns=taste_signals.columns)
-                hol = (self.tracedata.iloc[sig.index])
-                hol['col'] = tastant_colors_dict[event]
-                color_signals = pd.concat([color_signals, hol])
 
         taste_signals.sort_index(inplace=True)
         self.all_taste_trials = taste_signals
-        self.tr_colors = color_signals['col']
 
         if func.has_duplicates(self.all_taste_trials['Time(s)']):
             self.all_taste_trials.drop_duplicates(subset=['Time(s)'], inplace=True)
@@ -203,7 +202,7 @@ class Data(object):
         return temp
 
     def plot_stim(self):
-        plot.plot_stim(len(self.cells),
+        Plot.plot_stim(len(self.cells),
                        self.signals,
                        self.time,
                        self.timestamps,
@@ -212,7 +211,7 @@ class Data(object):
                        tastant_colors_dict)
 
     def plot_session(self):
-        plot.plot_session(len(self.cells),
+        Plot.plot_session(len(self.cells),
                           self.signals,
                           self.time,
                           self.session,
