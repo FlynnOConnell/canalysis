@@ -8,45 +8,55 @@ Module: Code execution.
 import pandas as pd
 import logging
 
-import data as du
-from models.models import SupportVectorMachine
+from models.SVM import SupportVectorMachine
 
-# %% Initialize data
+from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import GridSearchCV
+
+from core.data import CalciumData
 
 pd.set_option('chained_assignment', None)
 logger = logging.getLogger(__name__)
 logger.info(f'{__name__} called.')
 
+# %% Initialize data
+
 datadir = '/Users/flynnoconnell/Documents/Work/Data'
 animal_id = 'PGT13'
 date = '121021'
-target_date = '121021'
+target_date = '011222'
 
 tr_cells = ['C00', 'C01', 'C02', 'C03', 'C04', 'C05', 'C06', 'C09', 'C10']
 
-data = du.Data(animal_id, date, datadir, tr_cells)
-X = data.tr_data.to_numpy()
-y = data.taste_events
-x = data.all_taste_trials
+train_data = CalciumData(animal_id, date, datadir, tr_cells)
+val_data = CalciumData(animal_id, target_date, datadir, tr_cells)
+
+cv = StratifiedShuffleSplit()
+svm = SupportVectorMachine(train_data, val_data)
+clf = svm._get_classifier()
+
+svm.get_learning_curves(clf, cv)
+
+svm.fit(mat=False)
+
+svm.validate()
+
+results = svm.summary
+eval_scores = svm.summary['eval_scores']
+train_scores = svm.summary['train_scores']
 
 
-def train_SVM():
-    my_svm = SupportVectorMachine(data)
-
-
-#     print ("Accuracy:", accuracy)
-#     # print(y_pred)
-#     # Reduce dimension to two using PCA and plot the results
-#     Plot().plot_in_2d(X_test,
-#                       y_pred,
-#                       caption='Norm entire dataset pre-training',
-#                       title="Support Vector Machine", accuracy=accuracy)
-#     return y_test, y_pred
-
-# y_test, y_pred = train_SVM()
-
+#not sure where to put this yet
+def bigloop():
+    from models.SVM import run_all_params
+    x = svm.X
+    y = svm.y
+    
+    run_all_params(x, y, small=False)
 
 # %%
 
 if __name__ == "__main__":
-    train_SVM()
+    pass
+    # bigloop()

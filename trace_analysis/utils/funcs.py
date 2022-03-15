@@ -342,59 +342,6 @@ def get_handles(color_dict: dict,
     return proxy, label
 
 
-# def cell_gui(df: pd.DataFrame) -> list:
-#     """
-#     Popup GUI used for selecting cells when plotting individual cell signals.
-
-#     Args:
-#         df (pd.DataFrame): Dictionary of event:color k/v pairs.
-
-#     Returns:
-#         plotcells (list): List of cells to plot.
-
-#     """
-
-#     tmp, plotcells = [], []
-#     cells = df.columns
-#     for i, cell in enumerate(cells):
-#         tmp.append(cell.replace(' ', ''))
-#     tmp.remove('Time(s)')
-#     plotcells = []
-#     while True:
-#         myplotcells = easygui.multchoicebox(
-#             msg='Please select cell(s) to plot, or cancel to continue.',
-#             choices=tmp)
-#         if myplotcells is None:  # If no cells chosen
-#             ynbox = easygui.ynbox(
-#                 msg=('No cells chosen, continue without'
-#                      'plotting individual cells?'),
-#                 choices=(
-#                     ['Yes', 'No, take me back']))
-#             if ynbox is False:
-#                 continue
-#             if ynbox is True:
-#                 break
-#         else:
-#             plotcells.append(myplotcells)
-#             break
-
-#     return plotcells
-
-
 # Main wrapper for testing
 if __name__ == "__main__":
     pass
-    # animal_id = 'PGT13'
-    # date = '012222'
-    # target_date = '121021'
-    # session = animal_id + '_' + date
-    # data_dir = '/Users/flynnoconnell/Documents/Work/Data'
-    #
-    # os.chdir(data_dir)
-    # datapath = Path(data_dir) / animal_id / date
-    #
-    # find_trace = 'traces'
-    # files = (glob(os.path.join(datapath, find_trace)))
-    #
-    # if not files:
-    #     raise FileNotFoundError(f'No Files in this containing: {find_trace}')

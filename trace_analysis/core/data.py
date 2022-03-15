@@ -13,8 +13,8 @@ import pandas as pd
 import numpy as np
 import logging
 
+from core.draw_plots import Plot
 from utils import funcs as func
-from trace_analysis.utils.draw_plots import Plot
 from utils import excepts as e
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ tastant_colors_dict = {k: colors_dict[k] for k in list(colors_dict)[:6]}
 
 
 @dataclass
-class Data(object):
+class CalciumData(object):
 
     def __init__(self,
                  animal: str,
