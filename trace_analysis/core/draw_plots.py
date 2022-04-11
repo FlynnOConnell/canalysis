@@ -7,7 +7,7 @@ Module (core): Functions for drawing graphs.
 
 """
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, Iterable
 
 import pandas as pd
 import numpy as np
@@ -21,17 +21,39 @@ import webbrowser
 
 from utils import funcs as func
 
+plt.rcParams["font.weight"] = "bold"
+plt.rcParams["axes.labelweight"] = "bold"
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
 
-
 class Plot(object):
-    def __init__(self, data, **kwargs):
+    def __init__(self, 
+                 data, 
+                 y: Optional[Iterable]=None, 
+                 events: Optional[Iterable]=None,
+                 legend: Optional[dict]={},
+                 colors: Optional[Iterable]=None,
+                 **kwargs
+                 ):
+        
         self.cmap = plt.get_cmap('viridis')
         self.data = data
-
+        self.y = y
+        
+        self.legend = legend
+        self.colors = colors
+        self.events = events
+        
     # Plot the dataset X and the corresponding labels y in 2D using PCA.
-    def plot_in_2d(self, X, y=None, caption: str = '', title=None, accuracy=None, legend_labels=None):
+    def plot_in_2d(self, 
+                   X,
+                   y=None, 
+                   caption: str = '', 
+                   title=None,
+                   accuracy=None,
+                   legend_labels=None):
+        
         x1 = X[:, 0]
         x2 = X[:, 1]
         class_distr = []
@@ -70,170 +92,6 @@ class Plot(object):
         plt.ylabel('Principal Component 2')
 
         plt.show()
-
-    # Plot the dataset X and the corresponding labels y in 3D using PCA.
-    def plot_in_3d(self, X, y=None):
-        x1 = X[:, 0]
-        x2 = X[:, 1]
-        x3 = X[:, 2]
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(x1, x2, x3, c=y)
-        plt.show()
-
-    def plot_learning_curve(
-        estimator,
-        title,
-        X,
-        y,
-        axes=None,
-        ylim=None,
-        cv=None,
-        n_jobs=None,
-        train_sizes=np.linspace(0.1, 1.0, 5),
-        ):
-        """
-        Generate 3 plots: the test and training learning curve, the training
-        samples vs fit times curve, the fit times vs score curve.
-
-        Parameters
-        ----------
-        estimator : estimator instance
-            An estimator instance implementing `fit` and `predict` methods which
-            will be cloned for each validation.
-
-        title : str
-            Title for the chart.
-
-        X : array-like of shape (n_samples, n_features)
-            Training vector, where ``n_samples`` is the number of samples and
-            ``n_features`` is the number of features.
-
-        y : array-like of shape (n_samples) or (n_samples, n_features)
-            Target relative to ``X`` for classification or regression;
-            None for unsupervised learning.
-
-        axes : array-like of shape (3,), default=None
-            Axes to use for plotting the curves.
-
-        ylim : tuple of shape (2,), default=None
-            Defines minimum and maximum y-values plotted, e.g. (ymin, ymax).
-
-        cv : int, cross-validation generator or an iterable, default=None
-            Determines the cross-validation splitting strategy.
-            Possible inputs for cv are:
-
-              - None, to use the default 5-fold cross-validation,
-              - integer, to specify the number of folds.
-              - :term:`CV splitter`,
-              - An iterable yielding (train, test) splits as arrays of indices.
-
-            For integer/None inputs, if ``y`` is binary or multiclass,
-            :class:`StratifiedKFold` used. If the estimator is not a classifier
-            or if ``y`` is neither binary nor multiclass, :class:`KFold` is used.
-
-            Refer :ref:`User Guide <cross_validation>` for the various
-            cross-validators that can be used here.
-
-        n_jobs : int or None, default=None
-            Number of jobs to run in parallel.
-            ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-            ``-1`` means using all processors. See :term:`Glossary <n_jobs>`
-            for more details.
-
-        train_sizes : array-like of shape (n_ticks,)
-            Relative or absolute numbers of training examples that will be used to
-            generate the learning curve. If the ``dtype`` is float, it is regarded
-            as a fraction of the maximum size of the training set (that is
-            determined by the selected validation method), i.e. it has to be within
-            (0, 1]. Otherwise it is interpreted as absolute sizes of the training
-            sets. Note that for classification the number of samples usually have
-            to be big enough to contain at least one sample from each class.
-            (default: np.linspace(0.1, 1.0, 5))
-        """
-        from sklearn.model_selection import learning_curve
-
-        if axes is None:
-            _, axes = plt.subplots(1, 3, figsize=(20, 5))
-
-        axes[0].set_title(title)
-        if ylim is not None:
-            axes[0].set_ylim(*ylim)
-        axes[0].set_xlabel("Training examples")
-        axes[0].set_ylabel("Score")
-
-        train_sizes, train_scores, test_scores, fit_times, _ = learning_curve(
-            estimator,
-            X,
-            y,
-            cv=cv,
-            n_jobs=n_jobs,
-            train_sizes=train_sizes,
-            return_times=True,
-        )
-        train_scores_mean = np.mean(train_scores, axis=1)
-        train_scores_std = np.std(train_scores, axis=1)
-        test_scores_mean = np.mean(test_scores, axis=1)
-        test_scores_std = np.std(test_scores, axis=1)
-        fit_times_mean = np.mean(fit_times, axis=1)
-        fit_times_std = np.std(fit_times, axis=1)
-
-        # Plot learning curve
-        axes[0].grid()
-        axes[0].fill_between(
-            train_sizes,
-            train_scores_mean - train_scores_std,
-            train_scores_mean + train_scores_std,
-            alpha=0.1,
-            color="r",
-        )
-        axes[0].fill_between(
-            train_sizes,
-            test_scores_mean - test_scores_std,
-            test_scores_mean + test_scores_std,
-            alpha=0.1,
-            color="g",
-        )
-        axes[0].plot(
-            train_sizes, train_scores_mean, "o-", color="r", label="Training score"
-        )
-        axes[0].plot(
-            train_sizes, test_scores_mean, "o-", color="g", label="Cross-validation score"
-        )
-        axes[0].legend(loc="best")
-
-        # Plot n_samples vs fit_times
-        axes[1].grid()
-        axes[1].plot(train_sizes, fit_times_mean, "o-")
-        axes[1].fill_between(
-            train_sizes,
-            fit_times_mean - fit_times_std,
-            fit_times_mean + fit_times_std,
-            alpha=0.1,
-        )
-        axes[1].set_xlabel("Training examples")
-        axes[1].set_ylabel("fit_times")
-        axes[1].set_title("Scalability of the model")
-
-        # Plot fit_time vs score
-        fit_time_argsort = fit_times_mean.argsort()
-        fit_time_sorted = fit_times_mean[fit_time_argsort]
-        test_scores_mean_sorted = test_scores_mean[fit_time_argsort]
-        test_scores_std_sorted = test_scores_std[fit_time_argsort]
-        axes[2].grid()
-        axes[2].plot(fit_time_sorted, test_scores_mean_sorted, "o-")
-        axes[2].fill_between(
-            fit_time_sorted,
-            test_scores_mean_sorted - test_scores_std_sorted,
-            test_scores_mean_sorted + test_scores_std_sorted,
-            alpha=0.1,
-        )
-        axes[2].set_xlabel("fit_times")
-        axes[2].set_ylabel("Score")
-        axes[2].set_title("Performance of the model")
-
-        return plt
-
 
     def confusion_matrix(y_test,
                          y_fit,
@@ -334,7 +192,7 @@ class Plot(object):
                        c=df_colors, s=size,
                        marker=marker, alpha=alpha)
 
-        ax.set_title('{}'.format(title) + ' ' + plottype)
+        ax.set_title('{}'.format(title) + ' ' + plottype, fontweight = 'bold')
 
         proxy, label = func.get_handles(color_dict)
         ax.legend(handles=proxy,
@@ -361,8 +219,96 @@ class Plot(object):
                         bbox_inches='tight', dpi=300)
 
         return None
+    
+    def PCA(self,
+            noscale: bool=True,
+            title: str = '',
+            caption: str = '',
+            ss: bool = True,
+            mm: bool = True,
+            rs: bool = True,
+            numcomp: Optional[int] = 3
+            ):
+        
+        from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler
+        from sklearn.decomposition import PCA
+        
+        data = self.data
+        pca = PCA(n_components=numcomp)
+        
+        if noscale: 
+            
+            ns_data = pca.fit_transform(data)
+            variance = np.round(
+                pca.explained_variance_ratio_ * 100, decimals=1)
+            labels = [
+                'PC' + str(x) for x in range(1, len(variance) + 1)]
+            df = pd.DataFrame(ns_data, columns=labels)
+            
+            Plot.scatter(
+                df,
+                self.legend,
+                df_colors=self.colors,
+                title='No Scale, ' + title,
+                caption=caption)
+        
+        if ss: 
+            
+            ss_data = StandardScaler().fit_transform(data)
+            ss_pca = pca.fit_transform(ss_data)
+            variance = np.round(
+                pca.explained_variance_ratio_ * 100, decimals=1)
+            labels = [
+                'PC' + str(x) for x in range(1, len(variance) + 1)]
+            ss_df = pd.DataFrame(ss_pca, columns=labels)
+            
+            Plot.scatter(
+                ss_df,
+                self.legend,
+                df_colors=self.colors,
+                title='Scaled (standard), '+title,
+                caption=caption)
+
+        if rs: 
+            
+            rs_data = RobustScaler().fit_transform(data)
+            rs_pca = pca.fit_transform(rs_data)
+            
+            variance = np.round(
+                pca.explained_variance_ratio_ * 100, decimals=1)
+            labels = [
+                'PC' + str(x) for x in range(1, len(variance) + 1)]
+            rs_df = pd.DataFrame(rs_pca, columns=labels)
+            
+            Plot.scatter(
+                rs_df,
+                self.legend,
+                df_colors=self.colors,
+                title='Scaled (robust), '+title,
+                caption=caption)
+            
+        if mm: 
+            
+            mm_data = MinMaxScaler().fit_transform(data)
+            mm_pca = pca.fit_transform(mm_data)
+            
+            variance = np.round(
+                pca.explained_variance_ratio_ * 100, decimals=1)
+            labels = [
+                'PC' + str(x) for x in range(1, len(variance) + 1)]
+            mm_df = pd.DataFrame(mm_pca, columns=labels)
+            
+            Plot.scatter(
+                mm_df,
+                self.legend,
+                df_colors=self.colors,
+                title='Scaled (minmax), '+title,
+                caption=caption)
+        
+        return None
 
     def plot_skree(var: np.ndarray) -> None:
+        
         lab = np.arange(len(var)) + 1
         plt.plot(lab, var, 'o-', linewidth=2, color='blue')
         plt.title('Scree Plot')
@@ -446,20 +392,20 @@ class Plot(object):
 
         return None
 
-    def plot_session(nplot: int,
-                     tracedata: pd.DataFrame,
+    def plot_session(cells,
+                     signals: pd.DataFrame,
                      time: pd.Series,
                      session: str,
                      numlicks: int,
                      timestamps: dict = None,
                      lickshade: int = 1,
-
                      save_dir: str = None) -> None:
+        
         # create a series of plots with a shared x-axis
-        fig, axs = plt.subplots(nplot, 1, sharex=True)
-        for i in range(nplot):
+        fig, axs = plt.subplots(len(cells), 1, sharex=True)
+        for i in range(len(cells)):
             # get calcium trace (y axis data)
-            signal = list(tracedata.iloc[:, i + 1])
+            signal = list(signals.iloc[:, i])
 
             # plot signal
             axs[i].plot(time, signal, 'k', linewidth=.8)
@@ -472,7 +418,7 @@ class Plot(object):
             axs[i].set_yticks([])  # no Y ticks
 
             # add the cell name as a label for this graph's y-axis
-            axs[i].set_ylabel(tracedata.columns[i + 1],
+            axs[i].set_ylabel(signals.columns[i],
                               rotation='horizontal', labelpad=15, y=.1)
 
             # go through each lick and shade it in
@@ -564,22 +510,28 @@ class Plot(object):
                   trial_times,
                   session,
                   colors,
+                  my_stim: list = None,
                   save_dir: str = None
                   ) -> None:
+        
+        if my_stim:
+            for stim in my_stim:
+                trial_times = { stim: trial_times[stim] for stim in my_stim }
+            
         for stim, times in trial_times.items():
             trialno = 0
             for trial in times:
                 trialno += 1
 
                 # get only the data within the analysis window
-                data_ind = np.where((time > trial - 4) & (time < trial + 5))[0]
+                data_ind = np.where((time > trial - 1) & (time < trial + 3))[0]
                 # index to analysis data
                 this_time = time[data_ind]
 
                 fig, ax = plt.subplots(nplot, 1, sharex=True)
                 for i in range(nplot):
                     # Get calcium trace for this analysis window
-                    signal = list(tracedata.iloc[data_ind, i + 1])
+                    signal = list(tracedata.iloc[data_ind, i])
                     # plot signal
                     ax[i].plot(this_time, signal, 'k', linewidth=1)
                     ax[i].get_xaxis().set_visible(False)
@@ -587,7 +539,7 @@ class Plot(object):
                     ax[i].spines["bottom"].set_visible(False)
                     ax[i].spines["right"].set_visible(False)
                     ax[i].set_yticks([])
-                    ax[i].set_ylabel(tracedata.columns[i + 1],
+                    ax[i].set_ylabel(tracedata.columns[i],
                                      rotation='horizontal',
                                      labelpad=15, y=.1)
                     # Add shading.
@@ -595,7 +547,7 @@ class Plot(object):
                         done = 0
                         timey = timestamps[stimmy]
                         for ts in timey:
-                            if trial - 4 < ts < trial + 5:
+                            if trial - 1 < ts < trial + 3:
                                 if done == 0:
                                     label = stimmy
                                     done = 1

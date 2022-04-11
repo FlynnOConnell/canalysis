@@ -37,11 +37,12 @@ tastant_colors_dict = {k: colors_dict[k] for k in list(colors_dict)[:6]}
 
 @dataclass
 class CalciumData(object):
-
+    
     def __init__(self,
                  animal: str,
                  date: str,
                  data_dir: str,
+                 pick: Optional[int] = 0,
                  tr_cells: Optional[Iterable] = ''):
 
         # Session information
@@ -54,15 +55,16 @@ class CalciumData(object):
         self.tracedata: Type[pd.DataFrame]
         self.eventdata: Type[pd.DataFrame]
 
-        self._get_data()
+        self._get_data(pick)
         self._authenticate_input_data(self)
-
-        # Trace attributes
+        
+        # Core attributes
         self.signals = self._set_trace_signals()
         self.cells = np.array(self.tracedata.columns[1:])
         self.time = self.tracedata['Time(s)']
         self.binsize = self.time[2] - self.time[1]
 
+        self.datasets = {'main': self.tracedata}
         # Event attributes
         self.timestamps = {}
         self.trial_times = {}
@@ -70,24 +72,24 @@ class CalciumData(object):
         self.numlicks: int | None = None
         self._set_event_attrs()
 
-        # Other
         self.tastant_colors_dict = tastant_colors_dict
 
-        ## (Optional) Taste-specific data
+        ## Taste attributes
+        self.taste_data: Type[pd.NDframeT] = None
+        self.fill_taste_trials()
+        
+        self.taste_time = self.taste_data['Time(s)']
+        self.taste_colors = self.taste_data['colors']
+        self.taste_events = self.taste_data['events']
+        self.taste_signals = self.taste_data.drop(columns=['Time(s)', 'colors', 'events'])
+        self.tastants = tastant_colors_dict.keys()
+        
+        
         if tr_cells:
-            # Getting weird type errors between pd.DataFrame and pd.NDframeT
-            # pd.DataFrame is a subclass of NDframeT, so both should be valid, likely just
-            # an issue on pandas side. Will raise an issue request.
-
-            self.all_taste_trials: Type[pd.NDframeT]  # All data for taste-trials
-            self._get_taste_trials()
-
-            self.taste_events = self.all_taste_trials.events  # Array of which event was presented 
-            self.taste_colors = self.all_taste_trials.colors  # Array of which color of tastant was presented
-            self.tastants = tastant_colors_dict.keys()
-            self.tr_data = self.all_taste_trials.filter(items=tr_cells)  # Data for taste-responsive cells only
+            self.tr_data = self.all_taste_trials.filter(items=tr_cells)
             self.tr_cells = self.tr_data.columns
-
+        
+        
         logging.info('Data instantiated.')
 
     @staticmethod
@@ -100,14 +102,15 @@ class CalciumData(object):
         if not any(x in self.tracedata.columns for x in ['C0', 'C00']):
             raise AttributeError("No cells found in DataFrame")
 
-    def _get_data(self):
 
+    def _get_data(self, pick):
+       
         traces, events = func.get_dir(
-            self.data_dir, self.animal, self.date)
-
+            self.data_dir, self.animal, self.date, pick)
+        
         self.tracedata = self._clean(traces)
         self.eventdata = events
-
+            
     @staticmethod
     def _clean(_df) -> pd.DataFrame:
 
@@ -130,36 +133,61 @@ class CalciumData(object):
         _df.columns = [column.replace(' ', '') for column in _df.columns]
         return _df
 
-    def _get_taste_trials(self) -> None:
-
+    def fill_taste_trials(self,
+                         traces=None,
+                         nontaste: bool = False,
+                         store: str = ''
+                         ) -> None:
+        
+        if traces is None:
+            
+            data = self.tracedata
+            data_input = 0
+            
+        else: 
+            
+            assert isinstance(traces, pd.DataFrame)
+            data = traces
+            data_input = 1
+            
+        time = data['Time(s)']
+            
         # Get timestamps of taste - trials only
         stamps = self.timestamps.copy()
         stamps.pop('Lick')
         stamps.pop('Rinse')
-
-        taste_signals = pd.DataFrame(columns=self.signals.columns)
+        taste_data = pd.DataFrame(columns=self.signals.columns)
 
         # Populate df with taste trials only
         for event, timestamp in stamps.items():
             taste_interval = func.interval(timestamp)
             for lst in taste_interval:
-                sig_time = func.get_matched_time(self.time, *lst)
+                sig_time = func.get_matched_time(time, *lst)
 
-                sig = (self.tracedata.loc[(self.tracedata['Time(s)'] >= sig_time[0])
-                                          & (self.tracedata['Time(s)'] <= sig_time[1]), 'Time(s)'])
+                sig = (data.loc[(data['Time(s)'] >= sig_time[0])
+                                          & (data['Time(s)'] <= sig_time[1]), 'Time(s)'])
 
-                holder = (self.tracedata.iloc[sig.index])
+                holder = (data.iloc[sig.index])
                 holder['events'] = event
                 holder['colors'] = tastant_colors_dict[event]
-                taste_signals = pd.concat([taste_signals, holder])
+                taste_data = pd.concat([taste_data, holder])
 
-        taste_signals.sort_index(inplace=True)
-        self.all_taste_trials = taste_signals
-
-        if func.has_duplicates(self.all_taste_trials['Time(s)']):
-            self.all_taste_trials.drop_duplicates(subset=['Time(s)'], inplace=True)
-            if not self.all_taste_trials['Time(s)'].is_unique:
+        taste_data.sort_index(inplace=True)
+        self.taste_data = taste_data
+        
+        if store:
+            self.datasets[store] = taste_data
+            
+        if func.has_duplicates(taste_data['Time(s)']):
+            taste_data.drop_duplicates(subset=['Time(s)'], inplace=True)
+            if not taste_data['Time(s)'].is_unique:
                 e.DataFrameError('Duplicate values found and not caught.')
+                
+        if data_input ==1: 
+            logging.info('Taste signals set for input data.')
+        else: 
+            logging.info('Taste signals set for default data.')
+        
 
     def _set_event_attrs(self):
         allstim = []
@@ -193,6 +221,7 @@ class CalciumData(object):
                     if last_drytime > last_stimtime:
                         times.append(ts)
                 self.trial_times[stim] = times
+               
 
     def _set_trace_signals(self) -> pd.DataFrame:
 
@@ -201,19 +230,22 @@ class CalciumData(object):
         self.signals = temp
         return temp
 
-    def plot_stim(self):
+    def plot_stim(self, my_stim=None):
         Plot.plot_stim(len(self.cells),
                        self.signals,
                        self.time,
                        self.timestamps,
                        self.trial_times,
                        self.session,
-                       tastant_colors_dict)
+                       colors_dict,
+                       my_stim=None
+                       )
 
     def plot_session(self):
-        Plot.plot_session(len(self.cells),
+        Plot.plot_session(self.cells,
                           self.signals,
                           self.time,
                           self.session,
                           self.numlicks,
-                          self.eventdata.timestamps)
+                          self.timestamps
+                          )

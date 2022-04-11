@@ -437,8 +437,4 @@ class Scoring(object):
 
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    from sklearn.datasets import load_digits
-    from sklearn.model_selection import ShuffleSplit
-
-    fig, axes = plt.subplots(3, 2, figsize=(10, 15))
+    pass

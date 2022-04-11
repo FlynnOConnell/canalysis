@@ -9,7 +9,6 @@ from typing import Tuple, Iterable, Optional, Sized
 import os
 
 import matplotlib
-# import easygui
 import pandas as pd
 import numpy as np
 import math
@@ -165,7 +164,8 @@ def interval(lst: Iterable[any]) -> Iterable[list]:
 
 def get_dir(data_dir: str,
             _id: str,
-            date: str
+            date: str,
+            pick: int
             ):
     """
     
@@ -194,20 +194,21 @@ def get_dir(data_dir: str,
 
     os.chdir(data_dir)
     datapath = Path(data_dir) / _id / date
-
-    files_trace = (glob(os.path.join(datapath, '*traces*')))
-    files_events = (glob(os.path.join(datapath, '*processed*')))
-
-    if not files_trace:
-        if not files_events:
-            raise FileNotFoundError('No trace or event files in this directory')
-        raise FileNotFoundError('No trace files in this directory')
-    if not files_events:
-        raise FileNotFoundError('No event files in this directory')
-
-    tracepath = Path(glob(os.path.join(datapath, '*traces*'))[0])
+    
+    files = (glob(os.path.join(datapath, '*traces*')))
+    logging.info('{} trace files found:'.format(len(files)))
+    
+    if len(files) > 1:
+        if pick == 0: 
+            tracepath = Path(files[0])
+            logging.info('Taking trace file: {}'.format(tracepath.name))
+        else: 
+            tracepath = Path(files[pick])
+            logging.info('Taking trace file: {}'.format(tracepath.name))
+    elif len(files) == 1: 
+        tracepath = Path(files[0])
+        
     eventpath = Path(glob(os.path.join(datapath, '*processed*'))[0])
-
     tracedata = pd.read_csv(tracepath, low_memory=False)
     eventdata = pd.read_csv(eventpath, low_memory=False)
 
