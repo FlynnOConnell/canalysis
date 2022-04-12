@@ -139,7 +139,8 @@ def get_unique(arr: Iterable[any]) -> list:
     return is_unique
 
 
-def interval(lst: Iterable[any]) -> Iterable[list]:
+def interval(lst: Iterable[any],
+             gap: int = 1) -> Iterable[list]:
     """
     Create intervals where there elements are separated by less than 1.
     Used for bout creation.
@@ -150,15 +151,19 @@ def interval(lst: Iterable[any]) -> Iterable[list]:
          interv (list): New list with created interval.
     """
     interv, tmp = [], []
+    
     for v in lst:
         if not tmp:
             tmp.append(v)
         else:
-            if abs(tmp[-1] - v) < 1:
+            if abs(tmp[-1] - v) < gap:
                 tmp.append(v)
             else:
                 interv.append([tmp[0], tmp[-1]])
                 tmp = [v]
+                
+    # res = [[ele for ele in sub if ele[0] == ele[1]] for sub in interv]
+                
     return interv
 
 
@@ -289,7 +294,7 @@ def get_peak_window(time: list | pd.Series, peak_time) -> list:
 
 
 def get_matched_time(time: Iterable[any],
-                     *argv: list,
+                     match: list,
                      return_index: Optional[bool] = False) -> list:
     """
     Finds the closest number in tracedata time to the input. Can be a single value, or list.
@@ -302,11 +307,12 @@ def get_matched_time(time: Iterable[any],
 
     matched_index = []
     matched_time = []
-    for arg in argv:
+    for t in match:
         temp = []
         for valor in time:
-            temp.append(abs(arg - valor))
+            temp.append(abs(t - valor))
         matched_index.append(temp.index(min(temp)))
+        
     for idx in matched_index:
         this_time = time[idx]
         matched_time.append(this_time)

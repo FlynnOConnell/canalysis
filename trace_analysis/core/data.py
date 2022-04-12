@@ -54,6 +54,7 @@ class CalciumData(object):
         # Core
         self.tracedata: Type[pd.DataFrame]
         self.eventdata: Type[pd.DataFrame]
+        self.new_eventdata: Type[pd.DataFrame]
 
         self._get_data(pick)
         self._authenticate_input_data(self)
@@ -65,13 +66,20 @@ class CalciumData(object):
         self.binsize = self.time[2] - self.time[1]
 
         self.datasets = {'main': self.tracedata}
+        
         # Event attributes
         self.timestamps = {}
         self.trial_times = {}
+        self.allstim = []
         self.drylicks = []
+        self.licktime: Iterable = None
         self.numlicks: int | None = None
+        
         self._set_event_attrs()
-
+        self._alldata()
+        
+        self.bouttimes = []
+        
         self.tastant_colors_dict = tastant_colors_dict
 
         ## Taste attributes
@@ -162,7 +170,7 @@ class CalciumData(object):
         for event, timestamp in stamps.items():
             taste_interval = func.interval(timestamp)
             for lst in taste_interval:
-                sig_time = func.get_matched_time(time, *lst)
+                sig_time = func.get_matched_time(time, lst)
 
                 sig = (data.loc[(data['Time(s)'] >= sig_time[0])
                                           & (data['Time(s)'] <= sig_time[1]), 'Time(s)'])
@@ -190,14 +198,14 @@ class CalciumData(object):
         
 
     def _set_event_attrs(self):
-        allstim = []
+        
         for stimulus in self.eventdata.columns[1:]:
             self.timestamps[stimulus] = list(
                 self.eventdata['Time(s)'].iloc[np.where(
                     self.eventdata[stimulus] == 1)[0]])
             if stimulus != 'Lick':
-                allstim.extend(self.timestamps[stimulus])
-        self.drylicks = [x for x in self.timestamps['Lick'] if x not in allstim]
+                self.allstim.extend(self.timestamps[stimulus])
+        drylicks = [x for x in self.timestamps['Lick'] if x not in self.allstim]
         self.numlicks = len(self.timestamps['Lick'])
 
         for stim, tslist in self.timestamps.items():
@@ -216,11 +224,12 @@ class CalciumData(object):
                 for ts in tslist:
                     last_stimtime = tslist[np.where(
                         tslist == ts)[0] - 1]
-                    last_drytime = self.drylicks[np.where(
-                        self.drylicks < ts)[0][-1]]
+                    last_drytime = drylicks[np.where(
+                        drylicks < ts)[0][-1]]
                     if last_drytime > last_stimtime:
                         times.append(ts)
                 self.trial_times[stim] = times
+        self.drylicks = func.get_matched_time(self.time, drylicks)
                
 
     def _set_trace_signals(self) -> pd.DataFrame:
@@ -229,6 +238,56 @@ class CalciumData(object):
         temp.pop('Time(s)')
         self.signals = temp
         return temp
+    
+    def _alldata(self) -> pd.DataFrame:
+        
+        eventdata = self.eventdata.copy()
+        tracedata = self.tracedata.copy()
+        
+        eventdata = eventdata[:].iloc[np.where(eventdata['Lick'] == 1)]
+        matched_eventtime = func.get_matched_time(self.time, eventdata['Time(s)'])
+        
+        
+        eventdata.pop('Time(s)')
+        eventdata.insert(0, 'Time(s)', matched_eventtime)
+        # eventdata['Time(s)'] = eventdata['Time(s)'].round(3).astype(float)
+        eventdata.set_index('Time(s)', inplace=True)
+        
+        # tracedata['Time(s)'] = tracedata['Time(s)'].round(3).astype(float)
+        tracedata.set_index('Time(s)', inplace=True)
+        
+        self.licktime = eventdata.index[np.where(eventdata['Lick'] == 1)]
+                
+        # Lick Bout       
+        bout_intervs = list(func.interval(self.licktime))
+        
+        boutstart, boutend = [], []
+        for x in bout_intervs:
+            boutstart.append(x[0])
+            boutend.append(x[1])
+        
+        bouts = list(zip(boutstart, boutend))
+        
+        bouttimes = []
+        for index, bout in enumerate(bouts):
+            start = bout[0]
+            end = bout[1]
+            this_bout = self.time[(self.time>=start)&(self.time<=end)]
+            
+            bouttimes.extend(this_bout)
+            
+        bouts = pd.Series(index=bouttimes, name='bouts', dtype=int).fillna(1)
+        drylicks = pd.Series(index=self.drylicks, name='drylicks', dtype=int).fillna(1)
+
+        self.tracecheck = tracedata
+        self.eventcheck = eventdata
+        
+        # self.alldata = pd.concat([tracedata, eventdata, drylicks, bouts ], axis=1).fillna(0)
+        
+        return None
+                                      
+# bouts, drylicks
+
 
     def plot_stim(self, my_stim=None):
         Plot.plot_stim(len(self.cells),

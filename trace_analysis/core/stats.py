@@ -106,7 +106,6 @@ def get_bouts(session, licktime: Iterable, _data) -> pd.DataFrame:
     lickstats = pd.DataFrame(columns=[
         'File', 'Cell', 'Type'])
     lickstats_list = []
-    cell_id = np.array(_data.tracedata.cells)
 
     for index, cell in enumerate(_data.tracedata.columns):
         if (bout_dff[index]) > ((sponts[index]) + ((stdevs[index]) * 2.58)):
