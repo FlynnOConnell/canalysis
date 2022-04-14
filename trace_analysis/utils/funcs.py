@@ -5,11 +5,10 @@
 Module(util): General getter/setter/checker functions.
 """
 from __future__ import annotations
-from typing import Tuple, Iterable, Optional, Sized
+from typing import Tuple, Iterable, Optional, Sized, Any, Mapping
 import os
 
 import matplotlib
-# import easygui
 import pandas as pd
 import numpy as np
 import math
@@ -18,11 +17,14 @@ from pathlib import Path
 from glob import glob
 import gc
 import logging
-
+from scipy.ndimage.filters import gaussian_filter
+from matplotlib import pyplot as plt
 from utils import excepts as e
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
+
+
 
 
 @contextlib.contextmanager
@@ -151,6 +153,7 @@ def interval(lst: Iterable[any]) -> Iterable[list]:
          interv (list): New list with created interval.
     """
     interv, tmp = [], []
+
     for v in lst:
         if not tmp:
             tmp.append(v)
@@ -165,49 +168,47 @@ def interval(lst: Iterable[any]) -> Iterable[list]:
 
 def get_dir(data_dir: str,
             _id: str,
-            date: str
+            date: str,
+            pick: int
             ):
     """
-    
     From Home directory, set path to data files with pathlib object variable.
-    
-    Directory structure: 
-        -| Animal 
+    Directory structure:
+        -| Animal
         --| Date
         ---| Results
         -----| Graphs
         -----| Statistics
         ---| Data_traces*
         ---| Data_gpio_processed*
-
     Args:
         data_dir (str): Path to directory
         _id (str): Current animal ID
-        date (str): Current session date  
-        
+        date (str): Current session date
+        pick (int): Index of file to choose if multiple
     Returns:
         tracedata (pd.DataFrame): DataFrame of cell signals
         eventdata (pd.DataFrame): DataFrame of event times.
         session (str): Concatenated name of animalID_Date
-        
     """
-
     os.chdir(data_dir)
     datapath = Path(data_dir) / _id / date
+    files = (glob(os.path.join(datapath, '*traces*')))
+    if len(files) == 0:
+        raise FileNotFoundError(f'{_id}, {date} not found.')
+    logging.info('{} trace files found:'.format(len(files)))
 
-    files_trace = (glob(os.path.join(datapath, '*traces*')))
-    files_events = (glob(os.path.join(datapath, '*processed*')))
+    if len(files) > 1:
+        if pick == 0:
+            tracepath = Path(files[0])
+            logging.info('Taking trace file: {}'.format(tracepath.name))
+        else:
+            tracepath = Path(files[pick])
+            logging.info('Taking trace file: {}'.format(tracepath.name))
+    else:
+        tracepath = Path(files[0])
 
-    if not files_trace:
-        if not files_events:
-            raise FileNotFoundError('No trace or event files in this directory')
-        raise FileNotFoundError('No trace files in this directory')
-    if not files_events:
-        raise FileNotFoundError('No event files in this directory')
-
-    tracepath = Path(glob(os.path.join(datapath, '*traces*'))[0])
     eventpath = Path(glob(os.path.join(datapath, '*processed*'))[0])
-
     tracedata = pd.read_csv(tracepath, low_memory=False)
     eventdata = pd.read_csv(eventpath, low_memory=False)
 
@@ -241,16 +242,16 @@ def dup_check(signal: list | np.ndarray,
 
 
 def has_duplicates(to_check: Sized | Iterable[set]):
-    '''
+    """
       Check iterable for duplicates.
-      
+
       Args:
           to_check (Sized | Iterable[set]): Input iterable to check.
-      
+
       Returns:
           Bool: Truth value if duplicates are present.
-      
-      '''
+
+      """
     return len(to_check) != len(set(to_check))
 
 

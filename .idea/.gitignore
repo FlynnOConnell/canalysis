@@ -1,0 +1,19 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+**/desktop.ini
+desktop.ini
+
+\.DS_STORE
+build/
+dist/
+*egg-info*
+*__pycache__/
+*.py[cod]
+*eggs*
+*\.png
