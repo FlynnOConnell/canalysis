@@ -5,6 +5,7 @@
 
 Module: Classes for data processing.
 """
+
 from __future__ import annotations
 from typing import Type, Optional, Iterable
 from dataclasses import dataclass
@@ -50,6 +51,8 @@ class CalciumData(object):
         self.date = date
         self.session = animal + '_' + date
         self.data_dir = data_dir
+        
+        self.checks = {}
 
         # Core
         self.tracedata: Type[pd.DataFrame]
@@ -77,11 +80,17 @@ class CalciumData(object):
         
         self._set_event_attrs()
         self._alldata()
-        
-        self.bouttimes = []
-        
+                
         self.tastant_colors_dict = tastant_colors_dict
 
+        self.artsal_df = pd.DataFrame
+        self.drylick_df = pd.DataFrame
+        self.taste_df = pd.DataFrame
+        self.nonlick_df = pd.DataFrame
+        self.lick_df = pd.DataFrame
+        
+        self._get_event_df()
+        
         ## Taste attributes
         self.taste_data: Type[pd.NDframeT] = None
         self.fill_taste_trials()
@@ -91,12 +100,6 @@ class CalciumData(object):
         self.taste_events = self.taste_data['events']
         self.taste_signals = self.taste_data.drop(columns=['Time(s)', 'colors', 'events'])
         self.tastants = tastant_colors_dict.keys()
-        
-        
-        if tr_cells:
-            self.tr_data = self.all_taste_trials.filter(items=tr_cells)
-            self.tr_cells = self.tr_data.columns
-        
         
         logging.info('Data instantiated.')
 
@@ -109,7 +112,6 @@ class CalciumData(object):
             raise e.DataFrameError('Event data must be a dataframe.')
         if not any(x in self.tracedata.columns for x in ['C0', 'C00']):
             raise AttributeError("No cells found in DataFrame")
-
 
     def _get_data(self, pick):
        
@@ -140,6 +142,13 @@ class CalciumData(object):
         _df = _df.reset_index(drop=True)
         _df.columns = [column.replace(' ', '') for column in _df.columns]
         return _df
+
+    def how_many_trials(self) -> None:
+        
+        for stim, trials in self.trial_times.items():
+            logging.info(f'{stim} - {len(trials)}')
+        
+        return None
 
     def fill_taste_trials(self,
                          traces=None,
@@ -196,7 +205,6 @@ class CalciumData(object):
         else: 
             logging.info('Taste signals set for default data.')
         
-
     def _set_event_attrs(self):
         
         for stimulus in self.eventdata.columns[1:]:
@@ -231,7 +239,6 @@ class CalciumData(object):
                 self.trial_times[stim] = times
         self.drylicks = func.get_matched_time(self.time, drylicks)
                
-
     def _set_trace_signals(self) -> pd.DataFrame:
 
         temp = self.tracedata.copy()
@@ -277,19 +284,111 @@ class CalciumData(object):
             bouttimes.extend(this_bout)
             
         bouts = pd.Series(index=bouttimes, name='bouts', dtype=int).fillna(1)
-        drylicks = pd.Series(index=self.drylicks, name='drylicks', dtype=int).fillna(1)
+        self.drylicks = pd.Series(index=self.drylicks, name='drylicks', dtype=int).fillna(1)
 
-        self.tracecheck = tracedata
-        self.eventcheck = eventdata
-        
-        # self.alldata = pd.concat([tracedata, eventdata, drylicks, bouts ], axis=1).fillna(0)
+        _x = eventdata.index
+        _y = tracedata.index
+        _res = _x.isin(_y)
+        x_check = [_val for _val in _res if _val == 'False']
+        if x_check: 
+            raise e.MergeError('Time(s) does not perfectly match between events and traces.')
+                    
+        alldata = tracedata.merge(eventdata,
+                                  how='outer',
+                                  right_index=True,
+                                  left_index=True).fillna(0)
+        alldata = alldata.merge(bouts,
+                                how='outer',
+                                right_index=True,
+                                left_index=True).fillna(0)
+        self.alldata = alldata.merge(self.drylicks,
+                                how='outer',
+                                right_index=True,
+                                left_index=True).fillna(0)
         
         return None
-                                      
-# bouts, drylicks
 
+    
+    def _get_event_df(self):
+        
+        events = list(self.eventdata.columns[1:])
+        events.append('drylicks')
+        events.append('bouts')
+        
+        self.all_artsal_df = self.alldata.loc[
+            (self.alldata['Rinse'] == 1) &
+            (self.alldata['ArtSal'] == 1) ]
+        self.all_artsal_df['colors'] = 'dodgerblue'
+        
+        self.artsal_df = self.alldata.loc[
+            (self.alldata['ArtSal'] == 1) ]
+        self.artsal_df['colors'] = 'dodgerblue'
 
-    def plot_stim(self, my_stim=None):
+        self.rinse_df = self.alldata.loc[
+            (self.alldata['ArtSal'] == 1) ]
+        self.rinse_df['colors'] = 'lightsteelblue'
+ 
+        self.drylick_df = self.alldata.loc[
+            (self.alldata['drylicks'] == 1) ]
+        self.drylick_df['colors'] = 'lightgray'
+
+        self.nonlick_df = self.alldata.loc[
+            (self.alldata['Lick'] == 0) ]
+        self.nonlick_df['colors'] = 'black'
+        
+        self.taste_df = self.alldata.loc[
+            (self.alldata['MSG'] == 1 ) |
+            (self.alldata['NaCl'] == 1 ) | 
+            (self.alldata['Sucrose'] == 1 ) | 
+            (self.alldata['Citric'] == 1 ) | 
+            (self.alldata['Quinine'] == 1) 
+            ]
+        
+        self.lick_df = self.alldata.loc[
+            (self.alldata['Lick'] == 1) ]
+        self.lick_df['colors'] = 'red'
+
+        conditions = [
+            self.taste_df['MSG'] == 1,
+            self.taste_df['NaCl'] == 1,
+            self.taste_df['Sucrose'] == 1,
+            self.taste_df['Citric'] == 1,
+            self.taste_df['Quinine'] == 1 
+            ]
+
+        values = [
+            'darkorange',
+            'lime',
+            'magenta',
+            'yellow',
+            'red'
+            ]
+
+        self.taste_df['colors'] = np.select(conditions, values)
+        
+        self.all_artsal_df.drop(columns=events,
+            axis=1, inplace=True)
+        
+        self.artsal_df.drop(columns=events,
+            axis=1, inplace=True)
+
+        self.rinse_df.drop(columns=events,
+            axis=1, inplace=True)
+
+        self.nonlick_df.drop(columns=events,
+            axis=1, inplace=True)
+        
+        self.lick_df.drop(columns=events,
+            axis=1, inplace=True)
+
+        self.drylick_df.drop(columns=events,
+            axis=1, inplace=True)
+                
+        self.taste_df.drop(columns=events,
+            axis=1, inplace=True)
+
+    def plot_stim(self,
+                  my_stim=None):
         Plot.plot_stim(len(self.cells),
                        self.signals,
                        self.time,

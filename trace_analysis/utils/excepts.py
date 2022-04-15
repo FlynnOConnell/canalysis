@@ -60,4 +60,19 @@ class ParameterError(Exception):
             return '{0} '.format(self.message)
         else:
             return 'Only rbf or linear kernals allowed for this analysis.'
+        
+class MergeError(Exception):
+    def __init__(self, *args):
+        if args:
+            self.message = args[0]
+        else:
+            self.message = None
+
+    def __str__(self):
+        if self.message:
+            return '{0} '.format(self.message)
+        else:
+            return 'Cant merge these indices.'
+        
+        
 

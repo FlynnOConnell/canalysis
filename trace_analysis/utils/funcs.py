@@ -17,6 +17,8 @@ from pathlib import Path
 from glob import glob
 import gc
 import logging
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 from utils import excepts as e
 
@@ -321,11 +323,88 @@ def get_matched_time(time: Iterable[any],
         return matched_index
     else:
         return matched_time
+    
+def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
+    """
+    Create a plot of the covariance confidence ellipse of `x` and `y`
+            
+    Parameters
+    ----------
+    x, y : array_like, shape (n, )
+        Input data.
+    ax : matplotlib.axes.Axes
+        The axes object to draw the ellipse into.
+    n_std : float
+        The number of standard deviations to determine the ellipse's radiuses.
+    Returns
+    -------
+    matplotlib.patches.Ellipse
+    Other parameters
+    ----------------
+    kwargs : `~matplotlib.patches.Patch` properties
+    """
+    
+    from matplotlib.patches import Ellipse
+    import matplotlib.transforms as transforms
+
+    if x.size != y.size:
+        raise ValueError("x and y must be the same size")
+
+    cov = np.cov(x, y)
+    pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+    
+    # Using a special case to obtain the eigenvalues of this
+    # two-dimensionl dataset.
+    ell_radius_x = np.sqrt(1 + pearson)
+    ell_radius_y = np.sqrt(1 - pearson)
+    ellipse = Ellipse((0, 0),
+        width=ell_radius_x * 2,
+        height=ell_radius_y * 2,
+        facecolor=facecolor,
+        **kwargs)
+
+    # Calculating the stdandard deviation of x 
+    scale_x = np.sqrt(cov[0, 0]) * n_std
+    mean_x = np.mean(x)
+
+    # calculating the stdandard deviation of y 
+    scale_y = np.sqrt(cov[1, 1]) * n_std
+    mean_y = np.mean(y)
+
+    transf = transforms.Affine2D() \
+        .rotate_deg(45) \
+        .scale(scale_x, scale_y) \
+        .translate(mean_x, mean_y)
+
+    ellipse.set_transform(transf + ax.transData)
+    return ax.add_patch(ellipse)
+            
+def pcaTime(trc, time):
+    scaled_trc = StandardScaler().fit_transform(trc)
+    pca = PCA()
+    pca.fit(scaled_trc) # calc loading scores and variation 
+    pcaT_trc = pca.transform(scaled_trc) # final transform
+    perT_var = np.round(pca.explained_variance_ratio_*100, decimals=1) 
+    labelsT = ['PC' + str(x) for x in range(1, len(perT_var)+1)]
+    pcaT_df = pd.DataFrame(pcaT_trc, index=time, columns=labelsT)
+
+    return pcaT_df, perT_var, labelsT
+
+
+def pcaCells(trc, cell_names):
+    scaled_trc = StandardScaler().fit_transform(trc.T)
+    pca = PCA()
+    pca.fit(scaled_trc) # calc loading scores and variation 
+    pca_trc = pca.transform(scaled_trc) # final transform
+    per_var = np.round(pca.explained_variance_ratio_*100, decimals=1) 
+    labels = ['PC' + str(x) for x in range(1, len(per_var)+1)]
+    pca_df = pd.DataFrame(pca_trc, index=cell_names, columns=labels)
+    
+    return pca_df, per_var, labels
 
 
 def get_handles(color_dict: dict,
-                linestyle: Optional[str] = 'none',
-                marker: str = 'o'
+                **kwargs
                 ) -> Tuple[list, list]:
     """
     Get matplotlib handles for input dictionary.
@@ -343,7 +422,7 @@ def get_handles(color_dict: dict,
 
     proxy, label = [], []
     for t, c in color_dict.items():
-        proxy.append(matplotlib.lines.Line2D([0], [0], linestyle=linestyle, c=c, marker=marker))
+        proxy.append(matplotlib.lines.Line2D([0], [0], markerfacecolor=c, **kwargs))
         label.append(t)
 
     return proxy, label

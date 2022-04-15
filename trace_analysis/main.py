@@ -18,10 +18,14 @@ from core.draw_plots import Plot
 from core.data import CalciumData
 from utils import funcs as func
 from pathlib import Path
+from core.draw_plots import set_pub
+from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler, normalize
+from sklearn.decomposition import PCA
 
 pd.set_option('chained_assignment', None)
 logger = logging.getLogger(__name__)
 logger.info(f'{__name__} called.')
+
 
 # %% Initialize data
 colors_dict = {
@@ -30,83 +34,89 @@ colors_dict = {
     'NaCl': 'lime',
     'Sucrose': 'magenta',
     'Citric': 'yellow',
-    'Quinine': 'red',
-    'Rinse': 'lightsteelblue',
-    'Lick': 'darkgray'
+    'Quinine': 'red'
+    # 'Rinse': 'lightsteelblue',
+    # 'drylick': 'darkgray'
 }
+
 
 tastants = {k: colors_dict[k] for k in list(colors_dict)[:6]}
 tastants_ = list(tastants.keys())
 
 datadir = '/Users/flynnoconnell/Documents/Work/Data'
-animal_id = 'PGT13'
-date = '120221'
-data = CalciumData(animal_id, date, datadir, pick=1)
-alldata = data.alldata
-t = data.taste_data.copy()
-nonAS = ['MSG', 'NaCl','Sucrose', 'Citric', 'Quinine']
+animal_id = 'PGT08'
+date = '070121'
+
+data = CalciumData(animal_id, date, datadir, pick=0)
+
+taste_df = data.taste_df
+lick_df = data.lick_df
+nonlick_df = data.nonlick_df
+
+colors = taste_df.pop('colors')
 
 #%%
+# df = df[(np.abs(stats.zscore(df)) < 3).all(axis=1)]
+set_pub()
 
+df = pd.concat([data.lick_df, data.nonlick_df])
+colors = df['colors']
 
-nt_l_d = alldata.loc[
-    (alldata['MSG'] == 0 ) & 
-    (alldata['NaCl'] == 0 ) & 
-    (alldata['Sucrose'] == 0 ) & 
-    (alldata['Citric'] == 0 ) & 
-    (alldata['Quinine'] == 0) &
-    (alldata['Rinse'] == 1) &
-    (alldata['ArtSal'] == 1)
-]
-nt_l_d['colors'] = 'dodgerblue'
-
-t_l_d = alldata.loc[
-    (alldata['MSG'] == 1 ) & 
-    (alldata['NaCl'] == 1 ) & 
-    (alldata['Sucrose'] == 1 ) & 
-    (alldata['Citric'] == 1 ) & 
-    (alldata['Quinine'] == 1) &
-    (alldata['Rinse'] == 0) & 
-    (alldata['drylicks'] == 0)
-    ]
-t_l_d['colors'] = 'dodgerblue'
-
-
-filt = list(nt_l_d.filter(items=data.cells))
-filt.append(nt_l_d.columns[-1])
-nt_l_d = nt_l_d.filter(items=filt)
-
-t_l_d = t[t['events'].isin(nonAS)]
-t_l_d.pop('Time(s)')
-t_l_d.pop('events')
-
-taste = data.taste_data
-
-frames = pd.concat([t_l_d, nt_l_d])
-frames_color = frames.pop('colors')
 
 #%%
+df.drop(columns='colors', inplace=True)
 
-data.plot_stim(my_stim=['MSG', 'NaCl', 'Sucrose', 'Quinine'])
-data.plot_session()
+plotdata = Plot(taste_df, legend=colors_dict, colors=colors)
+plotdata.PCA(
+    title=f'{animal_id}, {date}, Lick vs Not Licking',
+    numcomp=2,
+    size=15,
+    norm=False,
+    noscale=True,
+    ss=True,
+    rs=True,
+    mm=True,
+    ns_save=False,
+    ss_save=False,
+    rs_save=False,
+    mm_save=False,
+    remove_outliers=False,
+    std=4,
+    skree=False
+    )
 
 #%%
+set_pub()
 
-plotdata = Plot(frames, legend=tastants, colors=frames_color)
-plotdata.PCA(title='{}, {}, {} Cells'.format(animal_id, date, len(data.cells)), numcomp=len(data.cells))
-
-tasteplots = Plot(data.taste_signals, legend=tastants, colors=data.taste_colors)
-tasteplots.PCA(title='{}, {}, {} Cells'.format(animal_id, date, len(data.cells)), numcomp=len(data.cells))
+plotdata = Plot(df, legend=colors_dict, colors=colors)
+plotdata.scatter_3d(
+    title=f'{animal_id}, {date}, Lick vs Not Licking',
+    size=15,
+    norm=False,
+    noscale=True,
+    ss=True,
+    rs=True,
+    mm=True,
+    ns_save=False,
+    ss_save=False,
+    rs_save=False,
+    mm_save=False,
+    remove_outliers=False,
+    std=4,
+    skree=False
+    )
 
 #%%
+set_pub()
 
-tastes = data.taste_signals
-
-data.fill_taste_trials(tastes, store='outliers1')
-new_df = tastes.mask((tastes - tastes.mean()).abs() > 5 * tastes.std()).dropna()
-
-
-# %%
+Plot.plot_session(data.cells,
+                  data.signals,
+                  data.time,
+                  data.session,
+                  data.numlicks,
+                  data.timestamps,
+                  save_dir=True
+                  )
 
 if __name__ == "__main__":
     pass     
