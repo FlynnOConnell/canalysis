@@ -8,6 +8,8 @@ Module (core): Functions for drawing graphs.
 from __future__ import annotations
 from typing import Tuple, Iterable, Optional, Sized, Any, Mapping
 
+
+
 import pandas as pd
 import numpy as np
 import logging
@@ -42,6 +44,7 @@ class Plot(object):
                     tastant_dict: dict,
                     tastant: str,
                     cmap: str,
+                    title: Optional[str] = '',
                     sigma: Optional[int] = 2,
                     aspect: Optional[str] = 'auto',
                     colorbar: Optional[bool] = False
@@ -51,8 +54,8 @@ class Plot(object):
             df_smooth = gaussian_filter(df, sigma=sigma)
             b = np.argsort(np.argsort(df_smooth, axis=1), axis=1)
             im = plt.imshow(b, aspect=aspect, cmap=cmap)
-            plt.title(f'{cmap}, {cell}', fontweight='bold')
-            plt.savefig(f'C://Users//dilorenzo//Desktop//CalciumPlots//{cmap}, {tastant}, {cell}',
+            plt.title(f'{title}, {cell}', fontweight='bold')
+            plt.savefig(f'C://Users//dilorenzo//Desktop//CalciumPlots// {title}, {tastant}, {cell}',
                         dpi=self.dpi
                         )
             if colorbar:
