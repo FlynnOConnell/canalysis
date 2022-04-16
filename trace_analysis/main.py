@@ -8,24 +8,15 @@ Module: Code execution.
 import pandas as pd
 import logging
 import numpy as np
-from scipy.stats import zscore
 
-import matplotlib.pyplot as plt
-import seaborn as sns; sns.set_theme()
-
-from models.SVM import SupportVectorMachine
 from core.draw_plots import Plot
 from core.data import CalciumData
 from utils import funcs as func
-from pathlib import Path
 from core.draw_plots import set_pub
-from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler, normalize
-from sklearn.decomposition import PCA
 
 pd.set_option('chained_assignment', None)
 logger = logging.getLogger(__name__)
 logger.info(f'{__name__} called.')
-
 
 # %% Initialize data
 colors_dict = {
@@ -39,20 +30,16 @@ colors_dict = {
     # 'drylick': 'darkgray'
 }
 
-
 tastants = {k: colors_dict[k] for k in list(colors_dict)[:6]}
-tastants_ = list(tastants.keys())
 
 datadir = '/Users/flynnoconnell/Documents/Work/Data'
 animal_id = 'PGT08'
 date = '070121'
 
 data = CalciumData(animal_id, date, datadir, pick=0)
-
 taste_df = data.taste_df
 lick_df = data.lick_df
 nonlick_df = data.nonlick_df
-
 colors = taste_df.pop('colors')
 
 #%%
@@ -63,7 +50,7 @@ df = pd.concat([data.lick_df, data.nonlick_df])
 colors = df['colors']
 
 
-#%%
+#%% Get PCA Plots
 df.drop(columns='colors', inplace=True)
 
 plotdata = Plot(taste_df, legend=colors_dict, colors=colors)
@@ -90,25 +77,11 @@ set_pub()
 
 plotdata = Plot(df, legend=colors_dict, colors=colors)
 plotdata.scatter_3d(
-    title=f'{animal_id}, {date}, Lick vs Not Licking',
-    size=15,
-    norm=False,
-    noscale=True,
-    ss=True,
-    rs=True,
-    mm=True,
-    ns_save=False,
-    ss_save=False,
-    rs_save=False,
-    mm_save=False,
-    remove_outliers=False,
-    std=4,
-    skree=False
+    title=f'{animal_id}, {date}, Lick vs Not Licking'
     )
 
 #%%
 set_pub()
-
 Plot.plot_session(data.cells,
                   data.signals,
                   data.time,

@@ -5,20 +5,19 @@
 Module(util): General getter/setter/checker functions.
 """
 from __future__ import annotations
-from typing import Tuple, Iterable, Optional, Sized
-import os
 
-import matplotlib
-import pandas as pd
-import numpy as np
-import math
 import contextlib
-from pathlib import Path
-from glob import glob
 import gc
 import logging
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
+import math
+import os
+from glob import glob
+from pathlib import Path
+from typing import Tuple, Iterable, Optional, Sized
+
+import matplotlib
+import numpy as np
+import pandas as pd
 
 from utils import excepts as e
 
@@ -36,6 +35,22 @@ def working_directory(path: str) -> None:
     finally:
         os.chdir(prev_cwd)
     return None
+
+
+def remove_outliers(df,
+                    colors,
+                    std: Optional[int] = 2
+                    ) -> Tuple[pd.DataFrame, pd.Series]:
+    from scipy import stats
+
+    df.reset_index(drop=True, inplace=True)
+    colors.reset_index(drop=True, inplace=True)
+    ind = (np.abs(stats.zscore(df)) < std).all(axis=1)
+    df[ind] = df
+    colors[ind] = colors
+    assert colors.shape[0] == df.shape[0]
+
+    return df, colors
 
 
 def garbage_collect(*delvar) -> None:
@@ -142,30 +157,36 @@ def get_unique(arr: Iterable[any]) -> list:
 
 
 def interval(lst: Iterable[any],
-             gap: int = 1) -> Iterable[list]:
+             gap: Optional[int] = 1,
+             anti: Optional[bool] = False
+             ) -> Iterable[list]:
     """
-    Create intervals where there elements are separated by less than 1.
-    Used for bout creation.
-    
+    Create intervals where there elements are separated by either:
+        -less than gap.  (if anti = False (default))
+        -more than gap.
+
     Args:
         lst (list): Iterable to search.
+        gap (int): length of interval.
+        anti (bool): Makes larger than (gap) intervals.
     Returns:
          interv (list): New list with created interval.
     """
     interv, tmp = [], []
-    
+
     for v in lst:
         if not tmp:
             tmp.append(v)
         else:
-            if abs(tmp[-1] - v) < gap:
-                tmp.append(v)
+            if anti:
+                if abs(tmp[-1] - v) > gap:
+                    tmp.append(v)
+                elif abs(tmp[-1] - v) > gap:
+                    tmp.append(v)
             else:
                 interv.append([tmp[0], tmp[-1]])
                 tmp = [v]
-                
-    # res = [[ele for ele in sub if ele[0] == ele[1]] for sub in interv]
-                
+
     return interv
 
 
@@ -189,6 +210,7 @@ def get_dir(data_dir: str,
 
     Args:
         data_dir (str): Path to directory
+        pick (int) = index of files to choose.
         _id (str): Current animal ID
         date (str): Current session date  
         
@@ -201,20 +223,25 @@ def get_dir(data_dir: str,
 
     os.chdir(data_dir)
     datapath = Path(data_dir) / _id / date
-    
+
     files = (glob(os.path.join(datapath, '*traces*')))
     logging.info('{} trace files found:'.format(len(files)))
-    
+    for file in files:
+        logging.info(f'{file}')
+
     if len(files) > 1:
-        if pick == 0: 
+        if pick == 0:
             tracepath = Path(files[0])
             logging.info('Taking trace file: {}'.format(tracepath.name))
-        else: 
+        else:
             tracepath = Path(files[pick])
             logging.info('Taking trace file: {}'.format(tracepath.name))
-    elif len(files) == 1: 
+    elif len(files) == 1:
         tracepath = Path(files[0])
-        
+    else:
+        logging.info(f'Files for {_id}, {date} not found.')
+        raise FileNotFoundError
+
     eventpath = Path(glob(os.path.join(datapath, '*processed*'))[0])
     tracedata = pd.read_csv(tracepath, low_memory=False)
     eventdata = pd.read_csv(eventpath, low_memory=False)
@@ -249,16 +276,16 @@ def dup_check(signal: list | np.ndarray,
 
 
 def has_duplicates(to_check: Sized | Iterable[set]):
-    '''
+    """
       Check iterable for duplicates.
-      
+
       Args:
           to_check (Sized | Iterable[set]): Input iterable to check.
-      
+
       Returns:
           Bool: Truth value if duplicates are present.
-      
-      '''
+
+      """
     return len(to_check) != len(set(to_check))
 
 
@@ -296,13 +323,13 @@ def get_peak_window(time: list | pd.Series, peak_time) -> list:
 
 
 def get_matched_time(time: Iterable[any],
-                     match: list,
+                     match: Iterable[any],
                      return_index: Optional[bool] = False) -> list:
     """
     Finds the closest number in tracedata time to the input. Can be a single value, or list.
 
     :param time: Series
-    :param argv: list
+    :param match: list
     :param return_index: bool
     """
     time: pd.Series
@@ -314,7 +341,7 @@ def get_matched_time(time: Iterable[any],
         for valor in time:
             temp.append(abs(t - valor))
         matched_index.append(temp.index(min(temp)))
-        
+
     for idx in matched_index:
         this_time = time[idx]
         matched_time.append(this_time)
@@ -323,7 +350,8 @@ def get_matched_time(time: Iterable[any],
         return matched_index
     else:
         return matched_time
-    
+
+
 def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
     """
     Create a plot of the covariance confidence ellipse of `x` and `y`
@@ -336,6 +364,8 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
         The axes object to draw the ellipse into.
     n_std : float
         The number of standard deviations to determine the ellipse's radiuses.
+    facecolor : str
+        Color of background.
     Returns
     -------
     matplotlib.patches.Ellipse
@@ -343,7 +373,7 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
     ----------------
     kwargs : `~matplotlib.patches.Patch` properties
     """
-    
+
     from matplotlib.patches import Ellipse
     import matplotlib.transforms as transforms
 
@@ -351,17 +381,17 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
         raise ValueError("x and y must be the same size")
 
     cov = np.cov(x, y)
-    pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
-    
+    pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
+
     # Using a special case to obtain the eigenvalues of this
     # two-dimensionl dataset.
     ell_radius_x = np.sqrt(1 + pearson)
     ell_radius_y = np.sqrt(1 - pearson)
     ellipse = Ellipse((0, 0),
-        width=ell_radius_x * 2,
-        height=ell_radius_y * 2,
-        facecolor=facecolor,
-        **kwargs)
+                      width=ell_radius_x * 2,
+                      height=ell_radius_y * 2,
+                      facecolor=facecolor,
+                      **kwargs)
 
     # Calculating the stdandard deviation of x 
     scale_x = np.sqrt(cov[0, 0]) * n_std
@@ -378,32 +408,11 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
 
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
-            
-def pcaTime(trc, time):
-    scaled_trc = StandardScaler().fit_transform(trc)
-    pca = PCA()
-    pca.fit(scaled_trc) # calc loading scores and variation 
-    pcaT_trc = pca.transform(scaled_trc) # final transform
-    perT_var = np.round(pca.explained_variance_ratio_*100, decimals=1) 
-    labelsT = ['PC' + str(x) for x in range(1, len(perT_var)+1)]
-    pcaT_df = pd.DataFrame(pcaT_trc, index=time, columns=labelsT)
-
-    return pcaT_df, perT_var, labelsT
-
-
-def pcaCells(trc, cell_names):
-    scaled_trc = StandardScaler().fit_transform(trc.T)
-    pca = PCA()
-    pca.fit(scaled_trc) # calc loading scores and variation 
-    pca_trc = pca.transform(scaled_trc) # final transform
-    per_var = np.round(pca.explained_variance_ratio_*100, decimals=1) 
-    labels = ['PC' + str(x) for x in range(1, len(per_var)+1)]
-    pca_df = pd.DataFrame(pca_trc, index=cell_names, columns=labels)
-    
-    return pca_df, per_var, labels
 
 
 def get_handles(color_dict: dict,
+                marker: Optional[str] = None,
+                linestyle: Optional[int] = 'none',
                 **kwargs
                 ) -> Tuple[list, list]:
     """
@@ -422,9 +431,8 @@ def get_handles(color_dict: dict,
 
     proxy, label = [], []
     for t, c in color_dict.items():
-        proxy.append(matplotlib.lines.Line2D([0], [0], markerfacecolor=c, **kwargs))
+        proxy.append(matplotlib.lines.Line2D([0], [0], marker=marker, markerfacecolor=c, linestyle=linestyle, **kwargs))
         label.append(t)
-
     return proxy, label
 
 
