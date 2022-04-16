@@ -5,7 +5,7 @@
 Module(util): General getter/setter/checker functions.
 """
 from __future__ import annotations
-from typing import Tuple, Iterable, Optional, Sized, Any, Mapping
+from typing import Tuple, Iterable, Optional, Sized
 import os
 
 import matplotlib
@@ -17,14 +17,13 @@ from pathlib import Path
 from glob import glob
 import gc
 import logging
-from scipy.ndimage.filters import gaussian_filter
-from matplotlib import pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
 from utils import excepts as e
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
-
-
 
 
 @contextlib.contextmanager
@@ -142,7 +141,8 @@ def get_unique(arr: Iterable[any]) -> list:
     return is_unique
 
 
-def interval(lst: Iterable[any]) -> Iterable[list]:
+def interval(lst: Iterable[any],
+             gap: int = 1) -> Iterable[list]:
     """
     Create intervals where there elements are separated by less than 1.
     Used for bout creation.
@@ -153,16 +153,19 @@ def interval(lst: Iterable[any]) -> Iterable[list]:
          interv (list): New list with created interval.
     """
     interv, tmp = [], []
-
+    
     for v in lst:
         if not tmp:
             tmp.append(v)
         else:
-            if abs(tmp[-1] - v) < 1:
+            if abs(tmp[-1] - v) < gap:
                 tmp.append(v)
             else:
                 interv.append([tmp[0], tmp[-1]])
                 tmp = [v]
+                
+    # res = [[ele for ele in sub if ele[0] == ele[1]] for sub in interv]
+                
     return interv
 
 
@@ -172,42 +175,46 @@ def get_dir(data_dir: str,
             pick: int
             ):
     """
+    
     From Home directory, set path to data files with pathlib object variable.
-    Directory structure:
-        -| Animal
+    
+    Directory structure: 
+        -| Animal 
         --| Date
         ---| Results
         -----| Graphs
         -----| Statistics
         ---| Data_traces*
         ---| Data_gpio_processed*
+
     Args:
         data_dir (str): Path to directory
         _id (str): Current animal ID
-        date (str): Current session date
-        pick (int): Index of file to choose if multiple
+        date (str): Current session date  
+        
     Returns:
         tracedata (pd.DataFrame): DataFrame of cell signals
         eventdata (pd.DataFrame): DataFrame of event times.
         session (str): Concatenated name of animalID_Date
+        
     """
+
     os.chdir(data_dir)
     datapath = Path(data_dir) / _id / date
+    
     files = (glob(os.path.join(datapath, '*traces*')))
-    if len(files) == 0:
-        raise FileNotFoundError(f'{_id}, {date} not found.')
     logging.info('{} trace files found:'.format(len(files)))
-
+    
     if len(files) > 1:
-        if pick == 0:
+        if pick == 0: 
             tracepath = Path(files[0])
             logging.info('Taking trace file: {}'.format(tracepath.name))
-        else:
+        else: 
             tracepath = Path(files[pick])
             logging.info('Taking trace file: {}'.format(tracepath.name))
-    else:
+    elif len(files) == 1: 
         tracepath = Path(files[0])
-
+        
     eventpath = Path(glob(os.path.join(datapath, '*processed*'))[0])
     tracedata = pd.read_csv(tracepath, low_memory=False)
     eventdata = pd.read_csv(eventpath, low_memory=False)
@@ -242,16 +249,16 @@ def dup_check(signal: list | np.ndarray,
 
 
 def has_duplicates(to_check: Sized | Iterable[set]):
-    """
+    '''
       Check iterable for duplicates.
-
+      
       Args:
           to_check (Sized | Iterable[set]): Input iterable to check.
-
+      
       Returns:
           Bool: Truth value if duplicates are present.
-
-      """
+      
+      '''
     return len(to_check) != len(set(to_check))
 
 
@@ -289,7 +296,7 @@ def get_peak_window(time: list | pd.Series, peak_time) -> list:
 
 
 def get_matched_time(time: Iterable[any],
-                     *argv: list,
+                     match: list,
                      return_index: Optional[bool] = False) -> list:
     """
     Finds the closest number in tracedata time to the input. Can be a single value, or list.
@@ -302,11 +309,12 @@ def get_matched_time(time: Iterable[any],
 
     matched_index = []
     matched_time = []
-    for arg in argv:
+    for t in match:
         temp = []
         for valor in time:
-            temp.append(abs(arg - valor))
+            temp.append(abs(t - valor))
         matched_index.append(temp.index(min(temp)))
+        
     for idx in matched_index:
         this_time = time[idx]
         matched_time.append(this_time)
@@ -315,11 +323,88 @@ def get_matched_time(time: Iterable[any],
         return matched_index
     else:
         return matched_time
+    
+def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
+    """
+    Create a plot of the covariance confidence ellipse of `x` and `y`
+            
+    Parameters
+    ----------
+    x, y : array_like, shape (n, )
+        Input data.
+    ax : matplotlib.axes.Axes
+        The axes object to draw the ellipse into.
+    n_std : float
+        The number of standard deviations to determine the ellipse's radiuses.
+    Returns
+    -------
+    matplotlib.patches.Ellipse
+    Other parameters
+    ----------------
+    kwargs : `~matplotlib.patches.Patch` properties
+    """
+    
+    from matplotlib.patches import Ellipse
+    import matplotlib.transforms as transforms
+
+    if x.size != y.size:
+        raise ValueError("x and y must be the same size")
+
+    cov = np.cov(x, y)
+    pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+    
+    # Using a special case to obtain the eigenvalues of this
+    # two-dimensionl dataset.
+    ell_radius_x = np.sqrt(1 + pearson)
+    ell_radius_y = np.sqrt(1 - pearson)
+    ellipse = Ellipse((0, 0),
+        width=ell_radius_x * 2,
+        height=ell_radius_y * 2,
+        facecolor=facecolor,
+        **kwargs)
+
+    # Calculating the stdandard deviation of x 
+    scale_x = np.sqrt(cov[0, 0]) * n_std
+    mean_x = np.mean(x)
+
+    # calculating the stdandard deviation of y 
+    scale_y = np.sqrt(cov[1, 1]) * n_std
+    mean_y = np.mean(y)
+
+    transf = transforms.Affine2D() \
+        .rotate_deg(45) \
+        .scale(scale_x, scale_y) \
+        .translate(mean_x, mean_y)
+
+    ellipse.set_transform(transf + ax.transData)
+    return ax.add_patch(ellipse)
+            
+def pcaTime(trc, time):
+    scaled_trc = StandardScaler().fit_transform(trc)
+    pca = PCA()
+    pca.fit(scaled_trc) # calc loading scores and variation 
+    pcaT_trc = pca.transform(scaled_trc) # final transform
+    perT_var = np.round(pca.explained_variance_ratio_*100, decimals=1) 
+    labelsT = ['PC' + str(x) for x in range(1, len(perT_var)+1)]
+    pcaT_df = pd.DataFrame(pcaT_trc, index=time, columns=labelsT)
+
+    return pcaT_df, perT_var, labelsT
+
+
+def pcaCells(trc, cell_names):
+    scaled_trc = StandardScaler().fit_transform(trc.T)
+    pca = PCA()
+    pca.fit(scaled_trc) # calc loading scores and variation 
+    pca_trc = pca.transform(scaled_trc) # final transform
+    per_var = np.round(pca.explained_variance_ratio_*100, decimals=1) 
+    labels = ['PC' + str(x) for x in range(1, len(per_var)+1)]
+    pca_df = pd.DataFrame(pca_trc, index=cell_names, columns=labels)
+    
+    return pca_df, per_var, labels
 
 
 def get_handles(color_dict: dict,
-                linestyle: Optional[str] = 'none',
-                marker: str = 'o'
+                **kwargs
                 ) -> Tuple[list, list]:
     """
     Get matplotlib handles for input dictionary.
@@ -337,7 +422,7 @@ def get_handles(color_dict: dict,
 
     proxy, label = [], []
     for t, c in color_dict.items():
-        proxy.append(matplotlib.lines.Line2D([0], [0], linestyle=linestyle, c=c, marker=marker))
+        proxy.append(matplotlib.lines.Line2D([0], [0], markerfacecolor=c, **kwargs))
         label.append(t)
 
     return proxy, label

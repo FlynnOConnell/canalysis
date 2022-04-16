@@ -12,24 +12,9 @@ import pandas as pd
 import numpy as np
 import logging
 from utils import funcs as func
-import data as du
-
-pd.set_option('chained_assignment', None)
-
-logger = logging.getLogger(__name__)
-logger.info(f'{__name__} module called.')
-
-datadir = 'A:\\'
-
-animal_id = 'PGT13'
-date = '120221'
-target_date = '121021'
-
-session = animal_id + '_' + date
-data = du.Data(animal_id, date, datadir)
 
 
-def get_antibouts(bouts_td_time: list) -> Tuple[list, list]:
+def get_antibouts(data, bouts_td_time: list) -> Tuple[list, list]:
     antibouts_dff = []
     antibouts_td_time = []
     k: int = 0
@@ -59,7 +44,7 @@ def get_antibouts(bouts_td_time: list) -> Tuple[list, list]:
     return antibouts_dff, antibouts_td_time
 
 
-def get_sponts() -> Tuple[list, list]:
+def get_sponts(data) -> Tuple[list, list]:
     idxs = np.where(np.diff(data.eventdata.licktime) > 30)[0]
 
     spont_intervs = np.column_stack((idxs[::2], idxs[1::2]))
@@ -83,7 +68,7 @@ def get_sponts() -> Tuple[list, list]:
     return sponts, stdevs
 
 
-def get_bouts(licktime: Iterable, _data=data) -> pd.DataFrame:
+def get_bouts(session, licktime: Iterable, _data) -> pd.DataFrame:
     # Lick Bout
     tmp, bout_intervs, boutstart, boutend, start_traces, end_traces = [], [], [], [], [], []
     for _ in enumerate(licktime):
@@ -121,7 +106,6 @@ def get_bouts(licktime: Iterable, _data=data) -> pd.DataFrame:
     lickstats = pd.DataFrame(columns=[
         'File', 'Cell', 'Type'])
     lickstats_list = []
-    cell_id = np.array(_data.tracedata.cells)
 
     for index, cell in enumerate(_data.tracedata.columns):
         if (bout_dff[index]) > ((sponts[index]) + ((stdevs[index]) * 2.58)):
@@ -146,11 +130,14 @@ def get_bouts(licktime: Iterable, _data=data) -> pd.DataFrame:
     return lickstats
 
 
-def get_stats(_data=data,
+def get_stats(_data, session,
               output: Optional[bool] = False,
-              results_dir: Optional[str] = '') -> Tuple[pd.DataFrame,
-                                                        pd.DataFrame,
-                                                        pd.DataFrame]:
+              results_dir: Optional[str] = '',
+              return_data: bool = False
+              ) -> Tuple[pd.DataFrame, 
+                         pd.DataFrame,
+                         pd.DataFrame]:
+                         
     firstcell = _data.tracedata.traces.columns[1]
     stats_df = pd.DataFrame(columns=[
         'File', 'Cell', 'Stimulus',
@@ -284,9 +271,6 @@ def get_stats(_data=data,
 
         print("Outputting data to Excel...")
 
-        # TODO: Match licktime events to traces for this output
-        # lickstats = get_bouts(licktime)
-
         with pd.ExcelWriter(str(results_dir)
                             + '/'
                             + '_statistics.xlsx') as writer:
@@ -299,7 +283,7 @@ def get_stats(_data=data,
             stats_df.to_excel(
                 writer, sheet_name='Trial Stats', index=False)
 
-        print(session + ' statistics successfully transfered to Excel!')
+        print(' statistics successfully transfered to Excel!')
 
     return stats_df, raw_df, summary
 
