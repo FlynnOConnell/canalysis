@@ -7,8 +7,9 @@ import numpy as np
 import logging
 import scipy.stats as stats
 from core.data import CalciumData
-from core.draw_plots import Plot
+from graphs.draw_plots import Plot
 from utils import funcs as func
+from utils import stats_helpers as stat_help
 
 #%% Data
 
@@ -16,12 +17,18 @@ pd.set_option('chained_assignment', None)
 logger = logging.getLogger(__name__)
 logger.info(f'{__name__} called.')
 
-datadir = 'A:\\'
-animal_id = 'PGT13'
-# animal_id = 'PGT08'
+datadir = '/Users/flynnoconnell/Documents/Work/Data'
 
-dates = ['011222', '011422', '011922', '030322', '032422', '120221', '121021', '121721']
+
+animal_id = 'PGT13'
+animal_id = 'PGT08'
+date = '070121'
+
+
+# dates = ['011222', '011422', '011922', '030322', '032422', '120221', '121021', '121721']
 # dates = ['060221', '062321', '071621', '072721', '082021', '092321', '093021']
+dates = ['011222', '011422', '011922', '030322', '032422', '120221', '121021', '121721']
+data = CalciumData(animal_id, date, datadir, pick=0)
 
 alldata = []
 for date in dates:
@@ -29,7 +36,9 @@ for date in dates:
     print((data_day.session, data_day.cells, data_day.numlicks))
     alldata.append(data_day)
 
-cells = alldata[0].cells
+cells = data.cells
+
+# cells = data.date
 
 labt = [0, 5, 34]
 labn = [-1, 0, 3]
@@ -45,6 +54,33 @@ AS_sw_dict, S_sw_dict, N_sw_dict, CA_sw_dict, Q_sw_dict, MSG_sw_dict = {}, {}, {
 AS_sz_dict, S_sz_dict, N_sz_dict, CA_sz_dict, Q_sz_dict, MSG_sz_dict = {}, {}, {}, {}, {}, {}
 
 #%% Fill Data Containers
+
+aaa_cellpd = pd.DataFrame(columns=cells)
+aab_cellpd = pd.DataFrame(columns=cells)
+
+for cell, df in AS_base_dict.items(): 
+    df = df.T
+    cell_holder = []   
+    for trial, ser in df.items(): 
+        cell_holder.extend(ser)
+    aaa_cellpd[cell] = cell_holder
+        
+for cell, df in AS_base_dict.items(): 
+    df = df.T
+    cell_holder = func.df_tolist(df)
+    aab_cellpd[cell] = cell_holder
+    
+    # for col in df.columns:
+    #     print(df[col])
+        
+    #     this_ser = df[col]
+    #     this_ser = this_ser.tolist()
+    #     cell_holder.append(this_ser)
+    # cellpd[cell] = cell_holder
+
+tastant = ['ArtSal', 'MSG', 'Quinine', 'NaCl', 'Citric']
+a, aa, aaa, aaaa, aaaaa, aaaaaaa, aaaaaaaa = stat_help.get_tastant_dicts(tastant, cells, data)
+#%%
 
     ###### ArtSal ########
 for ind, cell in enumerate(cells):
@@ -122,6 +158,11 @@ for ind, cell in enumerate(cells):
     AS_sz_dict[cell] = sig_zscore_holder
     AS_window_dict[cell] = window_holder
     AS_sig_dict[cell] = sig_signal_holder
+    
+    cell_holder = []   
+    for trial, ser in norm_holder.items(): 
+        cell_holder.extend(ser)
+    aaa_cellpd[cell] = cell_holder    
 
 for cell, cell_df in AS_base_dict.items():
     AS_base_dict[cell] = cell_df.T
@@ -136,6 +177,8 @@ for cell, cell_df in AS_window_dict.items():
 for cell, cell_df in AS_sig_dict.items():
     AS_sig_dict[cell] = cell_df.T
 
+
+#%%
      ###### SUCROSE ########
 for ind, cell in enumerate(cells):
     signal_holder = pd.DataFrame()

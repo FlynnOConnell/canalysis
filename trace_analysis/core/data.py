@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from weakref import WeakSet
 from typing import Type, Optional, Iterable
+from collections import namedtuple
 
 import numpy as np
 import pandas as pd
@@ -21,7 +23,7 @@ from sklearn.preprocessing import (
     RobustScaler,
     MinMaxScaler)
 
-from core.draw_plots import Plot
+from graphs.draw_plots import Plot
 from utils import excepts as e
 from utils import funcs as func
 
@@ -37,34 +39,52 @@ colors_dict = {
     'Citric': 'yellow',
     'Quinine': 'red',
     'Rinse': 'lightsteelblue',
-    'Lick': 'darkgray'
+    'drylick': 'darkgray'
 }
 
 tastant_colors_dict = {k: colors_dict[k] for k in list(colors_dict)[:6]}
 
 
+# @dataclass
+# class AllSessions(type):
+#     def __iter__(cls):
+#         return iter(cls.allsessions)
+#     def __len__(cls):
+#         return len(allsessions)
+
+
+# class data(object):
+#     def __new__(cls, *args, **kwargs):
+#         instance = object.__new__(cls, *args, **kwargs)
+#         if "instances" not in cls.__dict__:
+#             cls.instances = WeakSet()
+#         cls.instances.add(instance)
+#         return instance        
+
+
 @dataclass
 class CalciumData(object):
-
+    days = {}
+    _counter = 0
+    
     def __init__(self,
                  animal: str,
                  date: str,
                  data_dir: str,
                  pick: Optional[int] = 0,
                  ):
-
+        
         # Session information
         self.animal = animal
         self.date = date
         self.session = animal + '_' + date
         self.data_dir = data_dir
-
-        self.checks = {}
+        CalciumData.days[self.session] = self
+        CalciumData._counter += 1
 
         # Core
         self.tracedata: Type[pd.DataFrame]
         self.eventdata: Type[pd.DataFrame]
-        self.new_eventdata: Type[pd.DataFrame]
 
         self._get_data(pick)
         self._authenticate_input_data(self)
@@ -98,15 +118,20 @@ class CalciumData(object):
 
         ## Taste attributes
         self.taste_data: Type[pd.NDframeT] = None
-        self.fill_taste_trials()
+        self._fill_taste_trials()
 
         self.taste_time = self.taste_data['Time(s)']
         self.taste_colors = self.taste_data['colors']
         self.taste_events = self.taste_data['events']
         self.taste_signals = self.taste_data.drop(columns=['Time(s)', 'colors', 'events'])
         self.tastants = tastant_colors_dict.keys()
-
+        
+        
         logging.info('Data instantiated.')
+    
+    @classmethod
+    def __len__(cls):
+        return cls._counter
 
     @staticmethod
     def _authenticate_input_data(self):
@@ -324,7 +349,7 @@ class CalciumData(object):
         events.append('bouts')
 
         self.all_artsal_df = self.alldata.loc[
-            (self.alldata['Rinse'] == 1) &
+            (self.alldata['Rinse'] == 1) |
             (self.alldata['ArtSal'] == 1)]
         self.all_artsal_df['colors'] = 'dodgerblue'
 
@@ -408,3 +433,8 @@ class CalciumData(object):
                           self.numlicks,
                           self.timestamps
                           )
+        
+        
+        
+        
+

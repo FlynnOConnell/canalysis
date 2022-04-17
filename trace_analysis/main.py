@@ -9,7 +9,7 @@ import pandas as pd
 import logging
 import numpy as np
 
-from core.draw_plots import Plot
+from graphs.draw_plots import Plot
 from core.data import CalciumData
 from utils import funcs as func
 from core.draw_plots import set_pub
@@ -49,7 +49,6 @@ set_pub()
 df = pd.concat([data.lick_df, data.nonlick_df])
 colors = df['colors']
 
-
 #%% Get PCA Plots
 df.drop(columns='colors', inplace=True)
 
@@ -63,10 +62,6 @@ plotdata.PCA(
     ss=True,
     rs=True,
     mm=True,
-    ns_save=False,
-    ss_save=False,
-    rs_save=False,
-    mm_save=False,
     remove_outliers=False,
     std=4,
     skree=False

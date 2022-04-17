@@ -92,6 +92,21 @@ def flatten(lst: list) -> list:
     return [item for sublist in lst for item in sublist]
 
 
+def df_tolist(df) -> list:
+    tmp = []   
+    for col_name, ser in df.items(): 
+        tmp.extend(ser)
+    return tmp
+
+def dict_df_tolist(dct, transpose: bool = False) - df: 
+    for cell, df in dct.items():
+        
+    if transpose:
+        
+    
+        
+
+
 def shuffle_data(X, y, seed=None):
     """ Random shuffle of the samples in X and y """
     if seed:
