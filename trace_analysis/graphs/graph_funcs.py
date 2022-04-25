@@ -8,8 +8,34 @@ Module (graph): General functions for graphing.
 from __future__ import annotations
 
 from typing import Tuple, Optional
+from scipy.ndimage.filters import gaussian_filter
+
+import matplotlib as plt
 from matplotlib import lines
+import seaborn as sns
 import numpy as np
+import pandas as pd
+
+
+def single_sns_heatmap(df, tastant='', sigma=2,
+                       square=False, cbar=False, x=10, linewidth=3,
+                       color='white', cmap='magma', save=False, robust=False, dpi=400,
+                       **axargs):
+    if sigma:
+        df = pd.DataFrame(gaussian_filter(df, sigma=sigma))
+    # cm = sns.color_palette('magma', n_colors = df.shape[1], as_cmap = True)
+    ### Plot data
+    fig, ax = plt.subplots()
+    ax = sns.heatmap(df, square=square, cbar=cbar, cmap=cmap, robust=robust, **axargs)
+
+    ax.axis('off')
+    ax.axvline(x=x, color=color, linewidth=linewidth)
+    if save:
+        plt.savefig(f'/Users/flynnoconnell/Pictures/heatmaps/{tastant}.png',
+                    dpi=dpi, bbox_inches='tight', pad_inches=0.01)
+
+    return fig, ax
+
 
 def get_handles(color_dict: dict,
                 marker: Optional[str] = None,
@@ -35,6 +61,7 @@ def get_handles(color_dict: dict,
         proxy.append(lines.Line2D([0], [0], marker=marker, markerfacecolor=c, linestyle=linestyle, **kwargs))
         label.append(t)
     return proxy, label
+
 
 def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
     """
@@ -92,4 +119,3 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
 
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
-

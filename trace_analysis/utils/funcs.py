@@ -6,32 +6,30 @@ Module(util): General getter/setter/checker functions.
 """
 from __future__ import annotations
 
-import contextlib
-import logging
 import math
 import os
 from glob import glob
 from pathlib import Path
-from typing import Tuple, Iterable, Optional, Sized
+from typing import Tuple, Iterable, Optional, Sized, Any
 
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
 import logging
-import collections
 from utils import excepts as e
 from utils.wrappers import typecheck
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
-      
-#%% COLLAPSE DATA STRUCTURES
+
+
+# %% COLLAPSE DATA STRUCTURES
 
 def keys_exist(element, *keys):
     """
     Check if *keys (nested) exists in `element` (dict).
     """
-        
+
     if len(keys) == 0:
         raise AttributeError('keys_exists() expects at least two arguments, one given.')
 
@@ -43,24 +41,25 @@ def keys_exist(element, *keys):
             return False
     return True
 
+
 @typecheck(dict, int)
-def iter_events(event_dct, gap: int=5):
+def iter_events(event_dct, gap: int = 5):
     for event, ts in event_dct.items():
         intervals = interval(ts, gap)
         for interv in intervals:
-            yield (event, interv)
+            yield event, interv
+
 
 @typecheck(Iterable)
 def flatten(lst: Iterable) -> list:
     return [item for sublist in lst for item in sublist]
 
 
-
 @typecheck(Iterable, int)
 def interval(lst: Iterable[any],
              gap: Optional[int] = 1,
              outer: bool = False
-             ) -> Iterable[list]:
+             ) -> list[tuple[Any, Any]]:
     """
     Create intervals where there elements are separated by either:
         -less than gap. 
@@ -69,19 +68,19 @@ def interval(lst: Iterable[any],
     Args:
         lst (list): Iterable to search.
         gap (int): length of interval.
-        anti (bool): Makes larger than (gap) intervals.
+        outer (bool): Makes larger than (gap) intervals.
     Returns:
          interv (list): New list with created interval.
     """
     interv, tmp = [], []
-    
+
     for v in lst:
         if not tmp:
             tmp.append(v)
-            
+
         elif abs(tmp[-1] - v) < gap:
             tmp.append(v)
-            
+
         elif outer:
             interv.append(tuple((tmp[-1], v)))
             tmp = [v]
@@ -90,12 +89,12 @@ def interval(lst: Iterable[any],
             tmp = [v]
     return interv
 
+
 @typecheck(pd.DataFrame, pd.Series, int)
 def remove_outliers(df,
                     colors,
                     std: Optional[int] = 2
                     ) -> Tuple[pd.DataFrame, pd.Series]:
-
     df.reset_index(drop=True, inplace=True)
     colors.reset_index(drop=True, inplace=True)
     ind = (np.abs(stats.zscore(df)) < std).all(axis=1)
@@ -142,7 +141,7 @@ def get_dir(data_dir: str,
 
     files = (glob(os.path.join(datapath, '*traces*')))
     logging.info(f'{len(files)} trace files found:')
-    for file in (files):
+    for file in files:
         file = Path(file)
         logging.info(f'{file.stem}')
         logging.info('-' * 15)
@@ -165,6 +164,8 @@ def get_dir(data_dir: str,
     eventdata = pd.read_csv(eventpath, low_memory=False)
 
     return tracedata, eventdata
+
+
 ## Data Validation
 
 
@@ -210,26 +211,26 @@ def has_duplicates(to_check: Sized | Iterable[set]):
 
 
 @typecheck(Iterable[any], Iterable[any])
-def get_peak_window(time: list | pd.Series, peak_time) -> list:
+def get_peak_window(time: Iterable[any], peak: float) -> list:
     """
     Returns the index of tracedata centered 1s around the peak flourescent value for that trial.
     Args:
         time (list | pd.Series): List of all time values.
-        peak_time (float): Time value where signal is at its largest value.
+        peak (float) : peak time
     Returns:
          window_ind (list): list of index values to match time.
     """
     time: list
-    peak_time: float
 
     aux, window_ind = [], []
     for valor in time:
-        aux.append(abs(peak_time - valor))
+        aux.append(abs(peak - valor))
 
     window_ind.append(aux.index(min(aux)) - 20)
     window_ind.append(aux.index(min(aux)) + 20)
 
     return window_ind
+
 
 # @typecheck(Iterable[any], Iterable[any], bool)
 def get_matched_time(time: Iterable[any],
@@ -260,7 +261,6 @@ def get_matched_time(time: Iterable[any],
         return matched_index
     else:
         return matched_time
-
 
 
 # Main wrapper for testing

@@ -14,8 +14,8 @@ from glob import glob
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
+
 class FileHandler(object):
-    
     """
     File handler.
     Directory structure: 
@@ -34,18 +34,18 @@ class FileHandler(object):
         directory (str): Path to directory containing data.
         animal (str): Animal name.
         date (str): Current session date  
-        tracenames (str): String segment of trace to fetch.
-        eventnames (str): String segment of event file to fetch.
+        tracename (str): String segment of trace to fetch.
+        eventname (str): String segment of event file to fetch.
             -String used in unix-style pattern-matching, surrounded by wildcards:
                 e.g. *traces*, *events*, *processed*, *GPIO*
             -Use these args to match string in file for processing.
     """
-    
+
     def __init__(self,
-                 directory:str,
-                 animal:str,
-                 date:str,
-                 tracename: Optional[str] = 'traces', 
+                 directory: str,
+                 animal: str,
+                 date: str,
+                 tracename: Optional[str] = 'traces',
                  eventname: Optional[str] = 'processed'):
         self.animal = animal
         self.date = date
@@ -57,97 +57,81 @@ class FileHandler(object):
         self._eventname = eventname
         self._make_dirs()
 
-
     @property
     def directory(self):
         return self._directory
-    
+
     @directory.setter
     def directory(self, new_dir: str):
         self._directory = Path(new_dir)
-        return None
-        
+
     @property
     def tracename(self):
         return self._tracename
-    
+
     @tracename.setter
     def tracename(self, new_tracename):
         self._tracename = new_tracename
-        return None
-        
+
     @property
     def eventname(self):
         return self._eventname
-        
+
     @eventname.setter
     def eventname(self, new_eventname):
         self._eventname = new_eventname
-        return None
-
 
     def tree(self):
         print(f'-|{self._directory}')
-        for path in sorted(self.directory.rglob('[!.]*')): # exclude .files 
+        for path in sorted(self.directory.rglob('[!.]*')):  # exclude .files
             depth = len(path.relative_to(self.directory).parts)
             spacer = '    ' * depth
-            print(f'{spacer}-|{(path.name)}')
+            print(f'{spacer}-|{path.name}')
             return None
-            
 
     def get_traces(self):
         tracefiles = self.sessiondir.rglob(f'*{self.tracename}*')
         for file in tracefiles:
             yield file
 
- 
     def get_events(self):
         eventfiles = self.sessiondir.rglob(f'*{self.eventname}*')
         for file in eventfiles:
             yield file
-            
 
     def get_tracedata(self):
         for filepath in self.get_traces():
             tracedata = pd.read_csv(filepath, low_memory=False)
             yield tracedata
 
-        
     def get_eventdata(self):
         for filepath in self.get_events():
             eventdata = pd.read_csv(filepath, low_memory=False)
             yield eventdata
 
-            
-    def unique_path(self, filename, suffix='.csv'):
+    def unique_path(self, filename):
         counter = 0
         while True:
             counter += 1
-            path = self.sessiondir / filename 
+            path = self.sessiondir / filename
             if not path.exists():
                 return path
 
-    
     def _make_dirs(self):
         path = self.sessiondir
         Path(path).parents[0].mkdir(parents=True, exist_ok=True)
         return None
-    
-    # def get_data(self):
-        
-# 'test{:03d}.txt'        
-        
+
+
 datadir = '/Users/flynnoconnell/Documents/Work/Data'
 animal = 'PGT13'
 date = '121021'
 
-filehandler = FileHandler(datadir, animal, date)    
+filehandler = FileHandler(datadir, animal, date)
 
 traces = [file for file in filehandler.get_tracedata()]
 events = [file for file in filehandler.get_eventdata()]
 
-
-    
 # def get_dir(data_dir: str,
 #             _id: str,
 #             date: str,
