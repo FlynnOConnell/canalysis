@@ -5,86 +5,60 @@
 
 Module: Code execution.
 """
-import pandas as pd
 import logging
-import numpy as np
+from core.calciumdata import CalciumData
 
-from graphs.draw_plots import Plot
-from core.data import CalciumData
-from utils import funcs as func
-from core.draw_plots import set_pub
-
-pd.set_option('chained_assignment', None)
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
-logger.info(f'{__name__} called.')
 
 # %% Initialize data
-colors_dict = {
-    'ArtSal': 'dodgerblue',
-    'MSG': 'darkorange',
-    'NaCl': 'lime',
-    'Sucrose': 'magenta',
-    'Citric': 'yellow',
-    'Quinine': 'red'
-    # 'Rinse': 'lightsteelblue',
-    # 'drylick': 'darkgray'
-}
-
-tastants = {k: colors_dict[k] for k in list(colors_dict)[:6]}
 
 datadir = '/Users/flynnoconnell/Documents/Work/Data'
-animal_id = 'PGT08'
-date = '070121'
+animal2 = 'PGT08'
+date02 = '070121'
+date03 = '071621'
+date04 = '072721'
 
-data = CalciumData(animal_id, date, datadir, pick=0)
-taste_df = data.taste_df
-lick_df = data.lick_df
-nonlick_df = data.nonlick_df
-colors = taste_df.pop('colors')
+animal = 'PGT13'
+date = '011222'
+date01 = '011422'
+date001 = '121021'
 
-#%%
-# df = df[(np.abs(stats.zscore(df)) < 3).all(axis=1)]
-set_pub()
+data1 = CalciumData(animal, date, datadir)
+data11 = CalciumData(animal, date01, datadir)
+data111 = CalciumData(animal, date001, datadir)
 
-df = pd.concat([data.lick_df, data.nonlick_df])
-colors = df['colors']
+data2 = CalciumData(animal2, date02, datadir)
+data22 = CalciumData(animal2, date03, datadir)
+data222 = CalciumData(animal2, date04, datadir)
 
-#%% Get PCA Plots
-df.drop(columns='colors', inplace=True)
-
-plotdata = Plot(taste_df, legend=colors_dict, colors=colors)
-plotdata.PCA(
-    title=f'{animal_id}, {date}, Lick vs Not Licking',
-    numcomp=2,
-    size=15,
-    norm=False,
-    noscale=True,
-    ss=True,
-    rs=True,
-    mm=True,
-    remove_outliers=False,
-    std=4,
-    skree=False
-    )
 
 #%%
-set_pub()
+alldata = CalciumData.alldata
+print(alldata)
 
-plotdata = Plot(df, legend=colors_dict, colors=colors)
-plotdata.scatter_3d(
-    title=f'{animal_id}, {date}, Lick vs Not Licking'
-    )
+dct1 = {
+        'PGT13': {'Date1': data1,
+                  'Date2': data2},
+        'PGT08': {'Date1': data1,
+                  'Date2': data2}
+        
+        }
+print("\n".join(f"{key} - {len(value)} sessions." for key, value in dct1.items()))
+print(dct1.items())
+print(alldata.items())
 
-#%%
-set_pub()
-Plot.plot_session(data.cells,
-                  data.signals,
-                  data.time,
-                  data.session,
-                  data.numlicks,
-                  data.timestamps,
-                  save_dir=True
-                  )
+
+# len(alldata)
+
 
 if __name__ == "__main__":
     pass     
+
+
+
+
+
+
+
+
