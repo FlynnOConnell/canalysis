@@ -4,9 +4,9 @@
 #taste_data
 """
 import pandas as pd
-import core.calciumdata as ca
+from core.calciumdata import CalciumData as ca
 import numpy as np
-from utils import funcs as func
+from core import funcs as func
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,50 +14,52 @@ logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
 
 class TasteData(object):
     def __init__(self, 
-                 data,
+                 data: pd.DataFrame,
+                 events: dict,
+                 color_dict: dict,
                  baseline: int = 0,
                  post: int = 0) -> None: 
         
-        assert isinstance(data, ca.CalciumData)
         
-        self.color_dict = data.color_dict
-        self.timestamps = data.timestamps
-        self.trial_times = data.trial_times
-        
-        self.tracedata = data.tracedata
+        self.data = data
+        self.color_dict = color_dict
+
         self.time = None
         self.colors = None
         self.signals = None
         
-        self.post = None
-        self.baseline = None
+        self.events = events
+        self.post = post
+        self.baseline = baseline
         
         self.eventdata = None
         self.tastedata = {}
 
-        self.process(baseline, post)
-
-        self.tastant_dict =  {k: data.color_dict[k] for k in list(data.color_dict)[:6]}
+        self.process()
+        self.tastant_dict =  {k: color_dict[k] for k in list(color_dict)[:6]}
         self.tastants = list(self.tastant_dict.keys())
         
-
+    @staticmethod
+    def _authenticate(data):
+        
+        assert isinstance(data, pd.DataFrame) and data['Time(s)'] in data.columns
+        
                 
-    def process(self, baseline: int=0, post: int=0):
+    def process(self):
         
         logging.info('Setting taste data')
+        
         new_df = pd.DataFrame()
         for event, interv in func.iter_events(
-                self.timestamps):
+                self.events):
             
-            df = self.tracedata.loc[
-                (self.tracedata['Time(s)'] > (interv[0]-baseline)) &
-                (self.tracedata['Time(s)'] < (interv[1]+post))].copy()
+            df = self.data.loc[
+                (self.data['Time(s)'] > (interv[0] - self.baseline)) &
+                (self.data['Time(s)'] < (interv[1] + self.post))].copy()
             
-            df['colors'] = self.color_dict[event]
+            df['colors'] = ca.color_dict[event]
             new_df = pd.concat([new_df, df], axis=0)
         new_df.sort_values(by='Time(s)')
-        self.baseline = baseline
-        self.post = post
 
         return self._set_data(new_df)
     

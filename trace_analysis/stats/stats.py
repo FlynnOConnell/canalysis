@@ -11,7 +11,7 @@ from typing import Tuple, Iterable, Optional
 import pandas as pd
 import numpy as np
 import logging
-from utils import funcs as func
+from core import funcs as func
 from core.calciumdata import CalciumData
 from sklearn.decomposition import PCA
 

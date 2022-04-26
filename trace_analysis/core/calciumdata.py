@@ -10,27 +10,36 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Type, Optional, Iterable
+from typing import Type, Optional, Iterable, Callable
 import scipy.stats as stats
 from collections.abc import MutableMapping
 
 import numpy as np
 import pandas as pd
 
-from utils.FileHandler import FileHandler
+from core.file_handler import FileHandler
 from utils.wrappers import Singleton
 from utils import excepts as e
-from utils import funcs as func
+from core import funcs as func
 from graphs import Mixins
+import functools 
 
 logger = logging.getLogger(__name__)
 
 
 # %%
 
-# Storing instances in a mutable mapping from abstract base class 
-# for some extra functionality in how we iterate, count and represent 
-# items in the dict. 
+ComposableFunction = Callable[[float], float]
+
+def compose(*functions: ComposableFunction) -> ComposableFunction:
+    # go through list of function arguments (f and g), return a function and shift to call the next
+    # function. Works like Sklearn.Pipeline. 
+    return functools.reduce(lambda f, g: lambda x: g(f(x)), functions)
+
+
+# Storing instances in a mutable mapping from abstract base class
+# for some extra functionality in how we iterate, count and represent
+# items in the dict.
 @Singleton
 class AllData(MutableMapping):
     """
@@ -80,9 +89,9 @@ def set_params():
         "savefig.dpi": 300,
     })
 
-
 @dataclass
 class CalciumData(Mixins.CalPlots):
+    
     alldata = AllData.instance()
     color_dict = {
         'ArtSal': 'dodgerblue',
@@ -99,8 +108,10 @@ class CalciumData(Mixins.CalPlots):
                  animal: str,
                  date: str,
                  data_dir: str,
+                 clean: Optional[bool] = True,
                  **kwargs: Optional[dict]
                  ):
+        
         # Update the internal dict with kw arguments
         self.__dict__.update(kwargs)
 
@@ -116,7 +127,7 @@ class CalciumData(Mixins.CalPlots):
         self.eventdata: Type[pd.DataFrame]
 
         self._get_data()
-        self._authenticate_input_data()
+        self._authenticate()
 
         # Core attributes
         self.signals = self._set_trace_signals()
@@ -136,7 +147,7 @@ class CalciumData(Mixins.CalPlots):
         self.color_dict = CalciumData.color_dict
         self._add_instance()
 
-        logging.info(f'Data instance for: \n {self.animal} - {self.date} \n ...instantiated.')
+        # logging.info(f'Data instance for: \n {self.animal} - {self.date} \n ...instantiated.')
 
     def __hash__(self):
         return hash(repr(self))
@@ -171,7 +182,7 @@ class CalciumData(Mixins.CalPlots):
 
         return None
 
-    def get__trial_counts(self) -> None:
+    def get_trials(self) -> None:
         for stim, trials in self.trial_times.items():
             logging.info(f'{stim} - {len(trials)}')
         return None
@@ -183,6 +194,7 @@ class CalciumData(Mixins.CalPlots):
             allsignal = self.signals[cell]
             zscore = pd.Series(stats.zscore(allsignal))
             zscores[cell] = zscore
+        zscores['Time(s)'] = self.time
         return zscores
 
     def _set_event_attrs(self):
@@ -224,7 +236,7 @@ class CalciumData(Mixins.CalPlots):
         self.signals = temp
         return temp
 
-    def _authenticate_input_data(self):
+    def _authenticate(self):
 
         if not isinstance(self.tracedata, pd.DataFrame):
             raise e.DataFrameError('Trace data must be a dataframe')
@@ -234,11 +246,12 @@ class CalciumData(Mixins.CalPlots):
             raise AttributeError("No cells found in DataFrame")
 
     def _get_data(self):
-
+        
         traces = [file for file in self.filehandler.get_tracedata()][0]
         events = [file for file in self.filehandler.get_eventdata()][0]
-
+    
         self.tracedata = self._clean(traces)
+        self.tracedata['Time(s)'] = np.round(self.tracedata['Time(s)'], 1)
         self.eventdata = events
 
     @staticmethod
@@ -248,6 +261,7 @@ class CalciumData(Mixins.CalPlots):
         # so often that step is skipped. Need some way to check (check_if_accepted)
 
         def check_if_accepted(_df):
+            # If any cells marked as "accepted", use only those cells
             accepted_col = [col for col in _df.columns if ' accepted' in col]
             return accepted_col
 
@@ -262,3 +276,13 @@ class CalciumData(Mixins.CalPlots):
         _df = _df.reset_index(drop=True)
         _df.columns = [column.replace(' ', '') for column in _df.columns]
         return _df
+    
+            
+            
+            
+            
+            
+            
+            
+            
+            

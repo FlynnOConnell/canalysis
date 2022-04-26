@@ -8,9 +8,12 @@ Module (models): Classes/functions for NeuralNetwork module training.
 """
 
 from __future__ import division
+
+from abc import ABC, abstractmethod
 from typing import Optional
 from dataclasses import dataclass
 import pandas as pd
+from enum import Enum, auto
 import logging
 from sklearn import preprocessing
 from sklearn.svm import (
@@ -40,6 +43,12 @@ logger = logging.getLogger(__name__)
 
 
 # %%
+
+class Stage(Enum):
+    TRAIN = auto()
+    TEST = auto()
+    EVAL = auto()
+        
 
 class SupportVectorMachine(object):
     """
@@ -73,63 +82,35 @@ class SupportVectorMachine(object):
 
     """
 
-    def __init__(self, _training_data, _eval_data, cv=None, **params):
+    def __init__(self, Xt, Yt, xe, ye, cv=None, **params):
 
         self.scaler = preprocessing.StandardScaler()
         self.encoder = preprocessing.LabelEncoder()
 
         ## Training Data ---------------------------
 
-        self.X = _training_data.tr_data  # x, [features]: taste responsive only
-        self.X.reset_index(drop=True, inplace=True)
+        self.Xt = Xt # x, [features]: taste responsive only
+        self.Xt.reset_index(drop=True, inplace=True)
 
-        self.y = _training_data.all_taste_trials.events  # y, [true]: array of true values
+        self.Yt = Yt  # y, [true]: array of true values
 
         ## Evaluation Data -------------------------
 
-        self.X2 = _eval_data.tr_data  # x, [features]: taste responsive only
-        self.X2.reset_index(drop=True, inplace=True)
-        self.y2 = _eval_data.all_taste_trials.events  # y, [true]: array of true values
+        self.xe = xe  # x, [features]: taste responsive only
+        self.xe.reset_index(drop=True, inplace=True)
+        self.ye = ye  # y, [true]: array of true values
 
         # Encode/Decode y
-        self.encoder.fit(self.y)
-        self.y = self.encoder.transform(self.y)
-        self.y2 = self.encoder.transform(self.y2)
-
-        # Training
-        if cv:
-            assert isinstance(cv, (StratifiedShuffleSplit, ShuffleSplit))
-            self._cv = cv
-        else:
-            self._cv = None
-
-        # self._train(**params)
-        self.model = None
-
-        self.summary = {}
-
-        self.train_scores = None
-        self.eval_scores = None
+        self.encoder.fit(self.Yt)
+        self.Yt = self.encoder.transform(self.Yt)
+        self.ye = self.encoder.transform(self.ye)
 
         ## Helpers ---------------------------------
 
-        self.classes = _training_data.tastant_colors_dict
         self.grid = None
 
-    @property
-    def cv(self):
-        return self._cv
-
-    @cv.setter
-    def cv(self, new_cv):
-        self._cv = new_cv
-
-    @cv.deleter
-    def cv(self):
-        self._cv = None
-
     @staticmethod
-    def _split(X, y,
+    def split(X, y,
                cv=None,
                train_size: float = 0.9,
                test_size: float = None,
@@ -140,30 +121,20 @@ class SupportVectorMachine(object):
         if stratify:
             stratify = y
 
-        if not cv:
-            X_train, X_test, y_train, y_test = train_test_split(
-                X,
-                y,
-                train_size=train_size,
-                random_state=random_state,
-                stratify=stratify)
-            logging.info('train_test_split completed with sklearn.train_test_split')
-        else:
-            cv = cv
-            shuffle_split = StratifiedShuffleSplit(
-                n_splits=1,
-                train_size=0.6,
-                random_state=random_state
-            )
-            logging.info(f'train_test_split completed with {cv}')
+        shuffle_split = StratifiedShuffleSplit(
+            n_splits=1,
+            train_size=0.6,
+            random_state=random_state
+        )
+        logging.info('train_test_split completed')
 
-            train_index, test_index = next(shuffle_split.split(X, y))
-            X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-            y_train, y_test = y[train_index], y[test_index]
+        train_index, test_index = next(shuffle_split.split(X, y))
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y[train_index], y[test_index]
 
         return X_train, X_test, y_train, y_test
 
-    def _train(self,
+    def train(self,
                train_size: float = 0.9,
                test_size: float = None,
                random_state: int = None,
@@ -341,8 +312,7 @@ class SupportVectorMachine(object):
 
         estimator = estimator
 
-        linSVC = LinearSVC()
-
+        
         plot_learning_curve(
             title, X, y, axes=axes[:, 0], ylim=(0, 1.01), cv=cv
         )
