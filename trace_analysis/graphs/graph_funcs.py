@@ -23,8 +23,6 @@ def single_sns_heatmap(df, tastant='', sigma=2,
                        **axargs):
     if sigma:
         df = pd.DataFrame(gaussian_filter(df, sigma=sigma))
-    # cm = sns.color_palette('magma', n_colors = df.shape[1], as_cmap = True)
-    ### Plot data
     fig, ax = plt.subplots()
     ax = sns.heatmap(df, square=square, cbar=cbar, cmap=cmap, robust=robust, **axargs)
 

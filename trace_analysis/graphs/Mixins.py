@@ -3,7 +3,8 @@
 """
 #_plots.py
 
-Module (graph): .Mixin functions to inherit, plotting functions that use instance attributes and nothing else. 
+Module (graph): .Mixin functions to inherit, plotting functions that use instance attributes from Calcium Data
+ class and nothing else.
 """
 from __future__ import annotations
 

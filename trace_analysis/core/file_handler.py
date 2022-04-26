@@ -5,7 +5,7 @@ Module(util): File handling helper functions.
 """
 from __future__ import annotations
 from typing import Optional
-import os
+import sys
 import pandas as pd
 import logging
 from pathlib import Path
@@ -13,6 +13,10 @@ from glob import glob
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
+
+PROJECT_DIR = Path(__file__).parents[2]
+sys.path.append(
+    str(PROJECT_DIR / 'apps'))
 
 
 class FileHandler(object):
@@ -32,8 +36,8 @@ class FileHandler(object):
         
     Args:
         directory (str): Path to directory containing data.
-        animal (str): Animal name.
-        date (str): Current session date  
+        animal_id (str): Animal name.
+        session_date (str): Current session date
         tracename (str): String segment of trace to fetch.
         eventname (str): String segment of event file to fetch.
             -String used in unix-style pattern-matching, surrounded by wildcards:
@@ -43,12 +47,12 @@ class FileHandler(object):
 
     def __init__(self,
                  directory: str,
-                 animal: str,
-                 date: str,
+                 animal_id: str,
+                 session_date: str,
                  tracename: Optional[str] = 'traces',
                  eventname: Optional[str] = 'processed'):
-        self.animal = animal
-        self.date = date
+        self.animal = animal_id
+        self.date = session_date
         self._directory = Path(directory)
         self.session = self.animal + '_' + self.date
         self.animaldir = self._directory / self.animal
@@ -122,46 +126,9 @@ class FileHandler(object):
         Path(path).parents[0].mkdir(parents=True, exist_ok=True)
         return None
 
+    def get_cwd(self):
+        return str(self._directory.cwd())
 
-datadir = '/Users/flynnoconnell/Documents/Work/Data'
-animal = 'PGT13'
-date = '121021'
 
-filehandler = FileHandler(datadir, animal, date)
-
-traces = [file for file in filehandler.get_tracedata()]
-events = [file for file in filehandler.get_eventdata()]
-
-# def get_dir(data_dir: str,
-#             _id: str,
-#             date: str,
-#             pick: int
-#             ):
-#     os.chdir(data_dir)
-#     datapath = Path(data_dir) / _id / date
-
-#     files = (glob(os.path.join(datapath, '*traces*')))
-#     logging.info(f'{len(files)} trace files found:')
-#     for file in (files):
-#         file = Path(file)
-#         logging.info(f'{file.stem}')
-#         logging.info('-' * 15)
-
-#     if len(files) > 1:
-#         if pick == 0:
-#             tracepath = Path(files[0])
-#             logging.info('Taking trace file: {}'.format(tracepath.name))
-#         else:
-#             tracepath = Path(files[pick])
-#             logging.info('Taking trace file: {}'.format(tracepath.name))
-#     elif len(files) == 1:
-#         tracepath = Path(files[0])
-#     else:
-#         logging.info(f'Files for {_id}, {date} not found.')
-#         raise FileNotFoundError
-
-#     eventpath = Path(glob(os.path.join(datapath, '*processed*'))[0])
-#     tracedata = pd.read_csv(tracepath, low_memory=False)
-#     eventdata = pd.read_csv(eventpath, low_memory=False)
-
-#     return tracedata, eventdata
+    def get_home_dir(self):
+        return str(self._directory.home())

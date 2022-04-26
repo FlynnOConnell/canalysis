@@ -22,14 +22,14 @@ from utils.wrappers import Singleton
 from utils import excepts as e
 from core import funcs as func
 from graphs import Mixins
-import functools 
+import functools
 
 logger = logging.getLogger(__name__)
-
 
 # %%
 
 ComposableFunction = Callable[[float], float]
+
 
 def compose(*functions: ComposableFunction) -> ComposableFunction:
     # go through list of function arguments (f and g), return a function and shift to call the next
@@ -89,9 +89,9 @@ def set_params():
         "savefig.dpi": 300,
     })
 
+
 @dataclass
 class CalciumData(Mixins.CalPlots):
-    
     alldata = AllData.instance()
     color_dict = {
         'ArtSal': 'dodgerblue',
@@ -111,7 +111,7 @@ class CalciumData(Mixins.CalPlots):
                  clean: Optional[bool] = True,
                  **kwargs: Optional[dict]
                  ):
-        
+
         # Update the internal dict with kw arguments
         self.__dict__.update(kwargs)
 
@@ -246,10 +246,10 @@ class CalciumData(Mixins.CalPlots):
             raise AttributeError("No cells found in DataFrame")
 
     def _get_data(self):
-        
+
         traces = [file for file in self.filehandler.get_tracedata()][0]
         events = [file for file in self.filehandler.get_eventdata()][0]
-    
+
         self.tracedata = self._clean(traces)
         self.tracedata['Time(s)'] = np.round(self.tracedata['Time(s)'], 1)
         self.eventdata = events
@@ -276,13 +276,3 @@ class CalciumData(Mixins.CalPlots):
         _df = _df.reset_index(drop=True)
         _df.columns = [column.replace(' ', '') for column in _df.columns]
         return _df
-    
-            
-            
-            
-            
-            
-            
-            
-            
-            
