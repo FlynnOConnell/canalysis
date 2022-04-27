@@ -39,8 +39,8 @@ from sklearn.metrics import (
     classification_report
     )
 
-from graphs import draw_plots
-from models.tracking import ModelTracker, Stage
+from graphs import plot
+from models.utils.tracking import ModelTracker, Stage
 logger = logging.getLogger(__name__)
 
 

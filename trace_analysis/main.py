@@ -13,8 +13,8 @@ import numpy as np
 
 from core.calciumdata import CalciumData
 from core.taste_data import TasteData
-from graphs.quick_plots import Quick_Plot as qp
-from graphs.draw_plots import Plot
+from graphs.utils.quick_plots import Quick_Plot as qp
+from graphs.plot import Plot
 from stats.stats import ProcessData 
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')

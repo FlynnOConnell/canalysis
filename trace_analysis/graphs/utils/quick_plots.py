@@ -19,7 +19,7 @@ from IPython.display import HTML
 from matplotlib import rcParams
 import seaborn as sns
 
-import graphs.graph_funcs as gr_func
+import graphs.utils.graph_funcs as gr_func
 
 
 def set_pub():

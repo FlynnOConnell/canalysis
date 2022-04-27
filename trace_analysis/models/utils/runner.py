@@ -8,26 +8,23 @@ Class to run model.
 from typing import Any, Optional
 
 import numpy as np
-import torch
 from sklearn.metrics import accuracy_score
-from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
-from models.metrics import Metric
-from models.tracking import ModelTracker, Stage
-from models.SVM import SupportVectorMachine
+from models.utils.metrics import Metric
+from models.utils.tracking import ModelTracker, Stage
+from models.SVM import SVM
 
 class Runner:
     def __init__(
         self,
-        model: SupportVectorMachine,
+        model: SVM,
         params: dict = None,
     ) -> None:
         
         self.accuracy_metric = Metric()
         self.model = model
         # Objective (loss) function
-        self.compute_loss = torch.nn.CrossEntropyLoss(reduction="mean")
         self.y_true_batches: list[list[Any]] = []
         self.y_pred_batches: list[list[Any]] = []
         # Assume Stage based on presence of optimizer

@@ -12,6 +12,7 @@ from typing import Optional
 from dataclasses import dataclass
 import pandas as pd
 import logging
+
 logger = logging.getLogger(__name__)
 
 from sklearn.metrics import (
@@ -47,18 +48,18 @@ class Scoring(object):
 
         # Input variables
         self.report = None
-        
+
         self.predicted = pred
         self.true = true
         self.classes = classes
         self.descriptor = descriptor
-        
+
         # Report variables
         self.report = self.get_report()
 
         if mat:
             self.mat = self.get_confusion_matrix()
-        
+
         if descriptor is None:
             logging.info('No descriptor')
             pass
@@ -87,4 +88,3 @@ class Scoring(object):
             caption=caption)
 
         return mat
-
