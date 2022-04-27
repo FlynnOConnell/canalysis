@@ -246,10 +246,12 @@ class CalciumData(Mixins.CalPlots):
             raise AttributeError("No cells found in DataFrame")
 
     def _get_data(self):
-
-        traces = [file for file in self.filehandler.get_tracedata()][0]
+        
+        try:
+            traces = [file for file in self.filehandler.get_tracedata()][0]
+        except IndexError:
+            raise e.FileError('File type not located in directory.')
         events = [file for file in self.filehandler.get_eventdata()][0]
-
         self.tracedata = self._clean(traces)
         self.tracedata['Time(s)'] = np.round(self.tracedata['Time(s)'], 1)
         self.eventdata = events

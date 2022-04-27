@@ -14,9 +14,10 @@ import logging
 from core import funcs as func
 from core.calciumdata import CalciumData
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
-class Stats(object):
+class ProcessData(object):
     
     def __init__(self, data):
         assert isinstance(data, CalciumData)
@@ -31,7 +32,6 @@ class Stats(object):
         self.antibouts = self.get_antibouts()
         self.sponts = self.get_sponts()
         
-
     @staticmethod
     def PCA(df: pd.DataFrame,
             colors: Optional[Iterable],
@@ -40,8 +40,9 @@ class Stats(object):
             std: Optional[int] = 3,
             ):
             
+        data = StandardScaler().fit_transform(df)
         pca = PCA(n_components=numcomp)
-        data_fit = pca.fit_transform(df)
+        data_fit = pca.fit_transform(data)
 
         variance_ns = np.round(
             pca.explained_variance_ratio_ * 100, decimals=1)

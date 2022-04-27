@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
 class TasteData(object):
     def __init__(self, 
                  data: pd.DataFrame,
-                 events: dict,
+                 stamps: dict,
                  color_dict: dict,
                  baseline: int = 0,
                  post: int = 0) -> None: 
@@ -27,37 +27,37 @@ class TasteData(object):
         self.time = None
         self.colors = None
         self.signals = None
+        self.events: pd.Series
         
-        self.events = events
         self.post = post
         self.baseline = baseline
         
         self.eventdata = None
         self.tastedata = {}
 
-        self.process()
         self.tastant_dict =  {k: color_dict[k] for k in list(color_dict)[:6]}
         self.tastants = list(self.tastant_dict.keys())
+        self.process(stamps)
         
+
     @staticmethod
     def _authenticate(data):
-        
         assert isinstance(data, pd.DataFrame) and data['Time(s)'] in data.columns
         
                 
-    def process(self):
+    def process(self, stamps):
         
         logging.info('Setting taste data')
         
         new_df = pd.DataFrame()
-        for event, interv in func.iter_events(
-                self.events):
+        for event, interv in func.iter_events(stamps):
             
             df = self.data.loc[
                 (self.data['Time(s)'] > (interv[0] - self.baseline)) &
                 (self.data['Time(s)'] < (interv[1] + self.post))].copy()
             
-            df['colors'] = ca.color_dict[event]
+            df['colors'] = self.color_dict[event]
+            df['events'] = event
             new_df = pd.concat([new_df, df], axis=0)
         new_df.sort_values(by='Time(s)')
 
@@ -68,6 +68,7 @@ class TasteData(object):
         
         self.eventdata = df.copy()
         self.time = df.pop('Time(s)')
+        self.events = df.pop('events')
         self.colors = df.pop('colors')
         self.signals = df
         logging.info('Time, colors, signals are set.')

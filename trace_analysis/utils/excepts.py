@@ -74,5 +74,14 @@ class MergeError(Exception):
         else:
             return 'Cant merge these indices.'
         
+class FileError(Exception):
+    def __init__(self, msg:str, filetype: str='Traces'):
+        if not msg:
+            raise AttributeError('Message param missing from FileError call')
+        else: 
+            self.message = msg
+            self.filetype = filetype
+    def __str__(self):
+        return f'{self.message} - File type: {self.filetype}'
         
 
