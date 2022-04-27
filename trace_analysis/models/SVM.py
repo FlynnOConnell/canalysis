@@ -19,6 +19,8 @@ import pandas as pd
 import logging
 
 from sklearn import preprocessing
+from sklearn.pipeline import Pipeline
+
 from sklearn.svm import (
     SVC,
     LinearSVC)
@@ -52,171 +54,190 @@ class Stage(Enum):
 
     
 class DataHandler(object):
-    """
-    Class to check that features and targets have the same length, with a getter for each sample that also
-    includes the target for that sample.
     
-    Give instance of DataHandler() to GridSearchCV. 
-    """
     
     def __init(self, data, target):
-        self.data = data.reset_index(drop=True)
-        self.target = target.reset_index(drop=True)
+        """
+        Check and index specific data to feed into SVM. Accepted as input to sklearn.GridSearchCV().
+        Features are the data used for regression and margin vectorizations.
+        Labels (or targets, synonymous) are what the classifier is being trained on.
+
+        Args:
+            data (pd.DataFrame | np.ndarray): Features.
+            target (pd.Series | np.array): Labels/targets.
+
+        Returns:
+            None.
+
+        """
+        self.data = data
+        self.target = target
         assert self.data.shape[0] == self.target.shape
 
-    def __getitem__(self, x):
-        return self.data[x], self.target[x]
+
+    def __getitem__(self, idx: int):
+        """
+        Indexer. Returns both feature and target values.
+        
+        Args:
+            x (int | Iterable[Any]): Indexors of any type.
+
+        Returns:
+            data[slice]: Indexed features.
+            target[slice]: Indexed targets.
+
+        """
+        return self.data[idx], self.target[idx]
 
 
 class SVM(ModelTracker):
+    
     def __init__(self):
+        """
+        Base class for SVM. 
+        
+        -Instances of OrdinalEncoder() is needed to "hide" true targets for learning, converting 
+         a binary classification to [-1, 1] values or a multivariate classification to [-1, n-1]. 
+        -Instances of StandardScaler() needed to scale data to a mean = 0 and stdev = 1. 
+        
+        These attributes will be shared for each session.
+
+        Returns:
+            None.
+
+        """
+        self.tracker = ModelTracker()
+
         self.encoder = preprocessing.OrdinalEncoder()
-        self.state = ModelTracker.encoder(self, 'unfit')
+        self.scaler = preprocessing.StandardScaler()
+
         self.model = None
         self.grid = None
+        
         
     def validate_shape(self, x, y):
         assert x.shape[0] == y.shape[0]
         
         
-
 class Train(SVM):
     
-    def __init__(self, data: Iterable[float], targets: Iterable[str], **params):
-        
-        self.encoder = super().encoder
-            
+    def __init__(self, data: Iterable[float], targets: Iterable[str]):
+        """
+        Train an SVM classifier. 
+        Args:
+            data (Iterable[float]): Input data/features.
+            targets (Iterable[str]): Input labels/targets.
+            **params (Any): Optional parameters.
+
+        Returns:
+            None.
+        """
+
         self.data = data.reset_index(drop=True) 
         self.targets = targets  
+        
+        self.encoder = super().encoder
         super().validate_shape(data, targets)
         
+        self.trainset = {}
 
-    @staticmethod
-    def split(X: np.ndarray,
-              y: np.ndarray,
+
+    def split(self,
               train_size: float = 0.9,
               test_size: float = None,
               n_splits=1,
               stratify=True,
-              **splitparams
-          ):
+              **params):
+        """
+        Split training dataset into train/test data.
 
+        Args:
+            train_size (float, optional): Proportion used for training. Defaults to 0.9.
+            test_size (float, optional): Proportion used for testing. Defaults to None.
+            n_splits (int, optional): Number of iterations to split. Defaults to 1.
+            stratify (bool, optional): Split method. Defaults to True.
+            **params (dict): Optional ShuffleSplit estimator params or custom labels/data. 
+
+        Returns:
+            X_train (Iterable[Any]): Training features.
+            X_test (Iterable[Any]): Testing features. 
+            y_train (Iterable[Any]): Training labels.
+            y_test (Iterable[Any]): Testing labels.
+
+        """        
+        data = params.pop('data', self.data)
+        y = params.pop('y', self.y)
         if stratify:
-            stratify = y
-
+            stratify = self.y
+        else:
+            stratify=False
+        assert (train_size > 0.5) and test_size < 0.5 or None
         shuffle_split = StratifiedShuffleSplit(
             n_splits=n_splits,
             train_size=train_size,
-            **splitparams
-        )
-        logging.info('train_test_split completed')
-
-        train_index, test_index = next(shuffle_split.split(X, y))
-        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+            **params)
+        super().tracker.add_train_log(n_splits, train_size)
+        
+        train_index, test_index = next(shuffle_split.split(data, y))
+        X_train, X_test = data.iloc[train_index], data.iloc[test_index]
         y_train, y_test = y[train_index], y[test_index]
-
-        return X_train, X_test, y_train, y_test
-
-class EvalSVM(object):
+        
+        self.trainset['X_train'] = X_train
+        self.trainset['X_test'] = X_test
+        self.trainset['y_train'] = y_train
+        self.trainset['y_test'] = y_test
+        return self.scale(X_train, X_test, y_train, y_test)
     
-    def __init__(self, X: Iterable[Any], Y: Iterable[Any], **params):
-
-        self.scaler = preprocessing.StandardScaler()
-        self.encoder = preprocessing.LabelEncoder()
-
-        ## Training Data ---------------------------
-
-        self.X: np.ndarray = X.reset_index(drop=True) # samples / features, 1darray
-        self.Y = Y  
-
-        # Encode/Decode y
-        self.encoder.fit(self.Yt)
-        self.Y = self.encoder.transform(self.Yt)
-        self.Y = self.encoder.transform(self.ye)
-
-        ## Helpers ---------------------------------
-
-        self.grid = None
-
-
-    def train(self,
-               train_size: float = 0.9,
-               test_size: float = None,
-               random_state: int = None,
-               stratify=None,
-               **cv_params,
-               ):
-
-        X = self.X
-        y = self.y
-
-        if train_size:
-            assert train_size > 0.6
-        if test_size:
-            assert test_size < 0.5
-        if train_size and test_size:
-            assert train_size + test_size == 1
-        if stratify:
-            stratify = y
-
-        if not self.cv:
-            self.cv = StratifiedShuffleSplit(train_size=train_size, test_size=test_size, random_state=random_state)
-            logging.info('train_test_split completed with sklearn.train_test_split')
-        else:
-            cv = self.cv(**cv_params)
-
-        # Scale everything to only the training data's fit
-        self.scaler.fit(self.X_train)
-        self.scaler.transform(self.X_train)
-        self.scaler.transform(self.X_test)
-        self.scaler.transform(self.X2)
-
-    def _get_classifier(self,
-                        cv=None,
-                        kernel=None,
-                        c_range=None,
-                        gamma_range=None,
-                        **params):
+    def scale_encode(self, *args, **kwargs):
         """
-        Return SVM classifier built from training data.
-    
+        Scale the split data. 
+
         Args:
-            train_x (Iterable) : Features.
-            train_y (Iterable) : Targets
-            kernel (str): Function type for computing SVM().
-                -'linear' (Default)
-                -'rbf'
-            c_range (list): Values of C parameter to run GridSearchCV.
-            gamme_range (list):  Values of gamma parameter to run GridSearchCV.
-            params (str): Instance of data for different session.
-
+            *args (Iterable[Any]): Data provided from Split() method, or self provided from kwargs.
+            **kwargs (dict): Custom train/test data. Must be supplied given names: 
+                -X_train, X_test, y_train, y_test
         Returns:
-            SCV classifier.
+            None.
 
         """
-        from sklearn.pipeline import Pipeline
-        scalar = preprocessing.StandardScaler()
-        svc = SVC()
-        pipe = Pipeline([('scalar', scalar), ('svc', svc)])
+        X = kwargs.pop('X_train',args[0])
+        x = kwargs.pop('X_test', args[1])
+        Y = kwargs.pop('y_train', args[2])
+        y = kwargs.pop('y_test', args[3])
+        
+        super().scaler.fit(X)
+        X = super().scaler.transform(X)
+        x = super().scaler.transform(x)
+        super().encoder.fit(Y)
+        Y = super().encoder.transform(Y)
+        y = super().encoder.transform(y)
 
-        if not params:
-            param_grid = {
-                'kernel': ('linear', 'rbf','poly'),
-                'svc__C': [0.1, 1, 10, 100, 150, 200, 500, 1000, 2000, 5000, 10000],
-                'svc__gamma': ['scale', 'auto'],
-                'svc__kernel': ['linear', 'rbf', 'poly'],
-                'epsilon':[0.1,0.2,0.5,0.3]
+
+    def optimize(self,
+                multi_class='auto',
+                max_iter=None,
+                solver='lbfgs',
+                class_weight='balanced',
+                **kwargs):
+        
+        scv__C = kwargs.pop('scv__C',  [0.1, 1, 10, 100, 150, 200, 500, 1000])
+        svc__gamma = kwargs.pop('svc__gamma', ['scale', 'auto'])
+        svc__kernel = kwargs.pop('svc__kernel', ['linear', 'rbf', 'poly'])
+        svc__epsilon = kwargs.pop('svc__epsilon', [0.1,0.2,0.5,0.3])
+        verbose = kwargs.pop('verbose', True)
+        
+        param_grid = {
+            'svc__C': scv__C,
+            'svc__gamma': svc__gamma,
+            'svc__kernel': svc__kernel,
+            'svc__epsilon': svc__epsilon
             }
-
-        if 'cv':
-            cv = cv
-        else:
-            cv = StratifiedShuffleSplit(n_splits=2, test_size=0.2, random_state=42)
-
-        X_train, _, y_train, _ = self._split(self.X, self.y)
-
-        self.grid = GridSearchCV(pipe, param_grid=param_grid, cv=cv, verbose=True)
-        self.grid.fit(X_train, y_train)
+        
+        param_grid = kwargs.pop('param_grid', param_grid)
+        
+        svc = SVC(solver='lbfgs', multi_class='auto', max_iter=max_iter, class_weight='balanced')
+        self.grid = GridSearchCV(svc, param_grid=param_grid, verbose=verbose)
+        self.grid.fit(self.trainset['X_train'], self.trainset['y_train'])
 
         # Store training results 
         self.summary['param_grid'] = param_grid
@@ -321,71 +342,6 @@ class EvalSVM(object):
         )
 
         plt.show()
-
-
-@dataclass
-class Scoring(object):
-
-    def __init__(self,
-                 pred,
-                 true,
-                 classes,
-                 descriptor: Optional[str] = '',
-                 mat: bool = False,
-                 metrics: bool = False
-                 ):
-
-        # Input variables
-        self.results = {}
-
-        self.predicted = pred
-        self.true = true
-        self.classes = classes
-        self.results['descriptor'] = descriptor
-
-        # Report variables
-        self.clf_report = self.get_report()
-
-        if mat:
-            self.mat = self.get_confusion_matrix()
-
-        if metrics:
-            self.get_metrics()
-
-        if descriptor is None:
-            logging.info('No descriptor')
-            pass
-
-    def get_report(self) -> pd.DataFrame:
-
-        if self.descriptor:
-            assert self.descriptor in ['train', 'test', 'eval']
-
-        report = classification_report(
-            self.true,
-            self.predicted,
-            target_names=self.classes,
-            output_dict=True
-        )
-        report = pd.DataFrame(data=report).transpose()
-
-        return report
-
-    def get_metrics(self):
-
-        self.results['accuracy'] = accuracy_score(self.true, self.predicted)
-        self.results['recall'] = recall_score(self.true, self.predicted, average='micro')
-        self.results['f1'] = f1_score(self.true, self.predicted, average='micro')
-
-    def get_confusion_matrix(self, caption: Optional[str] = '') -> object:
-
-        mat = draw_plots.Plot.confusion_matrix(
-            self.true,
-            self.predicted,
-            labels=self.classes,
-            caption=caption)
-
-        return mat
 
 
 if __name__ == "__main__":

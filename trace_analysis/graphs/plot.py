@@ -39,7 +39,7 @@ logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
 
 class Plot(object):
     def __init__(self,
-                 data: pd.DataFrame=None,
+                 data: pd.DataFrame = None,
                  legend=None,
                  colors: Optional[Iterable] = None,
                  events: Optional[Iterable] = None,
