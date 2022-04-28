@@ -22,9 +22,9 @@ install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 dependency_links = [x.strip().replace('git+', '') for x in all_reqs if x.startswith('git+')]
 
 setup(
-    name='trace_analysis',
+    name='CalciumAnalysis',
     version=__version__,
-    description='Calcium imagine trace analysis with statistics and machine learning.',
+    description='Calcium Imaging trace analysis with statistics and machine learning.',
     license='MIT',
     packages=find_packages(),
     include_package_data=True,
