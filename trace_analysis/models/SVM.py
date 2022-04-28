@@ -39,24 +39,18 @@ from sklearn.metrics import (
     classification_report
     )
 
-from graphs import plot
-from models.utils.tracking import ModelTracker, Stage
+from graphs.plot import Plot
+from models.utils.tracking import Stage
 logger = logging.getLogger(__name__)
 
 
 # %%
 
-class Stage(Enum):
-    TRAIN = auto()
-    TEST = auto()
-    EVAL = auto()
-
 
     
 class DataHandler(object):
     
-    
-    def __init(self, data, target):
+    def __init__(self, stage, data, target = None):
         """
         Check and index specific data to feed into SVM. Accepted as input to sklearn.GridSearchCV().
         Features are the data used for regression and margin vectorizations.
@@ -68,11 +62,12 @@ class DataHandler(object):
 
         Returns:
             None.
-
         """
+        self.stage = Stage.VAL if target is None else Stage.TRAIN
         self.data = data
         self.target = target
-        assert self.data.shape[0] == self.target.shape
+        if (self.data.shape[0]) != (self.target.shape[0]):
+            raise Exception('Wrong')
 
 
     def __getitem__(self, idx: int):
@@ -85,14 +80,13 @@ class DataHandler(object):
         Returns:
             data[slice]: Indexed features.
             target[slice]: Indexed targets.
-
         """
         return self.data[idx], self.target[idx]
 
 
-class SVM(ModelTracker):
+class modelSVM(object):
     
-    def __init__(self):
+    def __init__(self, data, target):
         """
         Base class for SVM. 
         
@@ -106,48 +100,27 @@ class SVM(ModelTracker):
             None.
 
         """
-        self.tracker = ModelTracker()
-
+        self.TRAINDATA = DataHandler('train', data, target)
+        self.TESTDATA = None
         self.encoder = preprocessing.OrdinalEncoder()
         self.scaler = preprocessing.StandardScaler()
-
         self.model = None
         self.grid = None
         
+        self.trainset = {}
+            
         
     def validate_shape(self, x, y):
         assert x.shape[0] == y.shape[0]
         
         
-class Train(SVM):
-    
-    def __init__(self, data: Iterable[float], targets: Iterable[str]):
-        """
-        Train an SVM classifier. 
-        Args:
-            data (Iterable[float]): Input data/features.
-            targets (Iterable[str]): Input labels/targets.
-            **params (Any): Optional parameters.
-
-        Returns:
-            None.
-        """
-
-        self.data = data.reset_index(drop=True) 
-        self.targets = targets  
-        
-        self.encoder = super().encoder
-        super().validate_shape(data, targets)
-        
-        self.trainset = {}
-
-
     def split(self,
               train_size: float = 0.9,
               test_size: float = None,
               n_splits=1,
               stratify=True,
-              **params):
+              **params
+              ):
         """
         Split training dataset into train/test data.
 
@@ -164,20 +137,17 @@ class Train(SVM):
             y_train (Iterable[Any]): Training labels.
             y_test (Iterable[Any]): Testing labels.
 
-        """        
-        data = params.pop('data', self.data)
-        y = params.pop('y', self.y)
+        """      
+        data = params.pop('data', self.TRAINDATA.data)
+        y = params.pop('y', self.TRAINDATA.target)
         if stratify:
-            stratify = self.y
+            stratify = y
         else:
             stratify=False
-        assert (train_size > 0.5) and test_size < 0.5 or None
         shuffle_split = StratifiedShuffleSplit(
             n_splits=n_splits,
             train_size=train_size,
             **params)
-        super().tracker.add_train_log(n_splits, train_size)
-        
         train_index, test_index = next(shuffle_split.split(data, y))
         X_train, X_test = data.iloc[train_index], data.iloc[test_index]
         y_train, y_test = y[train_index], y[test_index]
@@ -187,7 +157,7 @@ class Train(SVM):
         self.trainset['y_train'] = y_train
         self.trainset['y_test'] = y_test
         return self.scale(X_train, X_test, y_train, y_test)
-    
+    #models
     def scale_encode(self, *args, **kwargs):
         """
         Scale the split data. 
@@ -235,7 +205,7 @@ class Train(SVM):
         
         param_grid = kwargs.pop('param_grid', param_grid)
         
-        svc = SVC(solver='lbfgs', multi_class='auto', max_iter=max_iter, class_weight='balanced')
+        svc = SVC(max_iter=max_iter, class_weight='balanced')
         self.grid = GridSearchCV(svc, param_grid=param_grid, verbose=verbose)
         self.grid.fit(self.trainset['X_train'], self.trainset['y_train'])
 
@@ -254,9 +224,9 @@ class Train(SVM):
         c_best = self.grid.best_params_['svc__C']
         gamma_best = self.grid.best_params_['svc__gamma']
 
-        clf = SVC(C=c_best, kernel=kernel, gamma=gamma_best, verbose=False)
+        best_clf = SVC(C=c_best, kernel=kernel, gamma=gamma_best, verbose=False)
 
-        return clf
+        return best_clf
 
     def fit(self,
             params: Optional[str] = '',

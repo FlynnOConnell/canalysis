@@ -17,25 +17,15 @@ from collections.abc import MutableMapping
 import numpy as np
 import pandas as pd
 
-from core.file_handler import FileHandler
+from core.core_utils.file_handler import FileHandler
+from core.core_utils import funcs as func
 from utils.wrappers import Singleton
 from utils import excepts as e
-from core import funcs as func
-from graphs import Mixins
-import functools
+from graphs.graph_utils import Mixins
 
 logger = logging.getLogger(__name__)
 
 # %%
-
-ComposableFunction = Callable[[float], float]
-
-
-def compose(*functions: ComposableFunction) -> ComposableFunction:
-    # go through list of function arguments (f and g), return a function and shift to call the next
-    # function. Works like Sklearn.Pipeline. 
-    return functools.reduce(lambda f, g: lambda x: g(f(x)), functions)
-
 
 # Storing instances in a mutable mapping from abstract base class
 # for some extra functionality in how we iterate, count and represent

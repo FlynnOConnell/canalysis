@@ -6,7 +6,7 @@
 import pandas as pd
 from core.calciumdata import CalciumData as ca
 import numpy as np
-from core import funcs as func
+from core.utils import funcs as func
 import logging
 
 logger = logging.getLogger(__name__)

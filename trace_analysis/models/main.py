@@ -10,11 +10,8 @@ import numpy as np
 
 from core.calciumdata import CalciumData
 from core.taste_data import TasteData
-from graphs.utils.quick_plots import Quick_Plot as qp
-from graphs.plot import Plot
-from stats.stats import ProcessData 
-from core.utils import funcs as func
-from models import SVM
+from core.core_utils import funcs as func
+from models.SVM import modelSVM
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -35,10 +32,10 @@ data = CalciumData(animal, date, datadir)
 
 zscores = data.zscores
 taste_data_z = TasteData(zscores, data.timestamps, data.color_dict)
-taste_data_z.events
-
-# events = func.convert_tastants(taste_data_z.colors, taste_data_z.color_dict)
-
+signals = taste_data_z.signals.shape[0]
+events = taste_data_z.events.shape[0]
+svm = modelSVM(signals, events)
+svm.split()
 
 
 
