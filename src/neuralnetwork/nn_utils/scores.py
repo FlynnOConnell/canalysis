@@ -9,12 +9,13 @@ Module (neuralnetwork): Structures to score and keep scores for evaluated data.
 
 from __future__ import division
 
+from typing import Optional, Iterable
+import numpy as np
 import logging
 from dataclasses import dataclass
-from typing import Optional
 import pandas as pd
 from sklearn.metrics import classification_report
-from graphs.plots import Plot
+from graphs.plot import Plot
 import pickle
 logger = logging.getLogger(__name__)
 
@@ -30,9 +31,9 @@ def load(save_file_path):
 @dataclass
 class Scoring(object):
     def __init__(self,
-                 pred,
-                 true,
-                 classes,
+                 pred: np.ndarray,
+                 true: np.ndarray,
+                 classes: Iterable,
                  descriptor: Optional[str] = '',
                  mat: bool = False):
         """
