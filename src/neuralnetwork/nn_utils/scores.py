@@ -38,15 +38,22 @@ class Scoring(object):
         """
         Class to manage scoring variables from fitted classifiers. 
 
-        Args:
-            pred (ndarray): Fitted model's "predicted" output.
-            true (ndarray): True output to compare with predicted.
-            classes (Iterable): Descriptors of each predictable value.
-            descriptor (Optional[str]): Description of what input was used. Defaults to ''.
-            mat (bool, optional): Whether to output a Confusion Matrix. Defaults to False.
-        Returns:
-            None.
+        Parameters
+        ----------
+        pred : ndarray
+            Fitted model's "predicted" output.
+        true : ndarray
+            Descriptors of each predictable value.
+        classes : Iterable
+            Descriptors of each predictable value.
+        descriptor : Optional[str], optional
+            Description of what input was used. 
+        mat : bool, optional
+            Whether to output a Confusion Matrix. The default is False.
 
+        Returns
+        -------
+        None.
         """
         # Input variables
         self.report = self.get_report()
