@@ -20,9 +20,11 @@ import numpy as np
 import pandas as pd
 from IPython.display import HTML
 from matplotlib import rcParams
+from calciumdata import CalciumData
 
 
 def set_pub():
+    # Function to set some easy params and avoid some annoying bugs
     rcParams.update({
         "font.weight": "bold",
         "axes.labelweight": 'bold',
@@ -37,32 +39,47 @@ logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
 
 
 class Plot(object):
+    
     def __init__(self,
                  data: pd.DataFrame = None,
                  colors: Optional[Iterable] = None,
                  cmap: str = 'magma',
                  dpi: Optional[int] = 600,
-                 save_dir: str = '/Users/flynnoconnell/Pictures',
+                 save_dir: str = None,
                  **kwargs
                  ):
+        """
+        Class with graphing utilities. 
+        
+        Parameters
+        ----------
+        data : pd.DataFrame, optional
+            Plotting data, representing points on the graph. The default is None.
+        colors : Optional[Iterable], optional
+            Matched colors if data values are colored. 
+            colors.shape must be the same as data.shape[0]. The default is None.
+        cmap : str, optional
+            Color for colormap. The default is 'magma'.
+        dpi : Optional[int], optional
+            Pixel resolution. The default is 600.
+        save_dir : str, FileHandler, optional
+            Directory for saving data. The default is None.
+        **kwargs : dict
+            optional arguments for matplotlib.Axes and Axes.Scatter.
 
-        self.cmap = plt.get_cmap(cmap)
+        Returns
+        -------
+        None.
+
+        """
         self.data = data
         self.colors = colors
         self.dpi = dpi
         self.save_dir = save_dir
         self.facecolor = 'white'
-        self.color_dict = {
-            'ArtSal': 'dodgerblue',
-            'MSG': 'darkorange',
-            'NaCl': 'lime',
-            'Sucrose': 'magenta',
-            'Citric': 'yellow',
-            'Quinine': 'red',
-            'Rinse': 'lightsteelblue',
-            'Lick': 'darkgray'
-        }
-
+        self.color_dict = CalciumData.color_dict
+        self.cmap = plt.get_cmap(cmap)
+        
         self.kwargs = kwargs
         self.checks = {}
 
@@ -84,28 +101,43 @@ class Plot(object):
                 ) -> None:
         """
             Plot 2D/3D scatter plot with matplotlib.
-    
-            Args:
-                df (pd.DataFrame): Input data for scatter plot. 
-                color_dict (dict): Colors for graph.
-                colors_c (pd.Series) | Any: Colors for each scatter point.
-                title (str): Text to display as title.
-                legend (bool: Whether to include a legend
-                conf_interv (bool): Whether to plot ellipse confidence intervals.
-                size (int): Size of graph markers. Default = 5.
-                marker (str): Shape of marker. Default is circle.
-                alpha (int): Alpha of markers.
-                savefig (str): Optional alternative location to save.
-                    Default = Path(resultsdir)
-                msg (str): Message to include if save_dir is given.
-                caption: Optional description box to place in graph.
-                facecolor (str): Color of background.
-                bbox_inches (str): Whitespace surrounding graphs.
-                dpi (int): pixels per inch.
 
-            Returns:
-                None
-    
+        Parameters
+        ----------
+        df : pd.DataFrame, optional
+            Input data for scatter plot. The default is None.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        colors : Iterable | Any, optional
+            Colors for graph. The default is None.
+        title : Optional[str], optional
+            Text to display as title. The default is None.
+        legend : Optional[bool], optional
+            Whether to include a legend. The default is True.
+        size : int, optional
+            Size of graph markers. Default = 5. The default is 5.
+        marker : str, optional
+            Shape of marker. The default is 'o'.
+        alpha : Optional[int], optional
+            Alpha of markers. The default is 1.
+        conf_interv : Optional[bool], optional
+            Whether to plot ellipse confidence intervals.
+            The default is False.
+        savefig : Optional[bool], optional
+            Alternative location to save. The default is Path(reesultsdir).
+        msg : Optional[str], optional
+            Message to include if save_dir is given. The default is 'nomsg'.
+        bbox_inches : str, optional
+            Whitespace surrounding graphs. The default is 'tight'.
+        facecolor : str, optional
+            Color of background. The default is 'white'.
+        **kwargs : dict
+            Optional inputs to matplotlib.Axes.Scatter.
+
+        Returns
+        -------
+        None
+
         """
         set_pub()
 
@@ -165,11 +197,25 @@ class Plot(object):
         return None
 
     @staticmethod
-    def skree(var: np.ndarray,
+    def skree(varience: np.ndarray,
               title: str = '') -> None:
+        """
+        Line chart skree plot.
 
-        lab = np.arange(len(var)) + 1
-        plt.plot(lab, var, 'o-', linewidth=2, color='blue')
+        Parameters
+        ----------
+        varience : np.ndarray
+            From PCA.explained_varience_ratio_.
+        title : str, optional
+            Title of graph. The default is ''.
+
+        Returns
+        -------
+        None
+            DESCRIPTION.
+        """
+        lab = np.arange(len(varience)) + 1
+        plt.plot(lab, varience, 'o-', linewidth=2, color='blue')
         plt.title(f'{title}' + 'Scree Plot')
         plt.xlabel('Principal Component')
         plt.ylabel('Variance Explained (%)')
@@ -184,48 +230,6 @@ class Plot(object):
 
         return None
 
-    def scatter_2d(self,
-                   df: pd.DataFrame | Iterable[Any],
-                   y=None,
-                   lim: bool = True,
-                   colors: Optional[Iterable] = None,
-                   legend: Optional[bool] = True,
-                   color_dict=None,
-                   marker: Optional[str] = 'o',
-                   ):
-        """ 
-        Make scatter plot, given data and labels.  
-        """
-        if color_dict is None:
-            color_dict = self.legend
-        if isinstance(df, pd.DataFrame):
-            x = df.iloc[:, 0]
-            y = df.iloc[:, 1]
-        else:
-            x = df
-            y = y
-
-        colors = colors
-        fig = plt.figure()
-        ax = fig.gca()
-
-        if lim:
-            ax.set_xlim(-.5, .5)
-            ax.set_ylim(0.5, 5)
-        # ax.set_xlabel(label_x, weight='bold')
-        # ax.set_ylabel(label_y, weight='bold')
-        # ax.set_title(f'{title}')
-        ax.scatter(x, y, s=40, c=colors, marker=marker, alpha=1)
-        if legend:
-            proxy, labels = gr_func.get_handles(color_dict)
-            ax.legend(handles=proxy,
-                      labels=labels,
-                      loc='upper right',
-                      prop={'size': 6},
-                      bbox_to_anchor=(1, 1),
-                      ncol=2, numpoints=1)
-
-        return None
 
     def scatter_3d(self,
                    df: pd.DataFrame = None,
@@ -243,26 +247,41 @@ class Plot(object):
                    bbox_inches: str = 'tight',
                    facecolor: str = 'white'
                    ) -> None:
-
         """
-            Plot 2D/3D scatter plot with matplotlib.
-    
-            Args:
-                df (pd.DataFrame): Input data for scatter plot. 
-                color_dict (dict): Colors for graph.
-                colors_c (pd.Series) | (np.1darray): Colors for each scatter point.
-                title (str): Text to display as title.
-                size (int): Size of graph markers. Default = 5.
-                marker (str): Shape of marker. Default is circle.
-                alpha (int): Alpha of markers.
-                savefig (str): Optional alternative location to save.
-                    Default = Path(resultsdir)
-                msg (str): Message to include if save_dir is given.
-                caption: Optional description box to place in graph.
-    
-            Returns:
-                None
-    
+        Plot 3D scatter plot with matplotlib.
+
+        Parameters
+        ----------
+        df : pd.DataFrame, optional
+            Input data for scatter plot. The default is None.
+        color_dict : dict, optional
+            Colors for graph. The default is None.
+        color : pd.Series, optional
+            Colors for each scatter point. The default is None.
+        title : Optional[str], optional
+            Text to display as title. The default is None.
+        size : int, optional
+            Size of graph markers. The default is 5.
+        marker : str, optional
+            Shape of marker. The default is 'o'.
+        alpha : int, optional
+            Alpha of markers. The default is 1.
+        conf_interv : Optional[bool], optional
+            Whether to plot ellipse confidence intervals.
+            The default is False.
+        savefig : Optional[bool], optional
+            Alternative location to save. The default is Path(reesultsdir).
+        msg : Optional[str], optional
+            Message to include if save_dir is given. The default is 'nomsg'.
+        bbox_inches : str, optional
+            Whitespace surrounding graphs. The default is 'tight'.
+        facecolor : str, optional
+            Color of background. The default is 'white'.
+
+        Returns
+        -------
+        None
+            DESCRIPTION.
         """
 
         assert isinstance(df, pd.DataFrame)
@@ -411,6 +430,32 @@ class Plot(object):
                          yaxislabel: Optional[str] = None,
                          caption: Optional[str] = '',
                          save_dir: str = None) -> np.array:
+        """
+        
+
+        Parameters
+        ----------
+        y_pred : TYPE
+            DESCRIPTION.
+        y_true : TYPE
+            DESCRIPTION.
+        labels : list
+            DESCRIPTION.
+        xaxislabel : Optional[str], optional
+            DESCRIPTION. The default is None.
+        yaxislabel : Optional[str], optional
+            DESCRIPTION. The default is None.
+        caption : Optional[str], optional
+            DESCRIPTION. The default is ''.
+        save_dir : str, optional
+            DESCRIPTION. The default is None.
+
+        Returns
+        -------
+        mat : TYPE
+            DESCRIPTION.
+
+        """
 
         import seaborn as sns
         sns.set()
