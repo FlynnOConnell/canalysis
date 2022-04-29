@@ -22,6 +22,7 @@ from sklearn.model_selection import (
     GridSearchCV)
 from sklearn.svm import SVC
 from graphs.graph_utils.graph_funcs import plot_learning_curve
+from neuralnetwork.nn_utils.scores import Scoring
 logger = logging.getLogger(__name__)
 
 
@@ -70,17 +71,32 @@ class SupportVectorMachine:
     def __init__(self, data, target):
         """
         Base class for svc.SVM neural network model.
-        
         -Instances of OrdinalEncoder() is needed to "hide" true targets for learning, converting 
-         a binary classification to [-1, 1] values or a multivariate classification to [-1, n-1]. 
+             a binary classification to [-1, 1] values or a multivariate classification to [-1, n-1]. 
         -Instances of StandardScaler() needed to scale data to a mean = 0 and stdev = 1. 
+        -These attributes will be shared for each session.
         
-        These attributes will be shared for each session.
-        Args:
-            data (pd.DataFrame | np.ndarray): Indexors of any type.
+        ..:Steps: 
+            1) Split dataset-1 into Train/Train-labels (X_train, Y_train) and Test/Test-labels
+            2) Scale data to mean = 0 Stdev = 1, and encode labels to integers -1 to 1-n (n = len(labels))
+            3) Optimize classifier (optional), tune hyperparameters with sklearn.GridSearchCv using default or 
+                   custom parameters for C, Gamma, and anything else. 
+            4) Fit the model to training data. 
+            5) Predict test labels from fitten model.
+            6) If scores are sufficient, use fitted model to predict labels from different eval dataset.
+                
+            Note: Each step can be performed independantly with custom data. 
+        
+        Parameters
+        ----------
+        data : pd.DataFrame | np.ndarray
+            Features x Samples.
+        target : pd.Series | np.ndarray
+            Labels for data input.
 
-        Returns:
-            None.
+        Returns
+        -------
+        None.
 
         """
         self.summary: dict = {}
@@ -92,6 +108,8 @@ class SupportVectorMachine:
         self.grid = None
 
         self.trainset = {}
+        self.cv_scoring = None
+        self.eval_scoring = None
 
     @staticmethod
     def validate_shape(x, y):
@@ -246,6 +264,7 @@ class SupportVectorMachine:
     def predict_clf(self, x_test):
         x_test = self.trainset['x_test']
         self.trainset['y_pred'] = self.model.predict(x_test)
+        self.cv_scoring = Scores()
         return None
 
 
