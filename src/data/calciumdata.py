@@ -16,8 +16,10 @@ from typing import Type, Optional, Iterable
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-from data_utils import funcs as func
-from data_utils.file_handler import FileHandler
+
+from data.data_utils import funcs as func
+from data.data_utils.file_handler import FileHandler
+from data.taste_data import TasteData
 from graphs.graph_utils import Mixins
 from utils import excepts as e
 from utils.wrappers import Singleton
@@ -81,7 +83,7 @@ def set_params():
 
 @dataclass
 class CalciumData(Mixins.CalPlots):
-    alldata = AllData.instance()
+    alldata = AllData.Instance()
     color_dict = {
         'ArtSal': 'dodgerblue',
         'MSG': 'darkorange',
@@ -134,6 +136,8 @@ class CalciumData(Mixins.CalPlots):
         self.numlicks: int | None = None
         self._set_event_attrs()
         self.color_dict = CalciumData.color_dict
+        self.tastedata = self._set_tastedata(self.tracedata)
+        
         self._add_instance()
 
         # logging.info(f'Data instance for: \n {self.animal} - {self.date} \n ...instantiated.')
@@ -155,22 +159,9 @@ class CalciumData(Mixins.CalPlots):
     def keys_exist(element, *keys):
         return func.keys_exist(element, *keys)
 
-    def _add_instance(self):
-
-        my_dict = type(self).alldata
-
-        if self.keys_exist(my_dict, self.animal, self.date):
-            logging.info(f'{self.animal}-{self.date} already exist.')
-        elif self.keys_exist(my_dict, self.animal) \
-                and not self.keys_exist(my_dict, self.date):
-            my_dict[self.animal][self.date] = self
-            logging.info(f'{self.animal} exists, {self.date} added.')
-        elif not self.keys_exist(my_dict, self.animal):
-            my_dict[self.animal] = {self.date: self}
-            logging.info(f'{self.animal} and {self.date} added')
-
-        return None
-
+    def _set_tastedata(self, df):
+        return TasteData(df, self.timestamps)
+    
     def get_trials(self) -> None:
         for stim, trials in self.trial_times.items():
             logging.info(f'{stim} - {len(trials)}')
@@ -217,6 +208,7 @@ class CalciumData(Mixins.CalPlots):
                         times.append(ts)
                 self.trial_times[stim] = times
         self.drylicks = func.get_matched_time(self.time, drylicks)
+        return None
 
     def _set_trace_signals(self) -> pd.DataFrame:
 
@@ -233,6 +225,7 @@ class CalciumData(Mixins.CalPlots):
             raise e.DataFrameError('Event data must be a dataframe.')
         if not any(x in self.tracedata.columns for x in ['C0', 'C00']):
             raise AttributeError("No cells found in DataFrame")
+        return None
 
     def _get_data(self):
         
@@ -244,6 +237,21 @@ class CalciumData(Mixins.CalPlots):
         self.tracedata = self._clean(traces)
         self.tracedata['Time(s)'] = np.round(self.tracedata['Time(s)'], 1)
         self.eventdata = events
+        return None
+        
+    def _add_instance(self):
+
+        my_dict = type(self).alldata
+        if self.keys_exist(my_dict, self.animal, self.date):
+            logging.info(f'{self.animal}-{self.date} already exist.')
+        elif self.keys_exist(my_dict, self.animal) \
+                and not self.keys_exist(my_dict, self.date):
+            my_dict[self.animal][self.date] = self
+            logging.info(f'{self.animal} exists, {self.date} added.')
+        elif not self.keys_exist(my_dict, self.animal):
+            my_dict[self.animal] = {self.date: self}
+            logging.info(f'{self.animal} and {self.date} added')
+        return None
 
     @staticmethod
     def _clean(_df) -> pd.DataFrame:
@@ -255,9 +263,7 @@ class CalciumData(Mixins.CalPlots):
             # If any cells marked as "accepted", use only those cells
             accepted_col = [col for col in _df.columns if ' accepted' in col]
             return accepted_col
-
         accept = check_if_accepted(_df)
-
         if accept:
             accepted = np.where(_df.loc[0, :] == ' accepted')[0]
             _df = _df.iloc[:, np.insert(accepted, 0, 0)]
@@ -267,3 +273,4 @@ class CalciumData(Mixins.CalPlots):
         _df = _df.reset_index(drop=True)
         _df.columns = [column.replace(' ', '') for column in _df.columns]
         return _df
+    

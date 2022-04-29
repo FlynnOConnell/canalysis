@@ -51,7 +51,6 @@ class Plot(object):
         self.colors = colors
         self.dpi = dpi
         self.save_dir = save_dir
-
         self.facecolor = 'white'
         self.color_dict = {
             'ArtSal': 'dodgerblue',
@@ -83,7 +82,6 @@ class Plot(object):
                 facecolor: str = 'white',
                 **kwargs,
                 ) -> None:
-
         """
             Plot 2D/3D scatter plot with matplotlib.
     
@@ -406,8 +404,8 @@ class Plot(object):
 
         return None
 
-    def confusion_matrix(y_test,
-                         y_fit,
+    def confusion_matrix(y_pred,
+                         y_true,
                          labels: list,
                          xaxislabel: Optional[str] = None,
                          yaxislabel: Optional[str] = None,
@@ -417,12 +415,11 @@ class Plot(object):
         import seaborn as sns
         sns.set()
         from sklearn.metrics import confusion_matrix
-
-        mat = confusion_matrix(y_test, y_fit)
+        set_pub()
+        mat = confusion_matrix(y_pred, y_true)
         sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
                     xticklabels=labels,
                     yticklabels=labels)
-
         if xaxislabel:
             plt.xlabel(xaxislabel)
         else:
@@ -434,11 +431,8 @@ class Plot(object):
         if caption:
             plt.text(0, -.03,
                      caption,
-                     fontstyle='italic',
                      fontsize='small')
-
         plt.show()
-
         if save_dir:
             plt.savefig(
                 save_dir

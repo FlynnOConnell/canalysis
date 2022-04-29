@@ -18,6 +18,7 @@
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
 
+.idea/**
 
 # CMake
 cmake-build-*/

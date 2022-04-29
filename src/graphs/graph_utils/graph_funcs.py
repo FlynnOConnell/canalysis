@@ -20,18 +20,14 @@ def get_handles(color_dict: dict,
                 ) -> Tuple[list, list]:
     """
     Get matplotlib handles for input dictionary.
-
     Args:
         color_dict (dict): Dictionary of event:color k/v pairs.
         linestyle (str): Connecting lines, default = none.
         marker (str): Shape of scatter point, default is circle.
-
     Returns:
         proxy (list): matplotlib.lines.line2D appended list.
         label (list): legend labels for each proxy.
-
     """
-
     proxy, label = [], []
     for t, c in color_dict.items():
         proxy.append(lines.Line2D([0], [0], marker=marker, markerfacecolor=c, linestyle=linestyle, **kwargs))
@@ -41,7 +37,7 @@ def get_handles(color_dict: dict,
 
 def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
     """
-    Create a plot of the covariance confidence ellipse of `x` and `y`
+    Create a covariance confidence ellipse of `x` and `y`
             
     Parameters
     ----------
@@ -60,18 +56,14 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
     ----------------
     kwargs : `~matplotlib.patches.Patch` properties
     """
-
     from matplotlib.patches import Ellipse
     import matplotlib.transforms as transforms
 
     if x.size != y.size:
         raise ValueError("x and y must be the same size")
-
     cov = np.cov(x, y)
     pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
-
-    # Using a special case to obtain the eigenvalues of this
-    # two-dimensionl dataset.
+    # obtain the eigenvalues (special case)
     ell_radius_x = np.sqrt(1 + pearson)
     ell_radius_y = np.sqrt(1 - pearson)
     ellipse = Ellipse((0, 0),
@@ -79,19 +71,15 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
                       height=ell_radius_y * 2,
                       facecolor=facecolor,
                       **kwargs)
-
     # Calculating the stdandard deviation of x 
     scale_x = np.sqrt(cov[0, 0]) * n_std
     mean_x = np.mean(x)
-
     # calculating the stdandard deviation of y 
     scale_y = np.sqrt(cov[1, 1]) * n_std
     mean_y = np.mean(y)
-
     transf = transforms.Affine2D() \
         .rotate_deg(45) \
         .scale(scale_x, scale_y) \
         .translate(mean_x, mean_y)
-
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)

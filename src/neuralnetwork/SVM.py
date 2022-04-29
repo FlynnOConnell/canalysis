@@ -20,11 +20,7 @@ from sklearn.model_selection import (
     StratifiedShuffleSplit,
     ShuffleSplit,
     GridSearchCV)
-from sklearn.svm import (
-    SVC)
-
-from graphs.plot import Plot
-
+from sklearn.svm import SVC
 logger = logging.getLogger(__name__)
 
 
@@ -51,9 +47,8 @@ class DataHandler:
             None.
         """
         self.stage = 'train'
-        # self.stage = Stage.VAL if target is None else Stage.TRAIN
-        self.data = data
-        self.target = target
+        self.data = np.array(data)
+        self.target = np.array(target)
 
     def __getitem__(self, idx: int):
         """
@@ -101,6 +96,16 @@ class SupportVectorMachine:
     def validate_shape(x, y):
         assert x.shape[0] == y.shape[0]
 
+    @staticmethod
+    def to_numpy(arg):
+        if isinstance(arg, np.ndarray):
+            return arg
+        elif isinstance(arg, pd.Series):
+            return arg.to_numpy()
+        else:
+            return np.array(arg)
+        
+        
     def split(self,
               train_size: float = 0.9,
               n_splits=1,
@@ -119,7 +124,6 @@ class SupportVectorMachine:
             x_test (Iterable[Any]): Testing features.
             Y_train (Iterable[Any]): Training labels.
             y_test (Iterable[Any]): Testing labels.
-
         """
         data = params.pop('data', self.TRAINDATA.data)
         target = params.pop('target', self.TRAINDATA.target)
@@ -128,8 +132,9 @@ class SupportVectorMachine:
             n_splits=n_splits,
             train_size=train_size,
             **params)
+        
         train_index, test_index = next(shuffle_split.split(data, target))
-        X_train, x_test = data.iloc[train_index], data.iloc[test_index]
+        X_train, x_test = data[train_index], data[test_index]
         Y_train, y_test = target[train_index], target[test_index]
 
         self.trainset['X_train'] = X_train
@@ -139,7 +144,7 @@ class SupportVectorMachine:
         self.trainset['encoded'] = 'no'
         return None
 
-    def scale_encode(self, *args, **kwargs):
+    def scale_encode(self, **kwargs):
         """
         Scale to mean = 0 and st.dev = 1 a train/split dataset.
 
@@ -150,113 +155,103 @@ class SupportVectorMachine:
         Returns:
             None.
         """
-        X_train = kwargs.pop('X_train', args[0])
-        x_test = kwargs.pop('x_test', args[1])
-        Y_train = kwargs.pop('Y_train', args[2])
-        y_test = kwargs.pop('y_test', args[3])
+        if not kwargs:
+            X_train = self.trainset['X_train']
+            x_test = self.trainset['x_test']
+            Y_train = self.trainset['Y_train']
+            y_test = self.trainset['y_test']
+        else:
+            X_train = kwargs['X_train']
+            x_test = kwargs['x_test']
+            Y_train = kwargs['Y_train']
+            y_test = kwargs['y_test']
         # Get scaler for only training data, apply to training and test data
         self.scaler.fit(X_train)
         X_train_scaled = self.scaler.transform(X_train)
         x_test_scaled = self.scaler.transform(x_test)
-        self.labelencoder.fit(Y_train)
-        Y_train_encoded = self.labelencoder.transform(Y_train)
-        y_test_encoded = self.labelencoder.transform(y_test)
-        self.trainset['X_train'] = X_train_scaled
-        self.trainset['x_test'] = x_test_scaled
-        self.trainset['Y_train'] = Y_train_encoded
-        self.trainset['y_test'] = y_test_encoded
+        self.labelencoder.fit(Y_train.reshape(-1,1))
+        Y_train_encoded = self.labelencoder.transform(Y_train.reshape(-1,1))
+        y_test_encoded = self.labelencoder.transform(y_test.reshape(-1,1))
+        self.trainset['X_train'] = self.to_numpy(X_train_scaled)
+        self.trainset['x_test'] = self.to_numpy(x_test_scaled)
+        self.trainset['Y_train'] = self.to_numpy(Y_train_encoded)
+        self.trainset['y_test'] = self.to_numpy(y_test_encoded)
         self.trainset['encoded'] = 'yes'
         return None
 
     def optimize_clf(self,
                      X_train=None,
                      Y_train=None,
-                     max_iter=None,
                      param_grid=None,
                      verbose=True,
-                     **svcparams
-                     ):
+                     refit=True,
+                     **svcparams):
         if param_grid:
             param_grid = param_grid
         else:
             param_grid = {
-                'svc__C': [0.1, 1, 10, 100, 150, 200, 500, 1000],
-                'svc__gamma': ['scale', 'auto'],
-                'svc__kernel': ['linear', 'rbf', 'poly'],
-                'svc__epsilon': [0.1, 0.2, 0.5, 0.3]
-            }
+                'C': [0.1, 1, 10, 100, 150, 200, 500, 1000],
+                'gamma': ['scale', 'auto'],
+                'kernel': ['linear', 'rbf', 'poly']}
         if not X_train:
             X_train = self.trainset['X_train']
+            Y_train = self.trainset['Y_train']
         else:
             X_train = X_train
-        if not Y_train:
-            Y_train = self.trainset['Y_train']
+            Y_train = Y_train
 
-        svc = SVC(max_iter=max_iter, class_weight='balanced', **svcparams)
-        self.grid = GridSearchCV(svc, param_grid=param_grid, verbose=verbose)
-        self.grid.fit(X_train, Y_train)
+        svc = SVC(class_weight='balanced', **svcparams)
+        self.grid = GridSearchCV(svc, param_grid=param_grid, refit=refit, verbose=verbose)
+        self.grid.fit(X_train, Y_train.ravel())
 
         # Store training results 
         self.summary['param_grid'] = param_grid
         self.summary['Best score - Train'] = self.grid.best_score_
-        self.summary['C'] = self.grid.best_params_['svc__C']
-        self.summary['gamma'] = self.grid.best_params_['svc__gamma']
-        self.summary['kernel'] = self.grid.best_params_['svc__kernel']
+        self.summary['C'] = self.grid.best_params_['C']
+        self.summary['gamma'] = self.grid.best_params_['gamma']
+        self.summary['kernel'] = self.grid.best_params_['kernel']
 
         print('**', '-' * 20, '*', '-' * 20, '**')
         print(f"Best params: {self.grid.best_params_}")
         print(f"Score: {self.grid.best_score_}")
-        kernel = self.grid.best_params_['svc__kernel']
-        c_best = self.grid.best_params_['svc__C']
-        gamma_best = self.grid.best_params_['svc__gamma']
+        kernel = self.grid.best_params_['kernel']
+        c_best = self.grid.best_params_['C']
+        gamma_best = self.grid.best_params_['gamma']
 
-        best_clf = SVC(C=c_best, kernel=kernel, gamma=gamma_best, verbose=False)
-
-        return best_clf
-
-    def fit(self,
-            params: Optional[str] = '',
-            learning_curve: bool = False,
-            **kwargs
-            ) -> object:
-
-        if 'mat' in kwargs:
-            mat = kwargs['mat']
-        else:
-            mat = True
-
-        x_train = self.X_train
-        Y_train = self.Y_train
-
-        #### Get / Fit Model ####
-
-        self.model = self._get_classifier(self, x_train, Y_train)
-        self.model.fit(self.X_train, self.Y_train)
-
-        y_pred = self.model.predict(self.x_test)
-
-        self.train_scores = Scoring(y_pred, self.y_test, self.classes,
-                                    descriptor='train', mat=mat, metrics=True)
-
-        self.summary['train_scores'] = self.train_scores
-        self.summary['train_acc'] = self.train_scores.accuracy
-
+        self.model = SVC(C=c_best, kernel=kernel, gamma=gamma_best, verbose=False)
         return None
 
-    def validate(self, **kwargs):
 
+    def fit_clf(self,
+                model=None,
+                learning_curve: bool = False,
+                **kwargs) -> object:
+        """
+        Fit classifier to training data.
+
+        Args:
+            **kwargs (dict): optional args for classifier.
+        """
+        X_train = self.trainset['X_train']
+        Y_train = self.trainset['Y_train']
+        x_test = self.trainset['x_test']
+        if model: 
+            self.model=model
+        self.model.fit(X_train, Y_train)
+        self.trainset['y_pred'] = self.model.predict(x_test)
+        return None
+    
+    
+    def predict_clf(self, x_test):
+        x_test = self.trainset['x_test']
+        self.trainset['y_pred'] = self.model.predict(x_test)
+        return None
+
+
+    def validate(self):
         y_pred = self.model.predict(self.X2)
-        if 'mat' in kwargs:
-            mat = kwargs['mat']
-        else:
-            mat = True
-
-        self.eval_scores = Scoring(y_pred, self.y2, self.classes, descriptor='eval', mat=mat, metrics=True)
-
-        self.summary['eval_scores'] = self.eval_scores
-        self.summary['Best score - test'] = self.eval_scores.accuracy
-
         return None
+    
 
     def get_learning_curves(self,
                             estimator,
@@ -275,7 +270,7 @@ class SupportVectorMachine:
         title = "Learning Curves (LinearSVC"
         estimator = estimator
 
-        Plot.plot_learning_curve(
+        plot_learning_curve(
             title, X, y, axes=axes[:, 0], ylim=(0, 1.01), cv=cv
         )
 
