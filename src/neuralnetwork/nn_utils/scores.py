@@ -13,12 +13,11 @@ import logging
 from dataclasses import dataclass
 from typing import Optional
 import pandas as pd
-logger = logging.getLogger(__name__)
-from sklearn.metrics import (
-    classification_report)
-
+from sklearn.metrics import classification_report
 from graphs.plots import Plot
 import pickle
+logger = logging.getLogger(__name__)
+
 
 def save(save_file_path, team):
     with open(save_file_path, 'wb') as f:
@@ -35,8 +34,20 @@ class Scoring(object):
                  true,
                  classes,
                  descriptor: Optional[str] = '',
-                 mat: bool = False,
-                 ):
+                 mat: bool = False):
+        """
+        Class to manage scoring variables from fitted classifiers. 
+
+        Args:
+            pred (ndarray): Fitted model's "predicted" output.
+            true (ndarray): True output to compare with predicted.
+            classes (Iterable): Descriptors of each predictable value.
+            descriptor (Optional[str]): Description of what input was used. Defaults to ''.
+            mat (bool, optional): Whether to output a Confusion Matrix. Defaults to False.
+        Returns:
+            None.
+
+        """
         # Input variables
         self.report = self.get_report()
         self.predicted = pred
@@ -50,6 +61,7 @@ class Scoring(object):
             pass
 
     def get_report(self) -> pd.DataFrame:
+        """ Get classification report"""
         if self.descriptor:
             assert self.descriptor in ['train', 'test', 'eval']
         self.report = classification_report(
@@ -61,6 +73,7 @@ class Scoring(object):
         return report_df
 
     def get_confusion_matrix(self, caption: Optional[str] = '') -> object:
+        """ Get confusion matrix"""
         mat = Plot.confusion_matrix(
             self.true,
             self.predicted,
