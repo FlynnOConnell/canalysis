@@ -21,6 +21,7 @@ from sklearn.model_selection import (
     ShuffleSplit,
     GridSearchCV)
 from sklearn.svm import SVC
+from graphs.graph_utils.graph_funcs import plot_learning_curve
 logger = logging.getLogger(__name__)
 
 
@@ -248,47 +249,40 @@ class SupportVectorMachine:
         return None
 
 
-    def validate(self):
-        y_pred = self.model.predict(self.X2)
+    def validate_clf(self):
+        self.y_pred = self.model.predict(self.X2)
         return None
     
 
     def get_learning_curves(self,
                             estimator,
                             cv=None,
-                            title: str = ''):
+                            title: str = 'Learning Curve'):
 
         import matplotlib.pyplot as plt
-
-        fig, axes = plt.subplots(3, 2, figsize=(10, 15))
+        _, axes = plt.subplots(3, 2, figsize=(10, 15))
 
         X = self.X
         y = self.y
 
         # Cross validation with 50 iterations to get smoother mean test and train
         # score curves, each time with 20% data randomly selected as a validation set.
-        title = "Learning Curves (LinearSVC"
+        title = title
         estimator = estimator
-
         plot_learning_curve(
-            title, X, y, axes=axes[:, 0], ylim=(0, 1.01), cv=cv
-        )
-
-        kern = self.grid.best_params_['svc__kernel']
-        gam = self.grid.best_params_['svc__gamma']
-        C = self.grid.best_params_['svc__C']
-
+            title, X, y, axes=axes[:, 0], ylim=(0, 1.01), cv=cv)
+        kern = self.grid.best_params_['kernel']
+        gam = self.grid.best_params_['gamma']
+        C = self.grid.best_params_['C']
         title = (f'SVC - kernel = {kern}, gamma = {gam}, C = {C}')
         if cv:
             cv = cv
         else:
             # SVC is more expensive so decrease number of CV iterations:
             cv = ShuffleSplit(n_splits=50, test_size=0.2, random_state=0)
-
         estimator = estimator
         plot_learning_curve(
-            title, X, y, axes=axes[:, 1], ylim=(0, 1.01), cv=cv
-        )
+            title, X, y, axes=axes[:, 1], ylim=(0, 1.01), cv=cv)
 
         plt.show()
 
