@@ -87,7 +87,7 @@ fabric.properties
 ._*
 .Spotlight-V100
 .Trashes
-ehthumbs.db
+thumbs.db
 =======
 # User-specific stuff
 .idea/**/workspace.xml
@@ -95,6 +95,10 @@ ehthumbs.db
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/**
+.idea/
+.idea
+/src/**/__pycache__
 
 # Generated files
 .idea/**/contentModel.xml
@@ -178,3 +182,4 @@ fabric.properties
 .Trashes
 ehthumbs.db
 Thumbs.db
+.idea
