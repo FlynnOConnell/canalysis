@@ -34,8 +34,10 @@ logger = logging.getLogger(__name__)
 @Singleton
 class AllData(MutableMapping):
     """
-    Custom mapping that works with properties from mutable object:
-        
+    Custom mapping that works with properties from mutable object. Used to store each instance
+    of data to iterate over and provide additional functionality. 
+    
+    ..: Usage:    
     alldata = AllData(function='xyz')
     and 
     d.function returns 'xyz'
@@ -67,18 +69,6 @@ class AllData(MutableMapping):
 
     def __repr__(self):
         return "\n".join(f"{key} - {len(value)} sessions." for key, value in self.__dict__.items())
-
-
-def set_params():
-    from matplotlib import rcParams
-    rcParams.update({
-        "font.weight": "bold",
-        "axes.labelweight": 'bold',
-        'axes.facecolor': 'w',
-        "axes.labelsize": 10,
-        "lines.linewidth": 1,
-        "savefig.dpi": 300,
-    })
 
 
 @dataclass

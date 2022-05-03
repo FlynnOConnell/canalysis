@@ -5,6 +5,7 @@ Module(util): File handling helper functions.
 """
 from __future__ import annotations
 
+import sys
 import logging
 from pathlib import Path
 from typing import Optional
@@ -13,9 +14,9 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
-# PROJECT_DIR = Path(__file__).parents[2]
-# sys.path.append(
-#     str(PROJECT_DIR / 'apps'))
+PROJECT_DIR = Path(__file__).parents[2]
+sys.path.append(
+    str(PROJECT_DIR / 'apps'))
 
 
 class FileHandler(object):
@@ -29,8 +30,9 @@ class FileHandler(object):
         ---| Results
         -----| Graphs
         -----| Statistics
-        ---| Data_traces*
-        ---| Data_gpio_processed*
+        ---| Data_traces* 
+        ---| Events_gpio (or)
+        ---| Events_gpio_processed*
         Use tree() to print current directory tree.
         
     Args:
@@ -49,7 +51,9 @@ class FileHandler(object):
                  animal_id: str,
                  session_date: str,
                  tracename: Optional[str] = 'traces',
-                 eventname: Optional[str] = 'processed'):
+                 eventname: Optional[str] = 'processed',
+                 process_gpio: Optional[bool] = False):
+        
         self.animal = animal_id
         self.date = session_date
         self._directory = Path(directory)

@@ -3,55 +3,39 @@
 """
 #main_nn.py
 
-Module: Code execution.
+Module: Main code execution. 
+        Note: Neural network requires separate main.py in neuralnetwork subpackage.
 """
 import logging
 
-from calciumdata import CalciumData
+from data.calciumdata import CalciumData
+from data.taste_data import TasteData
 from graphs.plot import Plot
-from taste_data import TasteData
+from stats.stats import Stats
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
 
 
-# %% Initialize data
+# %% Some examples on usage of different modules.
 
-datadir = '/Users/flynnoconnell/Documents/Work/Data'
-# datadir = 'A://'
-animal = 'PGT13'
-date = '121021'
-data = CalciumData(animal, date, datadir)
+def initialize_data():
+    """Set directory where data is stored."""
+    
+    datadir = '/Users/flynnoconnell/Documents/Work/Data'
+    animal = 'PGT13'
+    date = '121021'
+    data = CalciumData(animal, date, datadir)
+    return data
+
+def sparese_event_data(data):
+    """Get specific subset of data based on particular events"""
+    taste_data = TasteData(data.tracedata, data.timestamps, data.color_dict)
+    return taste_data
+
 
 
     
-#%%
-zdata = data.zscores
-
-taste_data = TasteData(zdata, data.timestamps, data.color_dict)
-
-zt = zdata.pop('Time(s)')
-# %%
-
-# p = qp(zdata, data.time, 'raw')
-# p.line_signals('raw')
-# p.line_fourier('raw')
-
-# %%
-ts = data.timestamps
-rem_list = ['ArtSal', 'Citric', 'Lick', 'Rinse']
-[ts.pop(key) for key in rem_list]
-
-tastedata = TasteData(data.tracedata, ts, data.color_dict)
-t_sig = tastedata.signals
-t_col = tastedata.colors
-
-stat = Stats(data)
-pca = stat.PCA(t_sig, t_col)
-
-plot = Plot()
-plot.scatter(pca[0], colors=t_col)
-
 if __name__ == "__main__":
-    pass
+    initialize_data()
