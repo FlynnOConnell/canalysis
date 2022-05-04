@@ -73,7 +73,7 @@ class TasteData(object):
         df_0 = pd.DataFrame(columns=self.signals.columns)
         df_1 = pd.DataFrame()
         for key, df in self.taste_events.items():
-            df = df.drop(['Time(s)', 'colors'], axis=1)
+            df = df.drop(['time', 'colors'], axis=1)
             if key in class_0:
                 df['binary'] = '0'
                 df_0 = pd.concat([df_0, df], axis=0)
@@ -86,7 +86,7 @@ class TasteData(object):
     @staticmethod
     def _authenticate(data):
         """Type check input data"""
-        assert isinstance(data, pd.DataFrame) and data['Time(s)'] in data.columns         
+        assert isinstance(data, pd.DataFrame) and data['time'] in data.columns         
             
                 
     def process(self, stamps):
@@ -109,19 +109,19 @@ class TasteData(object):
         new_df = pd.DataFrame()
         for event, interv in func.iter_events(stamps):
             df = self.data.loc[
-                (self.data['Time(s)'] > (interv[0] - self.baseline)) &
-                (self.data['Time(s)'] < (interv[1] + self.post))].copy()
+                (self.data['time'] > (interv[0] - self.baseline)) &
+                (self.data['time'] < (interv[1] + self.post))].copy()
             df['colors'] = self.color_dict[event]
             df['events'] = event
             new_df = pd.concat([new_df, df], axis=0)
-        new_df.sort_values(by='Time(s)')
+        new_df.sort_values(by='time')
         return self._set_data(new_df)
     
     
     def _set_data(self, df):
         """Set attributes from processed CalciumData"""
         eventdata = df.copy()
-        self.time = df.pop('Time(s)')
+        self.time = df.pop('time')
         self.events = df.pop('events')
         self.colors = df.pop('colors')
         self.signals = df

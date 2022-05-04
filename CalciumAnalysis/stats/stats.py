@@ -26,7 +26,7 @@ class ProcessData(object):
         self.time = data.time
         self.cells = data.cells
         self.licktime = data.eventdata.loc[
-            data.eventdata['Lick'] == 1, 'Time(s)']
+            data.eventdata['Lick'] == 1, 'time']
         self.get_antibouts()
         self.session = data.session
         self.trial_times = data.trial_times
@@ -55,20 +55,20 @@ class ProcessData(object):
         antibouts = pd.DataFrame()
         for interv in func.interval(self.licktime, gap=10, outer=True):
             df = self.tracedata.loc[
-                (self.tracedata['Time(s)'] > (interv[0])) &
-                (self.tracedata['Time(s)'] < (interv[1]))]
+                (self.tracedata['time'] > (interv[0])) &
+                (self.tracedata['time'] < (interv[1]))]
             antibouts = pd.concat([antibouts, df], axis=0)
-            antibouts.sort_values(by='Time(s)')
+            antibouts.sort_values(by='time')
         return antibouts
 
     def get_sponts(self) -> pd.DataFrame | pd.Series:
         sponts = pd.DataFrame()
         for interv in func.interval(self.licktime, gap=30, outer=True):
             df = self.tracedata.loc[
-                (self.tracedata['Time(s)'] > (interv[0])) &
-                (self.tracedata['Time(s)'] < (interv[1]))]
+                (self.tracedata['time'] > (interv[0])) &
+                (self.tracedata['time'] < (interv[1]))]
             sponts = pd.concat([sponts, df], axis=0)
-            sponts.sort_values(by='Time(s)')
+            sponts.sort_values(by='time')
         return sponts
 
     def get_stats(self,
@@ -125,7 +125,7 @@ class ProcessData(object):
                     # Get peak signal & time
                     peak_signal = max(signal)
                     peak_ts = self.tracedata.loc[self.tracedata[cell]
-                                                 == peak_signal, 'Time(s)'].iloc[0]
+                                                 == peak_signal, 'time'].iloc[0]
 
                     if peak_ts <= trial + 2.4:
                         peak_ts = max(bltime) + 2.4
@@ -157,7 +157,7 @@ class ProcessData(object):
                         sig = 'Significant'
                         raw_df.loc[track] = d
 
-                        baseline_df = (self.tracedata[self.tracedata['Time(s)'].between(
+                        baseline_df = (self.tracedata[self.tracedata['time'].between(
                             min(bltime), time_upper)])
                         raw_df = pd.concat([raw_df, baseline_df])
 

@@ -66,7 +66,7 @@ def get_tastant_dicts(tastant,
 
                         peak_signal = max(signal)
                         peak_ts = date.tracedata.loc[date.tracedata[cell]
-                                                     == peak_signal, 'Time(s)'].iloc[0]
+                                                     == peak_signal, 'time'].iloc[0]
                         if peak_ts <= trial + 2.4:
                             peak_ts = max(BLtime) + 2.4
                         peak_window_ind = func.get_peak_window(date.time, peak_ts)
@@ -157,7 +157,7 @@ def get_single_tastant_dicts(tastant: str,
 
                         peak_signal = max(signal)
                         peak_ts = date.tracedata.loc[date.tracedata[cell]
-                                                     == peak_signal, 'Time(s)'].iloc[0]
+                                                     == peak_signal, 'time'].iloc[0]
 
                         if peak_ts <= trial + 2.4:
                             peak_ts = max(BLtime) + 2.4

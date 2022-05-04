@@ -7,6 +7,10 @@ import pandas as pd
 import numpy as np
 import os
 
+
+class GpioData
+
+
 # %% User paramters
 
 # input must be a .csv file of gpio events exported from inscopix data processing software

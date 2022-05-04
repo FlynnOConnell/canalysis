@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import sys
 import logging
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 import pandas as pd
@@ -18,8 +19,9 @@ PROJECT_DIR = Path(__file__).parents[2]
 sys.path.append(
     str(PROJECT_DIR / 'apps'))
 
-
-class FileHandler(object):
+@dataclass
+class FileHandler:
+    
     """
     File handler.
     Directory structure: 
@@ -46,24 +48,24 @@ class FileHandler(object):
             -Use these args to match string in file for processing.
     """
 
-    def __init__(self,
-                 directory: str,
-                 animal_id: str,
-                 session_date: str,
-                 tracename: Optional[str] = 'traces',
-                 eventname: Optional[str] = 'processed',
-                 process_gpio: Optional[bool] = False):
-        
-        self.animal = animal_id
-        self.date = session_date
-        self._directory = Path(directory)
-        self.session = self.animal + '_' + self.date
-        self.animaldir = self._directory / self.animal
-        self.sessiondir = self.animaldir / self.date
-        self._tracename = tracename
-        self._eventname = eventname
-        self._make_dirs()
+    # Dataclass Fields
+    _directory: str = field(repr=False)
+    animal: str = field(repr=False)
+    date: str = field(repr=False)
+    _tracename: Optional[str] = 'traces'
+    _eventname: Optional[str] = 'processed'
+    gpio_file: Optional[bool] = False
+    _gpioname: Optional[str] = 'gpio'
+    
 
+    def __post_init__(self):
+        self._directory = Path(self._directory)
+        self.session: str = f'{self.animal}_{self.date}'
+        self.animaldir: str = self._directory / self.animal
+        self.sessiondir: str = self.animaldir / self.date        
+        self._make_dirs()
+        
+        
     @property
     def directory(self):
         return self._directory
@@ -90,12 +92,13 @@ class FileHandler(object):
 
     def tree(self):
         print(f'-|{self._directory}')
-        for path in sorted(self.directory.rglob('[!.]*')):  # exclude .files
-            depth = len(path.relative_to(self.directory).parts)
+        for path in sorted(self.sessiondir.rglob('[!.]*')):  # exclude .files
+            depth = len(path.relative_to(self.sessiondir).parts)
             spacer = '    ' * depth
             print(f'{spacer}-|{path.name}')
             return None
 
+    # Generators to iterate each file matching pattern
     def get_traces(self):
         tracefiles = self.sessiondir.rglob(f'*{self.tracename}*')
         for file in tracefiles:
@@ -105,7 +108,13 @@ class FileHandler(object):
         eventfiles = self.sessiondir.rglob(f'*{self.eventname}*')
         for file in eventfiles:
             yield file
-
+            
+    def get_gpio_files(self):
+        gpiofile = self.sessiondir.rglob(f'*{self.gpioname}')
+        for file in gpiofile:
+            yield file
+            
+    # Generators to iterate each matched file and convert to pd.DataFrame 
     def get_tracedata(self):
         for filepath in self.get_traces():
             tracedata = pd.read_csv(filepath, low_memory=False)
@@ -115,6 +124,12 @@ class FileHandler(object):
         for filepath in self.get_events():
             eventdata = pd.read_csv(filepath, low_memory=False)
             yield eventdata
+            
+    def get_gpiodata(self):
+        for filepath in self.get_gpio():
+            gpiodata = pd.read_csv(filepath, low_memory=False)
+            yield gpiodata
+            
 
     def unique_path(self, filename):
         counter = 0
@@ -124,10 +139,12 @@ class FileHandler(object):
             if not path.exists():
                 return path
 
+
     def _make_dirs(self):
         path = self.sessiondir
         Path(path).parents[0].mkdir(parents=True, exist_ok=True)
         return None
+
 
     def get_cwd(self):
         return str(self._directory.cwd())

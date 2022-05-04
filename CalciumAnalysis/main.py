@@ -11,7 +11,7 @@ import logging
 from data.calciumdata import CalciumData
 from data.taste_data import TasteData
 from graphs.plot import Plot
-from stats.stats import Stats
+from data.data_utils.file_handler import FileHandler
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -34,8 +34,12 @@ def sparese_event_data(data):
     taste_data = TasteData(data.tracedata, data.timestamps, data.color_dict)
     return taste_data
 
+datadir = '/Users/flynnoconnell/Documents/Work/Data'
+animal = 'PGT13'
+date = '121021'
+handler = FileHandler(datadir, animal, date)
+handler.eventname = 'gpio'
+handler.tree()
 
-
-    
 if __name__ == "__main__":
-    initialize_data()
+   data = initialize_data()
