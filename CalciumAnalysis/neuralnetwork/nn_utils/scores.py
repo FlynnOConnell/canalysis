@@ -9,14 +9,17 @@ Module (neuralnetwork): Structures to score and keep scores for evaluated data.
 
 from __future__ import division
 
-from typing import Optional, Iterable
-import numpy as np
 import logging
+import pickle
 from dataclasses import dataclass
+from typing import Optional, Iterable
+
+import numpy as np
 import pandas as pd
 from sklearn.metrics import classification_report
+
 from graphs.plot import Plot
-import pickle
+
 logger = logging.getLogger(__name__)
 
 

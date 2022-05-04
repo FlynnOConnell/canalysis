@@ -7,6 +7,7 @@ import logging
 
 import numpy as np
 import pandas as pd
+
 from data.data_utils import funcs as func
 
 logger = logging.getLogger(__name__)

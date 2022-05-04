@@ -6,8 +6,9 @@
 Module(nn_utils): Boilerplate property getter/setters for SVM model.
     
 """
-from neuralnetwork.nn_utils.datahandler import DataHandler
 from neuralnetwork.nn_utils._validate import _validate
+from neuralnetwork.nn_utils.datahandler import DataHandler
+
 
 class _props:
     @property

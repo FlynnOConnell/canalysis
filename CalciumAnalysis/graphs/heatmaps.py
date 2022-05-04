@@ -13,9 +13,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from calciumdata import CalciumData
-from taste_data import TasteData
 from matplotlib import rcParams
 from scipy.ndimage.filters import gaussian_filter
+from taste_data import TasteData
 
 
 def set_pub():

@@ -5,6 +5,7 @@
 Module (data.data_utils): Process traces exported from inscopix trace file.
 """
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -12,6 +13,7 @@ import pandas as pd
 import scipy.stats as stats
 
 from data.data_utils.file_handler import FileHandler
+
 
 #%%
 

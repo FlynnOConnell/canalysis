@@ -5,18 +5,19 @@
 Module (data.data_utils): Process event/gpio data exported from _video_gpio.isxd file.
 """
 from __future__ import annotations
-import logging
 
+import logging
 from dataclasses import dataclass
 
 import numpy as np
+
 from data.data_utils.file_handler import FileHandler
 
 
 @dataclass
 class EventData: 
     filehandler: FileHandler = FileHandler
-    def __post_init__(self):
+    def __post_init__(self,):
         """
         Data container for events. 
         

@@ -12,15 +12,16 @@ import logging
 import webbrowser
 from typing import Optional, Iterable, Any
 
-import graphs.graph_utils.graph_funcs as gr_func
 import matplotlib.animation as animation
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from IPython.display import HTML
-from matplotlib import rcParams
 from data.calciumdata import CalciumData
+from matplotlib import rcParams
+
+import graphs.graph_utils.graph_funcs as gr_func
 
 
 def set_pub():

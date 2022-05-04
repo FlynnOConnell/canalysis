@@ -9,13 +9,13 @@ from __future__ import annotations
 
 import logging
 from typing import Tuple, Optional
+
 import numpy as np
 import pandas as pd
-
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 from calciumdata import CalciumData
 from data_utils import funcs as func
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 class ProcessData(object):

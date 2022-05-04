@@ -5,13 +5,13 @@
 Module: Code execution.
 """
 import logging
+
 from data.calciumdata import CalciumData
+
 from neuralnetwork.SVM import SupportVectorMachine
-from sklearn.svm import SVC
+
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedShuffleSplit
 
 # %% Initialize data
 

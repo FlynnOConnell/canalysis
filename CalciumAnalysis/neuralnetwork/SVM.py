@@ -10,22 +10,21 @@ Module (neuralnetwork): Classes/functions for NeuralNetwork module training.
 from __future__ import division
 
 import logging
-import numpy as np
-import pandas as pd
 from enum import Enum, auto
 
+import numpy as np
+import pandas as pd
 from sklearn import preprocessing
 from sklearn.model_selection import (
     StratifiedShuffleSplit,
     RepeatedStratifiedKFold,
     GridSearchCV)
-
 from sklearn.svm import SVC
-from graphs.graph_utils.graph_funcs import plot_learning_curve
 
+from graphs.graph_utils.graph_funcs import plot_learning_curve
+from neuralnetwork.nn_utils._props import _validate, _props
 from neuralnetwork.nn_utils.datahandler import DataHandler
 from neuralnetwork.nn_utils.scores import Scoring
-from neuralnetwork.nn_utils._props import _validate, _props
 
 logger = logging.getLogger(__name__)
 

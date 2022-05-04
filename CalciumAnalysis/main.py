@@ -9,9 +9,9 @@ Module: Main code execution.
 import logging
 
 from data.calciumdata import CalciumData
-from data.taste_data import TasteData
-from graphs.plot import Plot
+
 from data.data_utils.file_handler import FileHandler
+from data.taste_data import TasteData
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)

@@ -9,14 +9,14 @@ from __future__ import annotations
 
 from typing import Tuple, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import lines
-import matplotlib.pyplot as plt
+from sklearn.datasets import load_digits
+from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import learning_curve
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
-from sklearn.datasets import load_digits
-from sklearn.model_selection import learning_curve
-from sklearn.model_selection import ShuffleSplit
 
 
 def get_handles(color_dict: dict,

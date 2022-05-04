@@ -4,14 +4,18 @@
 
 """
 from __future__ import annotations
-import pandas as pd
-import numpy as np
+
 from dataclasses import dataclass
+
+import numpy as np
+import pandas as pd
 
 from data.data_utils.file_handler import FileHandler
 
+
 @dataclass
 class GpioData:
+
     filehandler: FileHandler = FileHandler
     threshold: int = 3000
     dist_adjust: float = 0.005
@@ -25,8 +29,10 @@ class GpioData:
         'Citric': [1, 2, 3],
     }
 
+    gpiodata = None
+
     def __post_init__(self):
-        self.gpiodata = next(self.filehandler.get_gpio_files())
+        self.gpiodata = next(self.filehandler.get_gpio_files)
         self.timestamps = {}
         
     @staticmethod
@@ -91,7 +97,7 @@ class GpioData:
             for ts in self.timestamps[' GPIO-1']:  # for each lick
                 for chan in range(1, 5):
                     if ts not in self.timestamps[' GPIO-{}'.format(chan)] and chan in inputs:
-                        break  # if the input is needed to code for this stimulus and isnt present, move on
+                        break  # if the input is needed to code for this stimulus and isn't present, move on
                     elif ts in self.timestamps[' GPIO-{}'.format(chan)] and chan not in inputs:
                         break  # if the input is not needed to code for this stimulus and is present, move on
                 else:

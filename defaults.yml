@@ -1,0 +1,26 @@
+DIRS:
+  ms : 'A:\'
+  osx: '/users/flynnoconnell/work/data'
+  savedir: './Desktop'
+
+# Map event names to color for graphing
+COLORS:
+    ArtSal : dodgerblue
+    MSG : darkorange
+    NaCl : lime
+    Sucrose : magenta
+    Citric : yellow
+    Quinine : red
+    Rinse : lightsteelblue
+    Lick : darkgray
+
+# For GPIO ports 1-4. Value indicates GPIO number.
+DECODER:
+    Rinse : [1, 2, 3, 4]
+    ArtSal : [1, 3, 4]
+    Quinine : [1, 2, 4]
+    NaCl : [1, 3]
+    Sucrose : [1, 2]
+    MSG : [1, 4]
+    Citric : [1, 2, 3]
+

@@ -1,8 +1,14 @@
- # Trace Analysis
+ # Calcium Imaging Analysis
  
 
-This project takes .csv files gathered from Inscopix Data Processing software for statistical analysis 
-and machine learning. 
+This project takes `.csv` files gathered from Inscopix Data Processing software for processing:
+
+* Syncing traces with externally captured GPIO events.
+* General <img src="https://latex.codecogs.com/svg.image?\Delta&space;F/F" /> based statistics.
+* Large plotting functinality, 2d/3d scatter, regression, skree, heatmap and correlation matrix.
+* Dimensionality reduction with varience filters and principal component analysis.
+* Support Vector Machine Learning for classification tasks.
+
 
 File handling assumes the following directory structure:
 
@@ -30,13 +36,21 @@ File handling assumes the following directory structure:
         ├── *Events.csv
         └── *Traces.csv
 ```
-
 ---
+## Config 
 
-**To Do:** 
+1. 'directory' location of data
+   ```python
+   datadir = '/Users/me/mydata'
+   ```
 
-
-**Machine Learning**: Currently the only implemented model for machine learning is _Support Vector Machine_. 
-This is due to the relatively small training data available; sessions only contain 4-8 trials of each tastant 
-and subsequently 400-600 tastant licks. 
+2. `color_dict` dictionary of event:color pairs
+   ```python
+   color_dict = {
+       'Event1': 'magenta',
+       'Event1': 'darkorange',
+       'Event1': 'lime',
+   }
+   # colors from matplotlib.colors API
+   ```
 
