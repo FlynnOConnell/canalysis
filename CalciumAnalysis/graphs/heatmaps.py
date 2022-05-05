@@ -12,10 +12,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from calciumdata import CalciumData
+from data.calcium_data import CalciumData
 from matplotlib import rcParams
 from scipy.ndimage.filters import gaussian_filter
-from taste_data import TasteData
+from data.taste_data import TasteData
 
 
 def set_pub():
@@ -32,7 +32,8 @@ def set_pub():
 
 
 class Heatmap(object):
-    # Initialize the attributes to apply to our heatmaps, nearly all optional and can be ignored.
+    # Initialize the attributes to apply to our heatmaps
+    # nearly all optional and canbe ignored.
     def __init__(self,
                  save_dir: str | None = '',
                  cm: str = 'magma',
@@ -141,12 +142,12 @@ class Heatmap(object):
                    axs: object = None,
                    ):
         """
-        Plot heatmap with colorbar normalized for each individual column. Because of this, pre-stimulus
-        activity may show high values.
+        Plot heatmap with colorbar normalized for each individual column. Because of
+        this, pre-stimulus activity may show high values.
 
-        .. note::
-            Using seaborn (sns), each row of the heatmap needs to correspond to each row of dictionary.
-            If incoming data_dict is already in this format, you can just delete the df = df.T.
+        .. note:: Using seaborn (sns), each row of the heatmap needs to correspond to
+        each row of dictionary. If incoming data_dict is already in this format,
+        you can just delete the df = df.T.
 
         Parameters
         ----------
@@ -220,8 +221,10 @@ animal = 'PGT13'
 date = '121021'
 data = CalciumData(datadir, animal, date)
 #%%
-taste = TasteData(data.zscores,data.timestamps,data.color_dict)
-hm = taste.tastedata['Lick'].reset_index(drop=True).iloc[0:40].drop(['Time(s)', 'colors', 'events'], axis=1)
+taste = data.tastedata
+hm = taste.taste_events['Lick'].reset_index(drop=True).iloc[0:40].drop(['time',
+                                                                          'colors',
+                                                                     'events'], axis=1)
 #%%
 heatmaps = Heatmap()
 

@@ -39,9 +39,9 @@ class FileHandler:
 
     """
     # Dataclass Fields
-    _directory: str = field(repr=False)
     animal: str = field(repr=False)
     date: str = field(repr=False)
+    _directory: str = field(repr=False)
     _tracename: Optional[str] = 'traces'
     _eventname: Optional[str] = 'processed'
     gpio_file: Optional[bool] = False

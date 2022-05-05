@@ -6,6 +6,7 @@ Module (data.data_utils): Process event/gpio data exported from _video_gpio.isxd
 """
 from __future__ import annotations
 
+from typing import Sized
 import logging
 from dataclasses import dataclass
 
@@ -15,9 +16,10 @@ from data.data_utils.file_handler import FileHandler
 
 
 @dataclass
-class EventData: 
+class EventData:
     filehandler: FileHandler = FileHandler
-    def __post_init__(self,):
+
+    def __post_init__(self):
         """
         Data container for events. 
         
@@ -33,18 +35,15 @@ class EventData:
         self.eventdata = next(self.filehandler.get_eventdata())
         self.timestamps = {}
         self.trial_times = {}
-        self.numlicks: int 
+        self.numlicks: Sized | int
         self._set_event_attrs()
-        
-    
+
     def __hash__(self):
         return hash(repr(self))
 
-
     def __len__(self):
         return len(self.numlicks)
-    
-    
+
     def _set_event_attrs(self):
         allstim = []
         self.eventdata = self.eventdata.rename(columns={'Time(s)': 'time'})
@@ -55,7 +54,7 @@ class EventData:
             if stimulus != 'Lick':
                 allstim.extend(self.timestamps[stimulus])
         drylicks = [x for x in self.timestamps['Lick'] if x not in allstim]
-        self.numlicks = len(self.timestamps['Lick'])
+        self.numlicks: Sized | int = len(self.timestamps['Lick'])
         for stim, tslist in self.timestamps.items():
             if stim != 'Lick' and stim != 'Rinse' and len(self.timestamps[stim]) > 0:
                 # Get list of tastant deliveries
@@ -78,15 +77,14 @@ class EventData:
                         times.append(ts)
                 self.trial_times[stim] = times
         return None
-        
-        
+
     def get_trials(self) -> None:
         for stim, trials in self.trial_times.items():
             logging.info(f'{stim} - {len(trials)}')
         return None
-        
-        
-#%%
+
+
+# %%
 
 def main():
     datadir = '/Users/flynnoconnell/Documents/Work/Data'
@@ -99,4 +97,3 @@ def main():
 
 if __name__ == "__main__":
     eventdata = main()
-    
