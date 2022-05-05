@@ -19,6 +19,9 @@
 .idea/**/dbnavigator.xml
 
 .idea/**
+.bak
+
+
 
 # CMake
 cmake-build-*/
