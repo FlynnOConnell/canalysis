@@ -20,8 +20,10 @@
 
 .idea/**
 .bak
-
-
+*.vs
+.vs 
+.vs/
+.vs/**
 
 # CMake
 cmake-build-*/
