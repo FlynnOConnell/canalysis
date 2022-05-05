@@ -1,0 +1,9 @@
+Instant Suite
+8 |
+9 | Button below opens the Instant Suite GUI 
+8 |
+0 | Open Instant Suite GUI | plugin load instantsuite; writeplugins; togglemenu instantsuite
+8 | 
+8 | If this keybind does not work, you can rebind in the GUI, or manually via the bindings tab: 
+8 | On the top right where it says "None" click that button and immediately press your desired
+8 | keybind. Then double click the empty row, and type togglemenu instantsuite.
