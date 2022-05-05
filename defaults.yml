@@ -1,7 +1,7 @@
 DIRS:
   ms : 'A:\'
   osx: '/users/flynnoconnell/work/data'
-  savedir: './Desktop'
+  save: './Desktop'
 
 # Map event names to color for graphing
 COLORS:
