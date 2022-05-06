@@ -26,6 +26,10 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 # %% COLLAPSE DATA STRUCTURES
 
+def unzip(val):
+    list_of_tuples = list(zip(*val))
+    return [list(t) for t in list_of_tuples]
+
 
 def keys_exist(element, *keys):
     """Check if *keys (nested) exists in `element` (dict)"""
