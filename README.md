@@ -6,11 +6,6 @@
   <img style="float: right"
     width="550"
     height="300"
-    src="https://i.imgur.com/LiSY6hC.png"
-  >
-  <img style="float: right"
-    width="550"
-    height="300"
     src=https://i.imgur.com/SPok8sB.gif
   >
 </p>
