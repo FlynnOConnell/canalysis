@@ -1,30 +1,8 @@
 
----
-<style>
-#demoFont {
-font-family: Arial, Helvetica, sans-serif;
-font-size: 50px;
-letter-spacing: -1.6px;
-word-spacing: 4.6px;
-font-weight: 500;
-text-decoration: underline rgb(68, 68, 68);
-font-variant: small-caps;
-text-transform: capitalize;
-}
-#h1 {
-  text-align: right;
-  text-transform: uppercase;
-  color: #4CAF50;
-}
-#h2 {
-  text-align: right;
-  text-transform: uppercase;
-  color: #4CAF50;
-}
-</style>
 
-<div id="demoFont">Calcium Imaging Data Analysis</div>
-<div id="h1">From this</div>
+# Calcium Imaging Data Analysis
+
+
 
 <p>
   <img style="float: top"
@@ -32,12 +10,11 @@ text-transform: capitalize;
     height="300"
     src="https://i.imgur.com/S4H75sd.gif"
   >
-  <img style="float: right"
+  <img style="float: top"
     width="550"
     height="300"
     src="https://i.imgur.com/LiSY6hC.png"
   >
-<div id="h2">To this</div>
   <img style="float: right"
     width="550"
     height="300"
@@ -47,21 +24,18 @@ text-transform: capitalize;
 
 **This project takes `.csv` files gathered from Inscopix Data Processing software for processing:**
 
-<ul>
-   <li> Syncing traces with externally captured GPIO events.</li>
-   <li> General <img src="https://latex.codecogs.com/svg.image?\Delta&space;F/F" /> based statistics.</li>
-   <li> Plotting: animated, 2D and 3D scatter, regression, skree, heatmap and correlation matrix.</li>
-   <li> Dimensionality reduction with variance filters and principal component analysis.</li>
-   <li> Support Vector Machine Learning for classification tasks.</li>
-</ul>
+* Syncing traces with externally captured GPIO events.</li>
+* General <img src="https://latex.codecogs.com/svg.image?\Delta&space;F/F" /> based statistics.</li>
+* Plotting: animated, 2D and 3D scatter, regression, skree, heatmap and correlation matrix.</li>
+* Dimensionality reduction with variance filters and principal component analysis.</li>
+* Support Vector Machine Learning for classification tasks.</li>
+
 
 ![C](https://img.shields.io/badge/c-%2300599C.svg?style=plastic&logo=c&logoColor=white)
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=plastic&logo=c%2B%2B&logoColor=white)
 ![Python](https://img.shields.io/badge/python-3670A0?style=?style=plastic&logo=python&logoColor=ffdd54)
 
 <table>
-
-
   <tr >
     <td nowrap><strong>Supported OS</strong></td>
     <td>Linux (list of <a href="./docs/POSIX.md#the-list-of-posix-api-used-in-areg-sdk-including-multicast-message-router" alt="list of POSX API">POSIX API</a>), Windows 7 and higher.</td>
