@@ -2,15 +2,8 @@
 
 # Calcium Imaging Data Analysis
 
-
-
 <p>
-  <img style="float: top"
-    width="450"
-    height="300"
-    src="https://i.imgur.com/S4H75sd.gif"
-  >
-  <img style="float: top"
+  <img style="float: right"
     width="550"
     height="300"
     src="https://i.imgur.com/LiSY6hC.png"
