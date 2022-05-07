@@ -45,7 +45,7 @@ class AllData(MutableMapping):
     """
 
     def __init__(self, *args, **kwargs):
-        # Update the class dict atributes
+        # Update the class dict attributes
         self.__dict__.update(*args, **kwargs)
 
     # Standard dict methods, no overloading needed
@@ -74,20 +74,18 @@ class AllData(MutableMapping):
             f"{key} - {len(value)} sessions." for key, value in self.__dict__.items())
 
 
-
-
 @dataclass
 class CalciumData(Mixins.CalPlots):
     alldata = AllData.Instance()
     color_dict = {
-        'ArtSal' : 'dodgerblue',
-        'MSG'    : 'darkorange',
-        'NaCl'   : 'lime',
+        'ArtSal': 'dodgerblue',
+        'MSG': 'darkorange',
+        'NaCl': 'lime',
         'Sucrose': 'magenta',
-        'Citric' : 'yellow',
+        'Citric': 'yellow',
         'Quinine': 'red',
-        'Rinse'  : 'lightsteelblue',
-        'Lick'   : 'darkgray'
+        'Rinse': 'lightsteelblue',
+        'Lick': 'darkgray'
     }
 
     def __init__(
@@ -112,9 +110,9 @@ class CalciumData(Mixins.CalPlots):
 
         self.color_dict = CalciumData.color_dict
         self._tastedata: TasteData = TasteData(self.tracedata.signals,
-                                 self.tracedata.time,
-                                 self.eventdata.timestamps,
-                                 self.color_dict)
+                                               self.tracedata.time,
+                                               self.eventdata.timestamps,
+                                               self.color_dict)
         self._add_instance()
         # TODO: Replace self.color_dict ref with CalciumData.color_dict
 
@@ -159,7 +157,6 @@ class CalciumData(Mixins.CalPlots):
         if not any(x in self.tracedata.signals.columns for x in ['C0', 'C00']):
             raise AttributeError("No cells found in DataFrame")
         return None
-
 
     def _add_instance(self):
 

@@ -22,7 +22,7 @@
 ![C](https://img.shields.io/badge/c-%2300599C.svg?style=plastic&logo=c&logoColor=white)
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=plastic&logo=c%2B%2B&logoColor=white)
 ![Python](https://img.shields.io/badge/python-3670A0?style=?style=plastic&logo=python&logoColor=ffdd54)
-
+[![GitHub license](https://badgen.net/github/license/Naereen/Strapdown.js)](https://github.com/NeuroPyPy/CalciumAnalysis/blob/master/LICENSE)
 <table>
   <tr >
     <td nowrap><strong>Supported OS</strong></td>
@@ -81,7 +81,9 @@
    # see data/data_utils/gpio_data.py for implementation
    ```
 
-![ResearchGate](https://img.shields.io/badge/ResearchGate-00CCBB?style=for-the-badge&logo=ResearchGate&logoColor=white)
+**Analytics**
 
-
+[![CodeFactor](https://img.shields.io/codefactor/grade/github/NeuroPyPy/CalciumAnalysis/master?style=plastic)](https://www.codefactor.io/repository/github/neuropypy/calciumanalysis)
+![GitHub language count](https://img.shields.io/github/languages/count/NeuroPyPy/CalciumAnalysis?style=plastic)
+![Repo Size](https://img.shields.io/github/repo-size/NeuroPyPy/CalciumAnalysis?style=plastic)
 
