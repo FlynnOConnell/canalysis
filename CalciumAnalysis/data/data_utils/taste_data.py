@@ -8,7 +8,7 @@ import logging
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass
-from data.data_utils import funcs as func
+from misc import funcs
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
@@ -29,7 +29,6 @@ class TasteData:
         self.taste_events = {}
         self.process(self.timestamps)
         self._authenticate()
-
 
     def get_binary(self, class_0, class_1):
         """
@@ -70,7 +69,7 @@ class TasteData:
         """
         logging.info('Setting taste data')
         new_df = pd.DataFrame()
-        for event, interv in func.iter_events(timestamps):
+        for event, interv in funcs.iter_events(timestamps):
             df = self.signals.loc[
                 (self.time > (interv[0] - self.baseline)) &
                 (self.time < (interv[1] + self.post))].copy()

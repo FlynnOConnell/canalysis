@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from data.data_utils.file_handler import FileHandler
+from misc.file_handler import FileHandler
 
 
 @dataclass
@@ -91,7 +91,7 @@ def main():
     animal = 'PGT13'
     date = '121021'
     handler = FileHandler(datadir, animal, date)
-    eventdata = EventData(handler)
+    eventdata: EventData = EventData(handler)
     return eventdata
 
 

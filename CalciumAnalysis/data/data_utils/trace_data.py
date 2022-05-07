@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 
-from data.data_utils.file_handler import FileHandler
+from misc.file_handler import FileHandler
 
 
 # %%
@@ -30,7 +30,6 @@ class TraceData:
         self.time = self.tracedata.time
         self.binsize = self.time[2] - self.time[1]
         self.zscores = self._get_zscores()
-
 
     def __hash__(self):
         return hash(repr(self))
@@ -83,8 +82,8 @@ def main():
     animal = 'PGT13'
     date = '121021'
     handler = FileHandler(datadir, animal, date)
-    tracedata = TraceData(handler)
-    return tracedata
+    traces = TraceData(handler)
+    return traces
 
 
 if __name__ == "__main__":

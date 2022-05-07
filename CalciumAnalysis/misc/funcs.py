@@ -48,6 +48,7 @@ def keys_exist(element, *keys):
 def iter_events(event_dct, gap: int = 5):
     for event, ts in event_dct.items():
         intervals = interval(ts, gap)
+        interv: Iterable
         for interv in intervals:
             yield event, interv
 
