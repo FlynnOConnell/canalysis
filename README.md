@@ -33,7 +33,7 @@
 
 
 ---
-*File handling assumes the following directory structure*:
+### Directory Structure
 ```bash
 ./data/
 ├── Animal 1
@@ -54,7 +54,7 @@
 
 ```
 ---
-## Config 
+### Config 
 
 1. `DIRS:` - directories for loading and saving data
    ```yaml
@@ -80,6 +80,13 @@
      - Event4: 1, 4
    # see data/data_utils/gpio_data.py for implementation
    ```
+   
+---
+### Data Handling
+
+![Alt text](./md/SimpleCAClasses.svg)
+
+
 
 **Analytics**
 
