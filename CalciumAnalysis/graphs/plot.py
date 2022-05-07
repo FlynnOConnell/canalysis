@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from IPython.display import HTML
-from data.calciumdata import CalciumData
+from data.calcium_data import CalciumData
 from matplotlib import rcParams
 
 import graphs.graph_utils.graph_funcs as gr_func
@@ -40,7 +40,7 @@ logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
 
 
 class Plot(object):
-    
+
     def __init__(self,
                  data: pd.DataFrame = None,
                  colors: Optional[Iterable] = None,
@@ -80,7 +80,7 @@ class Plot(object):
         self.facecolor = 'white'
         self.color_dict = CalciumData.color_dict
         self.cmap = plt.get_cmap(cmap)
-        
+
         self.kwargs = kwargs
         self.checks = {}
 
@@ -125,7 +125,7 @@ class Plot(object):
             Whether to plot ellipse confidence intervals.
             The default is False.
         savefig : Optional[bool], optional
-            Alternative location to save. The default is Path(reesultsdir).
+            Alternative location to save. The default is None.
         msg : Optional[str], optional
             Message to include if save_dir is given. The default is 'nomsg'.
         bbox_inches : str, optional
@@ -198,15 +198,15 @@ class Plot(object):
         return None
 
     @staticmethod
-    def skree(varience: np.ndarray,
+    def skree(variance: np.ndarray,
               title: str = '') -> None:
         """
         Line chart skree plot.
 
         Parameters
         ----------
-        varience : np.ndarray
-            From PCA.explained_varience_ratio_.
+        variance : np.ndarray
+            From PCA.explained_variance_ratio_.
         title : str, optional
             Title of graph. The default is ''.
 
@@ -215,8 +215,8 @@ class Plot(object):
         None
             DESCRIPTION.
         """
-        lab = np.arange(len(varience)) + 1
-        plt.plot(lab, varience, 'o-', linewidth=2, color='blue')
+        lab = np.arange(len(variance)) + 1
+        plt.plot(lab, variance, 'o-', linewidth=2, color='blue')
         plt.title(f'{title}' + 'Scree Plot')
         plt.xlabel('Principal Component')
         plt.ylabel('Variance Explained (%)')
@@ -230,7 +230,6 @@ class Plot(object):
         plt.show()
 
         return None
-
 
     def scatter_3d(self,
                    df: pd.DataFrame = None,
@@ -271,7 +270,7 @@ class Plot(object):
             Whether to plot ellipse confidence intervals.
             The default is False.
         savefig : Optional[bool], optional
-            Alternative location to save. The default is Path(reesultsdir).
+            Alternative location to save. The default is None.
         msg : Optional[str], optional
             Message to include if save_dir is given. The default is 'nomsg'.
         bbox_inches : str, optional
@@ -287,6 +286,10 @@ class Plot(object):
 
         assert isinstance(df, pd.DataFrame)
 
+        if 'colors' in df.columns:
+            self.colors = df.pop('colors')
+
+        color = self.colors
         fig = plt.figure()
         fig.set_dpi(300)
 
@@ -354,14 +357,14 @@ class Plot(object):
 
         return None
 
-    def plot_3d_ani(session: str,
+    def plot_3d_ani(self,
+                    session: str,
                     df: pd.DataFrame,
                     color_dict: dict,
-                    colors: pd.Series,
                     size: int = 5,
                     marker: str = 'o',
-                    alpha: int = 1,
-                    temp_dir: Optional[str] = None) -> None:
+                    alpha: int = 1
+                    ) -> None:
         """
             Animated 3D Scatter plot.
             Plot gets saved to a temporary html file (location provided by save_dir).
@@ -373,8 +376,7 @@ class Plot(object):
                 size (int): Size of graph markers. Default = 5.
                 marker (str): Shape of marker. Default is circle.
                 alpha (int): Alpha of markers.
-                save_dir (str): Optional alternative location to save. Default = Path(resultsdir)
-    
+
             Returns:
                 None
     
@@ -384,13 +386,13 @@ class Plot(object):
         z = df.iloc[:, 2]
 
         fig = plt.figure()
-
         ax = fig.gca(projection='3d')
+
         ax.set_xlabel('PC1')
         ax.set_ylabel('PC2')
         ax.set_zlabel('PC3')
         ax.set_title('{}'.format(session) + ' ' + 'PCA')
-        ax.scatter(x, y, z, c=colors, s=size, marker=marker, alpha=alpha)
+        ax.scatter(x, y, z, c=self.colors, s=size, marker=marker, alpha=alpha)
 
         proxy, label = gr_func.get_handles(color_dict)
         ax.legend(handles=proxy,
@@ -416,15 +418,13 @@ class Plot(object):
         with open('/Users/flynnoconnell/Pictures', 'wb') as f:
             f.write(data.data.encode("UTF-8"))
 
-        if temp_dir:
-            url = temp_dir
-        else:
-            url = '/Users/flynnoconnell/Pictures'
+        url = self.save_dir
         webbrowser.open(url, new=2)
 
         return None
 
-    def confusion_matrix(y_pred,
+    def confusion_matrix(self,
+                         y_pred,
                          y_true,
                          labels: list,
                          xaxislabel: Optional[str] = None,
@@ -481,7 +481,7 @@ class Plot(object):
         plt.show()
         if save_dir:
             plt.savefig(
-                save_dir
+                self.save_dir
                 + '_confusionMatrix.png',
                 Addbbox_inches='tight', dpi=300)
 
