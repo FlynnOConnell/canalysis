@@ -12,8 +12,8 @@ from typing import Tuple, Optional
 
 import numpy as np
 import pandas as pd
-from calciumdata import CalciumData
-from data_utils import funcs as func
+from data.calcium_data import CalciumData
+from misc import funcs
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
@@ -53,7 +53,7 @@ class ProcessData(object):
 
     def get_antibouts(self) -> pd.DataFrame | pd.Series:
         antibouts = pd.DataFrame()
-        for interv in func.interval(self.licktime, gap=10, outer=True):
+        for interv in funcs.interval(self.licktime, gap=10, outer=True):
             df = self.tracedata.loc[
                 (self.tracedata['time'] > (interv[0])) &
                 (self.tracedata['time'] < (interv[1]))]
@@ -63,7 +63,7 @@ class ProcessData(object):
 
     def get_sponts(self) -> pd.DataFrame | pd.Series:
         sponts = pd.DataFrame()
-        for interv in func.interval(self.licktime, gap=30, outer=True):
+        for interv in funcs.interval(self.licktime, gap=30, outer=True):
             df = self.tracedata.loc[
                 (self.tracedata['time'] > (interv[0])) &
                 (self.tracedata['time'] < (interv[1]))]
@@ -134,7 +134,7 @@ class ProcessData(object):
                         shift = 'no'
 
                     # Get window 1s centered at peak
-                    peak_window_ind = func.get_peak_window(self.time, peak_ts)
+                    peak_window_ind = funcs.get_peak_window(self.time, peak_ts)
                     time_lower = self.time[peak_window_ind[0]]
                     time_upper = self.time[peak_window_ind[1]]
                     response_window = np.array(self.tracedata.loc[
@@ -166,7 +166,7 @@ class ProcessData(object):
 
                     # Check if peak_signal is a duplicate
                     for _ in signal:
-                        func.dup_check(signal, peak_signal)
+                        funcs.dup_check(signal, peak_signal)
 
                     # Pack stats into list
                     iteration_list = [self.session, cell, stim,
@@ -186,7 +186,7 @@ class ProcessData(object):
 
                 cell_list.append(trial_list)
             stats_list.append(cell_list)
-        flaten_stats = func.flatten(func.flatten(stats_list))
+        flaten_stats = funcs.flatten(funcs.flatten(stats_list))
 
         # Make dataframe from flattened list of stats
         for ind, d in enumerate(flaten_stats):
