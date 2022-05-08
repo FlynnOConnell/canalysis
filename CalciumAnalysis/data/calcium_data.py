@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from misc import funcs
-from misc.file_handler import FileHandler
+from file_handling.file_handler import FileHandler
 
 from data_utils.all_data import AllData
 from data_utils.trace_data import TraceData
