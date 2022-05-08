@@ -26,8 +26,7 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 # %% COLLAPSE DATA STRUCTURES
 
-
-def peek(iterable):
+def peek(iterable) -> tuple[Any, itertools.chain] | None:
     try:
         first = next(iterable)
     except StopIteration:
@@ -43,12 +42,7 @@ def check_numeric(my_str: str):
 
 def check_path(my_str: str | Path):
     """ Return boolean True if string is a path, otherwise False."""
-    if isinstance(my_str, Path):
-        return True
-    if '/' in my_str:
-        return True
-    else:
-        return False
+    return isinstance(my_str, Path) or any(x in my_str for x in ['/', '\\'])
 
 
 def unzip(val):
@@ -194,7 +188,7 @@ def get_dir(data_dir: str,
     return tracedata, eventdata
 
 
-## Data Validation
+# Data Validation
 
 
 @typecheck(Iterable[any])
