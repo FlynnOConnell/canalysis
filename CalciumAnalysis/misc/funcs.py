@@ -12,7 +12,7 @@ import os
 from glob import glob
 from pathlib import Path
 from typing import Tuple, Iterable, Optional, Sized, Any
-
+import itertools
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
@@ -25,6 +25,31 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 
 # %% COLLAPSE DATA STRUCTURES
+
+
+def peek(iterable):
+    try:
+        first = next(iterable)
+    except StopIteration:
+        return None
+    return first, itertools.chain([first], iterable)
+
+
+@typecheck(str)
+def check_numeric(my_str: str):
+    """ Return boolean True if string is all numbers, otherwise False."""
+    return my_str.isdecimal()
+
+
+def check_path(my_str: str | Path):
+    """ Return boolean True if string is a path, otherwise False."""
+    if isinstance(my_str, Path):
+        return True
+    if '/' in my_str:
+        return True
+    else:
+        return False
+
 
 def unzip(val):
     list_of_tuples = list(zip(*val))
