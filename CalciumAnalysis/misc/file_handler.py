@@ -9,7 +9,7 @@ import logging
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Generator, Any
+from typing import Optional, Generator, Any, Iterator
 
 import pandas as pd
 
@@ -36,22 +36,21 @@ class FileHandler:
         ---| Events_gpio (or)
         ---| Events_gpio_processed*
         Use tree() to print current directory tree.
-
     """
-    # Dataclass Fields
+
     animal: str = field(repr=False)
     date: str = field(repr=False)
-    _directory: str = field(repr=False)
+    _directory: Path = field(repr=False)
     _tracename: Optional[str] = 'traces'
     _eventname: Optional[str] = 'processed'
     gpio_file: Optional[bool] = False
     _gpioname: Optional[str] = 'gpio'
 
     def __post_init__(self):
-        self._directory = Path(self._directory)
-        self.session: str = f'{self.animal}_{self.date}'
-        self.animaldir: str = self._directory / self.animal
-        self.sessiondir: str = self.animaldir / self.date
+        self._directory: Path = Path(self._directory)
+        self.session: Path = Path(self.animal + self.date)
+        self.animaldir: Path = Path(self._directory / self.animal)
+        self.sessiondir: Path = Path(self.animaldir / self.date)
         self._make_dirs()
 
     @property
@@ -59,8 +58,8 @@ class FileHandler:
         return self._directory
 
     @directory.setter
-    def directory(self, new_dir: str):
-        self._directory = Path(new_dir)
+    def directory(self, new_dir: Path):
+        self._directory = new_dir
 
     @property
     def tracename(self):
@@ -87,36 +86,35 @@ class FileHandler:
             return None
 
     # Generators to iterate each file matching pattern
-    def get_traces(self):
-        tracefiles = self.sessiondir.rglob(f'*{self.tracename}*')
+    def get_traces(self) -> Iterator[str]:
+        tracefiles: Generator[Path, None, None] = self.sessiondir.rglob(f'*{self._tracename}*')
         for file in tracefiles:
             yield file
 
-    def get_events(self):
-        eventfiles = self.sessiondir.rglob(f'*{self.eventname}*')
+    def get_events(self) -> Iterator[str]:
+        eventfiles: Generator[Path, None, None] = self.sessiondir.rglob(f'*{self._eventname}*')
         for file in eventfiles:
             yield file
 
-    def get_gpio_files(self) -> Generator[Any, Any, None]:
-        gpiofile = self.sessiondir.rglob(f'*{self._gpioname}')
-        for file in gpiofile:
-            yield file
+    def get_gpio_files(self) -> Iterator[str]:
+        gpiofile: Generator[Path, None, None] = self.sessiondir.rglob(f'*{self._gpioname}')
+        for filepath in gpiofile:
+            yield filepath
 
     # Generators to iterate each matched file and convert to pd.DataFrame 
-    def get_tracedata(self):
+    def get_tracedata(self) -> Iterator[str]:
         for filepath in self.get_traces():
-            tracedata = pd.read_csv(filepath, low_memory=False)
+            tracedata: pd.DataFrame = pd.read_csv(filepath, low_memory=False)
             yield tracedata
 
-    def get_eventdata(self):
+    def get_eventdata(self) -> Iterator[str]:
         for filepath in self.get_events():
-            eventdata = pd.read_csv(filepath, low_memory=False)
+            eventdata: pd.DataFrame = pd.read_csv(filepath, low_memory=False)
             yield eventdata
 
-    def get_gpiodata(self) -> Generator[Any, Any, None]:
-        filepath: str
-        for filepath in self.get_gpio_files:
-            gpiodata = pd.read_csv(filepath, low_memory=False)
+    def get_gpiodata(self) -> Iterator[str]:
+        for filepath in self.get_gpio_files():
+            gpiodata: pd.DataFrame = pd.read_csv(filepath, low_memory=False)
             yield gpiodata
 
     def unique_path(self, filename):
@@ -128,8 +126,8 @@ class FileHandler:
                 return path
 
     def _make_dirs(self):
-        path = self.sessiondir
-        Path(path).parents[0].mkdir(parents=True, exist_ok=True)
+        path: Path = self.sessiondir
+        path.parents[0].mkdir(parents=True, exist_ok=True)
         return None
 
     def get_cwd(self):
