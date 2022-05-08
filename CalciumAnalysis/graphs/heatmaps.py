@@ -15,7 +15,6 @@ import seaborn as sns
 from data.calcium_data import CalciumData
 from matplotlib import rcParams
 from scipy.ndimage.filters import gaussian_filter
-from data.data_utils.taste_data import TasteData
 
 
 def set_pub():
@@ -77,7 +76,7 @@ class Heatmap(object):
              1) https://seaborn.pydata.org/generated/seaborn.color_palette.html?highlight=sns%20color_palette
              2) https://matplotlib.org/stable/tutorials/colors/colormaps.html
         _id : str
-            Identifyer that will be appended to the filenames this batch of graphs.
+            Identifier that will be appended to the filenames this batch of graphs.
                 -e.g. _id = 'heatmaps' -> .../heatmaps.png
         title: str = ''
             If parameter passed, set this string as the plot title.
@@ -127,7 +126,7 @@ class Heatmap(object):
             df = df.T
             if self.sigma is not None:
                 df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
-            ### Plot data
+            # Plot data
             fig, axs = plt.subplots()
             sns.heatmap(df, square=self.square, cbar=self.colorbar, robust=self.robust, **axargs)
             axs.axis('off')
@@ -139,7 +138,7 @@ class Heatmap(object):
             return fig, axs
 
     def columnwise(self,
-                   data: pd.DataFrame,
+                   df: pd.DataFrame,
                    axs: object = None,
                    ):
         """
@@ -152,7 +151,7 @@ class Heatmap(object):
 
         Parameters
         ----------
-        data : pd.DataFrame
+        df : pd.DataFrame
             Data used in heatmap.
         axs : matplotlib.Axes object
             Custom Axes object to include.
@@ -163,7 +162,7 @@ class Heatmap(object):
             An iterable of heatmaps containing 1 column stitched together.
         """
         set_pub()
-        df = data.T
+        df = df.T
         if self.sigma is not None:
             df = pd.DataFrame(gaussian_filter(data, sigma=self.sigma))
         # We need to grab each column individually
@@ -188,22 +187,22 @@ class Heatmap(object):
         return images
 
     def single(self,
-               data: pd.DataFrame,
+               df: pd.DataFrame,
                ):
         """
         Plot single heatmap with seaborn library.
 
         Parameters
         ----------
-        data : pd.DataFrame
+        df : pd.DataFrame
             Data used in heatmap.
         """
         set_pub()
-        data = data.copy()
+        df = df.copy()
         if self.sigma:
-            data = pd.DataFrame(gaussian_filter(data, sigma=self.sigma))
+            df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
         fig, axs = plt.subplots()
-        sns.heatmap(data, square=self.square, cbar=self.colorbar, cmap=self.cm, robust=self.robust)
+        sns.heatmap(df, square=self.square, cbar=self.colorbar, cmap=self.cm, robust=self.robust)
         axs.axis('off')
         if self.line_loc:
             axs.axvline(x=self.line_loc, color=self.line_color, linewidth=self.line_width)
@@ -230,4 +229,3 @@ heatmaps = Heatmap()
 
 heatmaps.single(hm)
 heatmaps.columnwise(hm)
-
