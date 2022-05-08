@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 
-from misc.file_handler import FileHandler
+from file_handling.file_handler import FileHandler
 
 
 # %%
