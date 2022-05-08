@@ -9,7 +9,7 @@ import logging
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Generator, Any, Iterator
+from typing import Optional, Iterator
 from collections.abc import Generator
 from misc import funcs
 import pandas as pd
@@ -60,8 +60,8 @@ class FileHandler:
     _directory: str | Path = field(repr=False)
     _tracename: Optional[str] = 'traces'
     _eventname: Optional[str] = 'processed'
-    gpio_file: Optional[bool] = False
     _gpioname: Optional[str] = 'gpio'
+    gpio_file: Optional[bool] = False
 
     def __post_init__(self):
         self._validate()
@@ -124,7 +124,6 @@ class FileHandler:
 
     def get_gpio_files(self) -> Iterator[str]:
         gpiofile: Generator[Path, None, None] = self.sessiondir.rglob(f'*{self._gpioname}')
-
         for filepath in gpiofile:
             yield filepath
 
@@ -143,6 +142,9 @@ class FileHandler:
         for filepath in self.get_gpio_files():
             gpiodata: pd.DataFrame = pd.read_csv(filepath, low_memory=False)
             yield gpiodata
+
+    def check_unprocessed_gpio(self):
+        return funcs.peek(self.get_gpio_files())
 
     def unique_path(self, filename):
         counter = 0
@@ -169,5 +171,4 @@ if __name__ == '__main__':
     datadir = r'C:\Users\flynn\repos\CalciumAnalysis\datasets'
     animal = 'PGT08'
     date = '071621'
-
-    filehandler = FileHandler(date, datadir, animal)
+    filehandler = FileHandler(animal, date, datadir)
