@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from misc.file_handler import FileHandler
+from file_handling.file_handler import FileHandler
 
 
 @dataclass
