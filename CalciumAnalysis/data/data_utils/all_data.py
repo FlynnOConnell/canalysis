@@ -18,10 +18,8 @@ class AllData(MutableMapping):
     """
 
     def __init__(self, *args, **kwargs):
-        # Update the class dict attributes
         self.__dict__.update(*args, **kwargs)
 
-    # Standard dict methods, no overloading needed
     def __setitem__(self, key, value):
         self.__dict__[key] = value
 
@@ -31,7 +29,6 @@ class AllData(MutableMapping):
     def __delitem__(self, key):
         del self.__dict__[key]
 
-    # These are what we want to change
     def __iter__(self):
         return iter(self.__dict__)
 

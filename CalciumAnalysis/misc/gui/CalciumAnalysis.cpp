@@ -3,79 +3,12 @@
 #include <sstream>
 #include <fstream>
 #include <filesystem>
-#include "InstantSuite.h"
+#include "CalciumAnalysis.h"
+
+std::filesystem::path HomeDirectory;
+std::filesystem::path DataDirectory;
 
 
-BAKKESMOD_PLUGIN(InstantSuite, "Instant Suite", plugin_version, PLUGINTYPE_FREEPLAY | PLUGINTYPE_CUSTOM_TRAINING)
-
-std::filesystem::path BakkesModConfigFolder;
-std::filesystem::path BakkesModCrashesFolder;
-std::filesystem::path InstantSuiteDataFolder;
-std::filesystem::path RocketLeagueExecutableFolder;
-std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
-
-
-//static inline std::string GetUserAgent()
-//{
-//	return "User-Agent: BPM;4;" + std::to_string(BAKKESMOD_PLUGIN_API_VERSION) + ";" + GetPlatform(myUniqueID.GetPlatform()) + ";" + myUniqueID.str() + ";";
-//}
-
-
-enum Mode
-{
-	CasualDuel = 1,
-	CasualDoubles = 2,
-	CasualStandard = 3,
-	CasualChaos = 4,
-	Private = 6,
-	RankedDuel = 10,
-	RankedDoubles = 11,
-	RankedSoloStandard = 12,
-	RankedStandard = 13,
-	MutatorMashup = 14,
-	Tournament = 22,
-	RankedHoops = 27,
-	RankedRumble = 28,
-	RankedDropshot = 29,
-	RankedSnowday = 30,
-	GodBall = 38,
-	GodBallDoubles = 43
-};
-
-
-/*
-*  Workshop and Custom Map File Functions
-*/
-
-
-/// <summary>Returns the lowercased string from the given string.</summary>
-/// <param name="str">String to change</param>
-/// <param name="changeInline">Whether to change the string inline</param>
-/// <returns>Returns the lowercased string from the given string</returns>
-std::string InstantSuite::toLower(std::string str, bool changeInline)
-{
-	std::string str_cpy = str;
-	std::transform(str_cpy.begin(), str_cpy.end(), str_cpy.begin(),
-		[](unsigned char c) { return (unsigned char)std::tolower(c); });
-
-	if (changeInline) {
-		str = str_cpy;
-	}
-
-	return str_cpy;
-}
-
-/// <summary>Checks if the given file extension is in the list of extensions.</summary>
-/// <param name="fileExtension">File extension</param>
-/// <param name="extensions">List of file extensions</param>
-/// <returns>Bool with if the file extension is in the list of extensions</returns>
-bool InstantSuite::HasExtension(const std::string& fileExtension, const std::vector<std::string>& extensions)
-{
-	// Filter out unwanted file extensions.
-	return std::any_of(extensions.begin(), extensions.end(), [&](const std::string& extension) {
-		return fileExtension == extension;
-		});
-}
 
 /// <summary>Recursively gets files from a certain directory.</summary>
 /// <remarks>These files can be filtered by if they end with certain file extensions.</remarks>
@@ -107,7 +40,6 @@ std::vector<std::filesystem::path> InstantSuite::IterateDirectory(const std::fil
 			files.push_back(filePath);
 		}
 	}
-
 	return files;
 }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-#stats.py
+#process_data.py
 
 Module(stats): Stats class for PCA and general statistics/output. 
 """
