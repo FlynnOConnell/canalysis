@@ -1,7 +1,7 @@
 """
 #file_helpers.py
 
-Module(util): File handling helper functions.
+Module(misc/file_helpers): File handling helper functions.
 """
 from __future__ import annotations
 
@@ -10,7 +10,8 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Generator, Any, Iterator
-
+from collections.abc import Generator
+from misc import funcs
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,23 @@ sys.path.append(
 class FileHandler:
     """
     File handler. From directory, return genorator looping through files.
-        Directory structure:
+
+    Parameters:
+    ___________
+    animal: str
+        - Animal ID, letter + number combo
+    date: str
+        - Session date, all_numeric
+    _directory: str
+        - Path as str, contains /
+    _tracename: Optional[str]
+        - Pattern matching to apply for trace files
+    _eventname: Optional[str]
+        - Pattern matching to apply for event files
+
+    Directory structure:
+    ___________
+    
     ./directory
         -| Animal
         --| Date
@@ -40,25 +57,34 @@ class FileHandler:
 
     animal: str = field(repr=False)
     date: str = field(repr=False)
-    _directory: Path = field(repr=False)
+    _directory: str | Path = field(repr=False)
     _tracename: Optional[str] = 'traces'
     _eventname: Optional[str] = 'processed'
     gpio_file: Optional[bool] = False
     _gpioname: Optional[str] = 'gpio'
 
     def __post_init__(self):
+        self._validate()
         self._directory: Path = Path(self._directory)
         self.session: Path = Path(self.animal + self.date)
         self.animaldir: Path = Path(self._directory / self.animal)
         self.sessiondir: Path = Path(self.animaldir / self.date)
         self._make_dirs()
 
+    def _validate(self):
+        if not funcs.check_numeric(self.date):
+            raise AttributeError(f'Date must be all numeric, not {self.date}')
+        if not funcs.check_path(self._directory):
+            raise AttributeError(f'Directory must contain /, not {self._directory}')
+        if funcs.check_numeric(self.animal) or funcs.check_path(self.animal):
+            raise AttributeError(f'Animal must not be only numeric or contain path characters, {self.animal}')
+
     @property
     def directory(self):
         return self._directory
 
     @directory.setter
-    def directory(self, new_dir: Path):
+    def directory(self, new_dir: str):
         self._directory = new_dir
 
     @property
@@ -98,6 +124,7 @@ class FileHandler:
 
     def get_gpio_files(self) -> Iterator[str]:
         gpiofile: Generator[Path, None, None] = self.sessiondir.rglob(f'*{self._gpioname}')
+
         for filepath in gpiofile:
             yield filepath
 
@@ -135,3 +162,12 @@ class FileHandler:
 
     def get_home_dir(self):
         return str(self._directory.home())
+
+
+if __name__ == '__main__':
+    # datadir = 'A:\\'
+    datadir = r'C:\Users\flynn\repos\CalciumAnalysis\datasets'
+    animal = 'PGT08'
+    date = '071621'
+
+    filehandler = FileHandler(date, datadir, animal)
