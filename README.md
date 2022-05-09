@@ -2,40 +2,60 @@
 
 <style>
 
+
 p 
 {
 font-weight: bold;
 font-family: "Arial", Helvetica, serif;
 }
 
+
 li 
 {
 font-weight: bold;
-font-family: "Arial", Helvetica, serif;
+font-family: emo, Helvetica, serif;
 }
+
 
 table td 
+
 {
 font-weight: bold;
+
 font-family: "Arial", Helvetica, serif;
+
 }
+
 
 h1 
+
 {
+
 font-weight: bold;
+
 font-family: Arial, Helvetica, serif;
+
 }
+
 
 h2 
+
 {
 
+
 }
+
 
 h6 
+
 {
+
 font-weight: bold;
+
 font-family: Arial, Helvetica,serif;
+
 }
+
 
 </style>
 
