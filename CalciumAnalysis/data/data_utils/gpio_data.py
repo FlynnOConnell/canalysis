@@ -29,7 +29,7 @@ class GpioData:
     gpiodata = None
 
     def __post_init__(self):
-        self.gpiodata = next(self.filehandler.get_gpiodata())
+        self.gpiodata = self.filehandler.get_gpiodata()
         self.timestamps = {}
 
     @staticmethod
