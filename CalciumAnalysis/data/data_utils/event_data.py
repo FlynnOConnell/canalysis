@@ -15,7 +15,7 @@ import pandas as pd
 from file_handling.file_handler import FileHandler
 
 
-@dataclass(slots=True, order=False)
+@dataclass(order=False)
 class EventData:
     timestamps: dict = field(init=False)
     trial_times: dict = field(init=False)
