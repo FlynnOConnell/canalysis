@@ -1,5 +1,13 @@
+
+# Load a single session
+SINGLE:
+  animal: 'PGT08'
+  date: '071621'                # for single day analysis
+  dates: ['070121, 071621']     # iterate for multi-day analysis
+
 DIRS:
   ms : 'A:\'
+  HOME: 'C:\Users\flynn\repos\CalciumAnalysis\datasets'
   osx: '/users/flynnoconnell/work/data'
   save: './Desktop'
 
