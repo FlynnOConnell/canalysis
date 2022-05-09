@@ -141,7 +141,7 @@ class FileHandler:
             logging.info(f'Taking file: {eventfiles[0]}')
         return pd.read_csv(eventfiles[0], low_memory=False)
 
-    def get_gpio(self) -> pd.DataFrame:
+    def get_gpiodata(self) -> pd.DataFrame:
         gpiofiles: list[Path] = self.get_gpio_files()
         if gpiofiles is None:
             raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._gpioname}"')
