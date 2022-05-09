@@ -4,13 +4,11 @@
 Module(misc/file_helpers): File handling helper functions.
 """
 from __future__ import annotations
-
 import logging
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Iterator
-from collections.abc import Generator
+from typing import Optional
 from misc import funcs
 import pandas as pd
 
@@ -60,7 +58,7 @@ class FileHandler:
     _directory: str | Path = field(repr=False)
     _tracename: Optional[str] = 'traces'
     _eventname: Optional[str] = 'processed'
-    _gpioname: Optional[str] = 'gpio'
+    _gpioname: Optional[str] = 'gpio.csv'
     gpio_file: Optional[bool] = False
 
     def __post_init__(self):
@@ -72,6 +70,7 @@ class FileHandler:
         self._make_dirs()
 
     def _validate(self):
+        """Validate format of input data. Raises AttributeErrors for each check."""
         if not funcs.check_numeric(self.date):
             raise AttributeError(f'Date must be all numeric, not {self.date}')
         if not funcs.check_path(self._directory):
@@ -80,73 +79,81 @@ class FileHandler:
             raise AttributeError(f'Animal must not be only numeric or contain path characters, {self.animal}')
 
     @property
-    def directory(self):
+    def directory(self) -> Path:
         return self._directory
 
     @directory.setter
-    def directory(self, new_dir: str):
-        self._directory = new_dir
+    def directory(self, new_dir: str) -> None:
+        self._directory: str = new_dir
 
     @property
-    def tracename(self):
+    def tracename(self) -> str:
         return self._tracename
 
     @tracename.setter
-    def tracename(self, new_tracename):
-        self._tracename = new_tracename
+    def tracename(self, new_tracename: str) -> None:
+        self._tracename: str = new_tracename
 
     @property
-    def eventname(self):
+    def eventname(self) -> str:
         return self._eventname
 
     @eventname.setter
-    def eventname(self, new_eventname):
-        self._eventname = new_eventname
+    def eventname(self, new_eventname: str) -> None:
+        self._eventname: str = new_eventname
 
-    def tree(self):
-        print(f'-|{self._directory}')
-        for path in sorted(self.sessiondir.rglob('[!.]*')):  # exclude .files
-            depth = len(path.relative_to(self.sessiondir).parts)
-            spacer = '    ' * depth
-            print(f'{spacer}-|{path.name}')
-            return None
+    @property
+    def gpioname(self) -> str:
+        return self._gpioname
 
-    # Generators to iterate each file matching pattern
-    def get_traces(self) -> Iterator[str]:
-        tracefiles: Generator[Path, None, None] = self.sessiondir.rglob(f'*{self._tracename}*')
-        for file in tracefiles:
-            yield file
+    @gpioname.setter
+    def gpioname(self, new_gpioname: str):
+        self._gpioname: str = new_gpioname
 
-    def get_events(self) -> Iterator[str]:
-        eventfiles: Generator[Path, None, None] = self.sessiondir.rglob(f'*{self._eventname}*')
-        for file in eventfiles:
-            yield file
+    def get_traces(self) -> list[Path]:
+        return [p for p in self.sessiondir.glob(f'*{self._tracename}')]
 
-    def get_gpio_files(self) -> Iterator[str]:
-        gpiofile: Generator[Path, None, None] = self.sessiondir.rglob(f'*{self._gpioname}')
-        for filepath in gpiofile:
-            yield filepath
+    def get_events(self) -> list[Path]:
+        return [p for p in self.sessiondir.glob(f'*{self._eventname}')]
 
-    # Generators to iterate each matched file and convert to pd.DataFrame 
-    def get_tracedata(self) -> Iterator[str]:
-        for filepath in self.get_traces():
-            tracedata: pd.DataFrame = pd.read_csv(filepath, low_memory=False)
-            yield tracedata
+    def get_gpio_files(self) -> list[Path]:
+        return [p for p in self.sessiondir.glob(f'*{self._gpioname}')]
 
-    def get_eventdata(self) -> Iterator[str]:
-        for filepath in self.get_events():
-            eventdata: pd.DataFrame = pd.read_csv(filepath, low_memory=False)
-            yield eventdata
+    def get_tracedata(self) -> pd.DataFrame:
+        tracefiles: list[Path] = self.get_traces()
+        if tracefiles is None:
+            raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._tracename}"')
+        if len(tracefiles) > 1:
+            logging.info(f'Multiple trace-files found in {self.sessiondir} matching "{self._tracename}":')
+            for tracefile in tracefiles:
+                logging.info(f'{tracefile}')
+            logging.info(f'Taking file: {tracefiles[0]}')
+        return pd.read_csv(tracefiles[0], low_memory=False)
 
-    def get_gpiodata(self) -> Iterator[str]:
-        for filepath in self.get_gpio_files():
-            gpiodata: pd.DataFrame = pd.read_csv(filepath, low_memory=False)
-            yield gpiodata
+    def get_eventdata(self) -> pd.DataFrame:
+        eventfiles: list[Path] = self.get_events()
+        if eventfiles is None:
+            raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._eventname}"')
+        if len(eventfiles) > 1:
+            logging.info(f'Multiple event-files found in {self.sessiondir} matching "{self._eventname}":')
+            for event_file in eventfiles:
+                logging.info(f'{event_file}')
+            logging.info(f'Taking file: {eventfiles[0]}')
+        return pd.read_csv(eventfiles[0], low_memory=False)
 
-    def check_unprocessed_gpio(self):
-        return funcs.peek(self.get_gpio_files())
+    def get_gpio(self) -> pd.DataFrame:
+        gpiofiles: list[Path] = self.get_gpio_files()
+        if gpiofiles is None:
+            raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._gpioname}"')
+        if len(gpiofiles) > 1:
+            self.gpio_file = True
+            logging.info(f'Multiple gpio-files found in {self.sessiondir} matching "{self._gpioname}":')
+            for gpio_file in gpiofiles:
+                logging.info(f'{gpio_file}')
+            logging.info(f'Taking file: {gpiofiles[0]}')
+        return pd.read_csv(gpiofiles[0], low_memory=False)
 
-    def unique_path(self, filename):
+    def unique_path(self, filename) -> Path:
         counter = 0
         while True:
             counter += 1
@@ -154,16 +161,23 @@ class FileHandler:
             if not path.exists():
                 return path
 
-    def _make_dirs(self):
-        path: Path = self.sessiondir
-        path.parents[0].mkdir(parents=True, exist_ok=True)
+    def _make_dirs(self) -> None:
+        self.sessiondir.parents[0].mkdir(parents=True, exist_ok=True)
         return None
 
-    def get_cwd(self):
+    def get_cwd(self) -> str:
         return str(self._directory.cwd())
 
-    def get_home_dir(self):
+    def get_home_dir(self ) -> str:
         return str(self._directory.home())
+
+    def tree(self) -> None:
+        print(f'-|{self._directory}')
+        for path in sorted(self.sessiondir.rglob('[!.]*')):  # exclude .files
+            depth = len(path.relative_to(self.sessiondir).parts)
+            spacer = '    ' * depth
+            print(f'{spacer}-|{path.name}')
+            return None
 
 
 if __name__ == '__main__':
@@ -172,3 +186,4 @@ if __name__ == '__main__':
     animal = 'PGT08'
     date = '071621'
     filehandler = FileHandler(animal, date, datadir)
+    files = filehandler.get_gpio_files()
