@@ -116,10 +116,10 @@ A configuration file `config.yaml` contains defaults that can be set in a single
 ## References
 <a id="1">[1]</a> 
 Long Term In-Vivo One-Photon Ca2+ Imaging of Taste-Responsive Cells In The Parabrachial Pons In The Freely Licking Rat.
-Flynn P. O'Connell1, Joshua D. Sammons2, Patricia M. Di Lorenzo1. 1Binghamton University, Binghamton, NY, USA. 2University of Alabama at Birmingham, Birmingham, AL, USA
+Flynn P. O'Connell1, Joshua D. Sammons2, Patricia M. Di Lorenzo1. 1Binghamton University, Binghamton, NY, USA. 2University of Alabama at Birmingham, Birmingham, AL, USA. [Achems.org]()
 
 <a id="2">[2]</a> 
-Hallock R. M., Di Lorenzo P. M. (2006). Temporal coding in the gustatory system. Neurosci. Biobehav. Rev. 30, 1145–1160. 10.1016/j.neubiorev.2006.07.005
+Hallock R. M., Di Lorenzo P. M. (2006). Temporal coding in the gustatory system. Neurosci. Biobehav. Rev. 30, 1145–1160. [10.1016/j.neubiorev.2006.07.005]()
 
 <a id="3">[3]</a> 
-Kyunghun Lee, Xiaomin Wu, Yaesop Lee, Da-Ting Lin, Shuvra S. Bhattacharyya & Rong Chen (2021) Neural decoding on imbalanced calcium imaging data with a network of support vector machines, Advanced Robotics, 35:7, 459-470, DOI: 10.1080/01691864.2020.1863259 
+Kyunghun Lee, Xiaomin Wu, Yaesop Lee, Da-Ting Lin, Shuvra S. Bhattacharyya & Rong Chen (2021) Neural decoding on imbalanced calcium imaging data with a network of support vector machines, Advanced Robotics, 35:7, 459-470, [DOI: 10.1080/01691864.2020.1863259]() 
