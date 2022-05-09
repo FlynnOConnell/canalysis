@@ -1,6 +1,46 @@
 
 
-# Calcium Imaging Data Analysis
+<style>
+
+p 
+{
+font-weight: bold;
+font-family: "Arial", Helvetica, serif;
+}
+
+li 
+{
+font-weight: bold;
+font-family: "Arial", Helvetica, serif;
+}
+
+table td 
+{
+font-weight: bold;
+font-family: "Arial", Helvetica, serif;
+}
+
+h1 
+{
+font-weight: bold;
+font-family: Arial, Helvetica, serif;
+}
+
+h2 
+{
+
+}
+
+h6 
+{
+font-weight: bold;
+font-family: Arial, Helvetica,serif;
+}
+
+</style>
+
+
+<h1> Calcium Imaging Data Analysis </h1>
 
 <p>
   <img style="float: right"
@@ -12,7 +52,7 @@
 
 *Images from poster presented at AChems 2022 [[1]](#1).
 
-**This project takes `.csv` files gathered from Inscopix Data Processing software for processing:**
+###### **This project takes `.csv` files gathered from Inscopix Data Processing software for processing:**
 
 * Syncing traces with externally captured GPIO events.</li>
 * General <img src="https://latex.codecogs.com/svg.image?\Delta&space;F/F" /> based statistics.</li>
@@ -57,7 +97,7 @@
 
 ```
 ---
-### Config 
+### Config
 A configuration file `config.yaml` contains defaults that can be set in a single top-level file.
 
 1. `DIRS:` - directories for loading and saving data
@@ -102,7 +142,7 @@ A configuration file `config.yaml` contains defaults that can be set in a single
 
 ---
 
-**TO DO:** 
+### **TO DO:**
 * Additional layers to neural network for additional feature extraction
   * Layer for additional outlier/anomaly detection
   * Layer for linear trend normalization
@@ -112,7 +152,7 @@ A configuration file `config.yaml` contains defaults that can be set in a single
 
 
 
-## References
+#### References
 <a id="1">[1]</a> 
 Long Term In-Vivo One-Photon Ca2+ Imaging of Taste-Responsive Cells In The Parabrachial Pons In The Freely Licking Rat.
 Flynn P. O'Connell1, Joshua D. Sammons2, Patricia M. Di Lorenzo1. 1Binghamton University, Binghamton, NY, USA. 2University of Alabama at Birmingham, Birmingham, AL, USA. [Achems.org](https://achems.org/web/)
