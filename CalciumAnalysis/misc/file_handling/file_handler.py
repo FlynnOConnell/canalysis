@@ -73,7 +73,7 @@ class FileHandler:
         if not funcs.check_numeric(self.date):
             raise AttributeError(f'Date must be all numeric, not {self.date}')
         if not funcs.check_path(self._directory):
-            raise AttributeError(f'Directory must contain /, not {self._directory}')
+            raise AttributeError(f'Directory must contain "/", not {self._directory}')
         if funcs.check_numeric(self.animal) or funcs.check_path(self.animal):
             raise AttributeError(f'Animal must not be only numeric or contain path characters, {self.animal}')
 
@@ -125,9 +125,9 @@ class FileHandler:
         if len(tracefiles) > 1:
             logging.info(f'Multiple trace-files found in {self.sessiondir} matching "{self._tracename}":')
             for tracefile in tracefiles:
-                logging.info(f'{tracefile}')
-        logging.info(f'Taking file: {tracefiles[0]}')
-        return pd.read_csv(tracefiles[0], low_memory=False)
+                logging.info(f'{tracefile.stem}')
+        logging.info(f'Taking file: {tracefiles[0].stem}')
+        return pd.read_csv(str(tracefiles[0]), low_memory=False)
 
     def get_eventdata(self) -> pd.DataFrame:
         eventfiles: list[Path] = self.get_events()
@@ -138,7 +138,7 @@ class FileHandler:
             for event_file in eventfiles:
                 logging.info(f'{event_file}')
             logging.info(f'Taking file: {eventfiles[0]}')
-        return pd.read_csv(eventfiles[0], low_memory=False)
+        return pd.read_csv(str(eventfiles[0]), low_memory=False)
 
     def get_gpiodata(self) -> pd.DataFrame:
         gpiofiles: list[Path] = self.get_gpio_files()
@@ -150,7 +150,7 @@ class FileHandler:
             for gpio_file in gpiofiles:
                 logging.info(f'{gpio_file}')
             logging.info(f'Taking file: {gpiofiles[0]}')
-        return pd.read_csv(gpiofiles[0], low_memory=False)
+        return pd.read_csv(str(gpiofiles[0]), low_memory=False)
 
     def unique_path(self, filename) -> Path:
         counter = 0
