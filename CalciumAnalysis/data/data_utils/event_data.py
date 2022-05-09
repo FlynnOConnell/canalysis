@@ -8,52 +8,38 @@ from __future__ import annotations
 
 from typing import Sized
 import logging
-from dataclasses import dataclass
-
+from dataclasses import dataclass, field
 import numpy as np
+import pandas as pd
 
 from file_handling.file_handler import FileHandler
 
 
-@dataclass
+@dataclass(slots=True, order=False)
 class EventData:
+    timestamps: dict = field(init=False)
+    trial_times: dict = field(init=False)
+    numlicks: Sized | int = field(init=False)
+    drylicks: list = field(init=False)
     filehandler: FileHandler = FileHandler
 
     def __post_init__(self):
-        """
-        Data container for events. 
-        
-        Parameters
-        ----------
-        eventdata: pd.DataFrame
-            Frame with timestamps for each event.
-        timestamps: dict
-            Key ('Event'): Each timestamp for that event 
-        trial_times: dict
-            Key ('Event'): Timestamp for first trial of each stimulus
-        """
-        self.eventdata = next(self.filehandler.get_eventdata())
-        self.timestamps = {}
-        self.trial_times = {}
-        self.numlicks: Sized | int
         self._set_event_attrs()
-
-    def __hash__(self):
-        return hash(repr(self))
 
     def __len__(self):
         return len(self.numlicks)
 
     def _set_event_attrs(self):
         allstim = []
-        self.eventdata = self.eventdata.rename(columns={'Time(s)': 'time'})
-        for stimulus in self.eventdata.columns[1:]:
+        data: pd.DataFrame = self.filehandler.get_eventdata()
+        events = data.rename(columns={'Time(s)': 'time'})
+        for stimulus in events.columns[1:]:
             self.timestamps[stimulus] = list(
-                self.eventdata['time'].iloc[np.where(
-                    self.eventdata[stimulus] == 1)[0]])
+                events['time'].iloc[np.where(
+                    events[stimulus] == 1)[0]])
             if stimulus != 'Lick':
                 allstim.extend(self.timestamps[stimulus])
-        drylicks = [x for x in self.timestamps['Lick'] if x not in allstim]
+        self.drylicks = [x for x in self.timestamps['Lick'] if x not in allstim]
         self.numlicks: Sized | int = len(self.timestamps['Lick'])
         for stim, tslist in self.timestamps.items():
             if stim != 'Lick' and stim != 'Rinse' and len(self.timestamps[stim]) > 0:
@@ -71,14 +57,15 @@ class EventData:
                 for ts in tslist:
                     last_stimtime = tslist[np.where(
                         tslist == ts)[0] - 1]
-                    last_drytime = drylicks[np.where(
-                        drylicks < ts)[0][-1]]
+                    last_drytime = self.drylicks[np.where(
+                        self.drylicks < ts)[0][-1]]
                     if last_drytime > last_stimtime:
                         times.append(ts)
                 self.trial_times[stim] = times
         return None
 
     def get_trials(self) -> None:
+        """Print number of instances of each event"""
         for stim, trials in self.trial_times.items():
             logging.info(f'{stim} - {len(trials)}')
         return None
