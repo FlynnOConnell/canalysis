@@ -7,11 +7,10 @@ Module: Classes for data processing.
 """
 
 from __future__ import annotations
-
+from collections import namedtuple
 import logging
-from dataclasses import dataclass
-from typing import Optional
-
+from dataclasses import dataclass, field
+from typing import ClassVar
 from misc import funcs
 from file_handling.file_handler import FileHandler
 
@@ -21,72 +20,41 @@ from data_utils.taste_data import TasteData
 from data_utils.event_data import EventData
 from graphs.graph_utils import Mixins
 from misc import excepts as e
-
 logger = logging.getLogger(__name__)
 
 
 # %%
 
-# Storing instances in a mutable mapping from abstract base class
-# for some extra functionality in how we iterate, count and represent
-# items in the dict.
-
-
-@dataclass
+@dataclass()
 class CalciumData(Mixins.CalPlots):
-    alldata = AllData.Instance()
-    color_dict = {
-        'ArtSal': 'dodgerblue',
-        'MSG': 'darkorange',
-        'NaCl': 'lime',
-        'Sucrose': 'magenta',
-        'Citric': 'yellow',
-        'Quinine': 'red',
-        'Rinse': 'lightsteelblue',
-        'Lick': 'darkgray'
-    }
+    alldata: ClassVar[AllData] = AllData.Instance()
 
-    def __init__(
-            self,
-            animal: str,
-            date: str,
-            data_dir: str,
-            **kwargs: Optional[dict]
-    ):
+    filehandler: FileHandler
+    tracedata: TraceData = field(init=False)
+    eventdata: EventData = field(init=False)
+    _tastedata: TasteData = field(init=False)
 
-        # Update the internal dict with kw arguments
-        self.filehandler = self.get_handler(animal, date, data_dir)
-        self.date = None
-        self.animal = None
-        self.data_dir = None
-        self.__dict__.update(kwargs)
+    def __post_init__(self):
+
+        self.date = self.filehandler.date
+        self.animal = self.filehandler.animal
+        self.data_dir = self.filehandler.directory
+        self.color_dict: namedtuple = field(default=self.filehandler.color_dict)
 
         # Core
         self.tracedata: TraceData = self._set_tracedata()
         self.eventdata: EventData = self._set_eventdata()
         self._authenticate()
 
-        self.color_dict = CalciumData.color_dict
         self._tastedata: TasteData = TasteData(self.tracedata.signals,
                                                self.tracedata.time,
                                                self.eventdata.timestamps,
                                                self.color_dict)
         self._add_instance()
-        # TODO: Replace self.color_dict ref with CalciumData.color_dict
-
-    def __hash__(self):
-        return hash(repr(self))
-
-    def __eq__(self, other):
-        return self.date == other.date and self.animal == other.animal
 
     @classmethod
     def __len__(cls):
         return len(cls.alldata.keys())
-
-    @staticmethod
-    def get_handler(animal, date, data_dir):
-        return FileHandler(animal, date, data_dir)
 
     @staticmethod
     def keys_exist(element, *keys):
@@ -107,7 +75,6 @@ class CalciumData(Mixins.CalPlots):
         return EventData(self.filehandler)
 
     def _authenticate(self):
-
         if not isinstance(self.tracedata, TraceData):
             raise e.DataFrameError('Trace data must be a dataframe')
         if not isinstance(self.eventdata, EventData):
@@ -117,7 +84,6 @@ class CalciumData(Mixins.CalPlots):
         return None
 
     def _add_instance(self):
-
         my_dict = type(self).alldata
         if self.keys_exist(my_dict, self.animal, self.date):
             logging.info(f'{self.animal}-{self.date} already exist.')
