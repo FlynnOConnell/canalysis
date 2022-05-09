@@ -22,7 +22,7 @@ class TraceData:
     filehandler: FileHandler = FileHandler
 
     def __post_init__(self):
-        self.tracedata = next(self.filehandler.get_tracedata())
+        self.tracedata = self.filehandler.get_tracedata()
         self._clean()
         # Core attributes
         self.signals = self._set_trace_signals()
