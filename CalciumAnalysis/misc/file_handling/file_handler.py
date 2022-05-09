@@ -1,23 +1,21 @@
 """
 #file_helpers.py
 
-Module(misc/file_helpers): File handling helper functions.
+Module(misc/file_helpers): File handling data-container class to keep all file-related data.
 """
 from __future__ import annotations
+from collections import namedtuple
 import logging
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
-from misc import funcs
 import pandas as pd
+
+from CalciumAnalysis import config
+from misc import funcs
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
-
-PROJECT_DIR = Path(__file__).parents[2]
-sys.path.append(
-    str(PROJECT_DIR / 'apps'))
 
 
 @dataclass
@@ -56,6 +54,7 @@ class FileHandler:
     animal: str = field(repr=False)
     date: str = field(repr=False)
     _directory: str | Path = field(repr=False)
+    color_dict: namedtuple = namedtuple('color_dict', config['COLORS'])
     _tracename: Optional[str] = 'traces'
     _eventname: Optional[str] = 'processed'
     _gpioname: Optional[str] = 'gpio.csv'
@@ -111,13 +110,13 @@ class FileHandler:
         self._gpioname: str = new_gpioname
 
     def get_traces(self) -> list[Path]:
-        return [p for p in self.sessiondir.glob(f'*{self._tracename}')]
+        return [p for p in self.sessiondir.glob(f'*{self._tracename}*')]
 
     def get_events(self) -> list[Path]:
-        return [p for p in self.sessiondir.glob(f'*{self._eventname}')]
+        return [p for p in self.sessiondir.glob(f'*{self._eventname}*')]
 
     def get_gpio_files(self) -> list[Path]:
-        return [p for p in self.sessiondir.glob(f'*{self._gpioname}')]
+        return [p for p in self.sessiondir.glob(f'*{self._gpioname}*')]
 
     def get_tracedata(self) -> pd.DataFrame:
         tracefiles: list[Path] = self.get_traces()
@@ -127,7 +126,7 @@ class FileHandler:
             logging.info(f'Multiple trace-files found in {self.sessiondir} matching "{self._tracename}":')
             for tracefile in tracefiles:
                 logging.info(f'{tracefile}')
-            logging.info(f'Taking file: {tracefiles[0]}')
+        logging.info(f'Taking file: {tracefiles[0]}')
         return pd.read_csv(tracefiles[0], low_memory=False)
 
     def get_eventdata(self) -> pd.DataFrame:
@@ -168,7 +167,7 @@ class FileHandler:
     def get_cwd(self) -> str:
         return str(self._directory.cwd())
 
-    def get_home_dir(self ) -> str:
+    def get_home_dir(self) -> str:
         return str(self._directory.home())
 
     def tree(self) -> None:
