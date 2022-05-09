@@ -31,6 +31,7 @@ setup(
     author='Flynn OConnell',
     install_requires=install_requires,
     setup_requires=['numpy>=1.10', 'scipy>=0.17, python>=3.5'],
+    zip_safe=False,
     dependency_links=dependency_links,
     author_email='oconnell@binghatmon.edu'
 )
