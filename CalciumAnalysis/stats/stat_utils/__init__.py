@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan 19 20:39:48 2022
+# ./stats/stat_utils __init__.py
 
-@author: flynnoconnell
+Subpackage for statistical helper functionis and libraries.
 """
-from __future__ import absolute_import
+name = 'stat_utils'
 
