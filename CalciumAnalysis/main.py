@@ -7,32 +7,21 @@ Module: Main code execution.
         Note: Neural network requires separate main.py in neuralnetwork subpackage.
 """
 import logging
-import yaml
-
+from CalciumAnalysis import config
 from data.calcium_data import CalciumData
 
-from data.data_utils.file_handler import FileHandler
-from data.taste_data import TasteData
+from misc.file_handling.file_handler import FileHandler
+from data.data_utils.taste_data import TasteData
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
-with open('defaults.yml', 'r') as c:
-    config = yaml.safe_load(c)
-
-datadir = config['DIRS']
-
 
 # %% Some examples on usage of different modules.
 
-def initialize_data():
-    """Set directory where data is stored."""
-
-    datadir = '/Users/flynnoconnell/Documents/Work/Data'
-    animal = 'PGT13'
-    date = '121021'
-    data = CalciumData(animal, date, datadir)
-    return data
+def initialize_data(_filehandler: FileHandler):
+    _data = CalciumData(_filehandler)
+    return _data
 
 
 def sparse_event_data(ev_data):
@@ -41,12 +30,9 @@ def sparse_event_data(ev_data):
     return taste_data
 
 
-datadir = '/Users/flynnoconnell/Documents/Work/Data'
-animal = 'PGT13'
-date = '121021'
-handler = FileHandler(datadir, animal, date)
-handler.eventname = 'gpio'
-handler.tree()
-
 if __name__ == "__main__":
-    data = initialize_data()
+    _animal = config['SINGLE']['animal']
+    _date = config['SINGLE']['date']
+    _dir = config['DIRS']['HOME']
+    filehandler = FileHandler(_animal, _date, _dir)
+    data = initialize_data(filehandler)
