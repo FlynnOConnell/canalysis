@@ -11,6 +11,12 @@ DIRS:
   osx: '/users/flynnoconnell/work/data'
   save: './Desktop'
 
+# Names used in pattern matching to distinguish files
+FILENAMES:
+  traces: 'traces'
+  events: 'processed'
+  gpio: 'gpio.csv'
+
 # Map event names to color for graphing
 COLORS:
     ArtSal : dodgerblue
