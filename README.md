@@ -20,10 +20,9 @@
 * Dimensionality reduction with variance filters and principal component analysis.</li>
 * Support Vector Machine Learning for classification tasks.</li>
 
-
-![C](https://img.shields.io/badge/c-%2300599C.svg?style=plastic&logo=c&logoColor=white)
-![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=plastic&logo=c%2B%2B&logoColor=white)
 ![Python](https://img.shields.io/badge/python-3670A0?style=?style=plastic&logo=python&logoColor=ffdd54)
+![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=plastic&logo=c%2B%2B&logoColor=white)
+![C](https://img.shields.io/badge/c-%2300599C.svg?style=plastic&logo=c&logoColor=white)
 [![GitHub license](https://badgen.net/github/license/Naereen/Strapdown.js)](https://github.com/NeuroPyPy/CalciumAnalysis/blob/master/LICENSE)
 
 [![CodeFactor](https://img.shields.io/codefactor/grade/github/NeuroPyPy/CalciumAnalysis/master?style=plastic)](https://www.codefactor.io/repository/github/neuropypy/calciumanalysis)
