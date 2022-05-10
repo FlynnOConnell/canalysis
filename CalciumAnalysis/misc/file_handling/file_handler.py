@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 
-@dataclass
 class FileHandler:
     """
     File handler. From directory, return genorator looping through files.
@@ -51,21 +50,29 @@ class FileHandler:
         Use tree() to print current directory tree.
     """
 
-    animal: str = field(repr=False)
-    date: str = field(repr=False)
-    _directory: str | Path = field(repr=False)
-    color_dict: namedtuple = namedtuple('color_dict', config['COLORS'])
-    _tracename: Optional[str] = 'traces'
-    _eventname: Optional[str] = 'processed'
-    _gpioname: Optional[str] = 'gpio.csv'
-    gpio_file: Optional[bool] = False
+    def __init__(self,
+                 animal,
+                 date,
+                 _dir,
+                 _tracename: Optional[str] = 'traces',
+                 _eventname: Optional[str] = 'processed',
+                 _gpioname: Optional[str] = 'gpio.csv'
+                 ) -> None:
 
-    def __post_init__(self):
+        self.animal = animal
+        self.date = date
+        self._directory: Path = Path(_dir)
+        self._tracename: Optional[str] = _tracename
+        self._eventname: Optional[str] = _eventname
+        _gpioname: Optional[str] = _gpioname
+        # self.color_dict = config['COLORS']
+        self.color_dict: namedtuple = namedtuple('color_dict', config['COLORS'].keys())(**config['COLORS'])
         self._validate()
-        self._directory: Path = Path(self._directory)
+
         self.session: Path = Path(self.animal + self.date)
         self.animaldir: Path = Path(self._directory / self.animal)
         self.sessiondir: Path = Path(self.animaldir / self.date)
+        self._gpio_file: Optional[bool] = False
         self._make_dirs()
 
     def _validate(self):
@@ -177,12 +184,3 @@ class FileHandler:
             spacer = '    ' * depth
             print(f'{spacer}-|{path.name}')
             return None
-
-
-if __name__ == '__main__':
-    # datadir = 'A:\\'
-    datadir = r'C:\Users\flynn\repos\CalciumAnalysis\datasets'
-    animal = 'PGT08'
-    date = '071621'
-    filehandler = FileHandler(animal, date, datadir)
-    files = filehandler.get_gpio_files()
