@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # %%
 
-@dataclass()
+@dataclass
 class CalciumData(Mixins.CalPlots):
     alldata: ClassVar[AllData] = AllData.Instance()
 
@@ -35,11 +35,10 @@ class CalciumData(Mixins.CalPlots):
     _tastedata: TasteData = field(init=False)
 
     def __post_init__(self):
-
         self.date = self.filehandler.date
         self.animal = self.filehandler.animal
         self.data_dir = self.filehandler.directory
-        self.color_dict: namedtuple = field(default=self.filehandler.color_dict)
+        self.color_dict = self.filehandler.color_dict
 
         # Core
         self.tracedata: TraceData = self._set_tracedata()
