@@ -17,30 +17,38 @@ from file_handling.file_handler import FileHandler
 
 @dataclass(order=False)
 class EventData:
-    timestamps: dict = field(init=False)
-    trial_times: dict = field(init=False)
-    numlicks: Sized | int = field(init=False)
-    drylicks: list = field(init=False)
     filehandler: FileHandler = FileHandler
+    timestamps: field = field(init=False, default_factory=dict)
+    trial_times: field = field(init=False, default_factory=dict)
+    # Initialize empty placeholders to fill later
+    numlicks: Sized | int = field(default_factory=list)
+    drylicks: list = field(default_factory=list)
+    __allstim: list = field(default_factory=list)
 
     def __post_init__(self):
-        self._set_event_attrs()
+        self.timestamps: dict = self.__get_timestamps()
+        self.drylicks = [x for x in self.timestamps['Lick'] if x not in self.__allstim]
+        self.trial_times: dict = self.__get_trial_times()
+        self.color_dict: dict = self.filehandler.color_dict
 
     def __len__(self):
         return len(self.numlicks)
 
-    def _set_event_attrs(self):
-        allstim = []
+    def __get_timestamps(self):
+        timestamps: dict = {}
         data: pd.DataFrame = self.filehandler.get_eventdata()
         events = data.rename(columns={'Time(s)': 'time'})
         for stimulus in events.columns[1:]:
-            self.timestamps[stimulus] = list(
+            timestamps[stimulus] = list(
                 events['time'].iloc[np.where(
                     events[stimulus] == 1)[0]])
             if stimulus != 'Lick':
-                allstim.extend(self.timestamps[stimulus])
-        self.drylicks = [x for x in self.timestamps['Lick'] if x not in allstim]
-        self.numlicks: Sized | int = len(self.timestamps['Lick'])
+                self.__allstim.extend(timestamps[stimulus])
+        self.numlicks: Sized | int = len(timestamps['Lick'])
+        return timestamps
+
+    def __get_trial_times(self) -> dict:
+        trial_times: dict = {}
         for stim, tslist in self.timestamps.items():
             if stim != 'Lick' and stim != 'Rinse' and len(self.timestamps[stim]) > 0:
                 # Get list of tastant deliveries
@@ -62,14 +70,13 @@ class EventData:
                     if last_drytime > last_stimtime:
                         times.append(ts)
                 self.trial_times[stim] = times
-        return None
+        return trial_times
 
     def get_trials(self) -> None:
         """Print number of instances of each event"""
         for stim, trials in self.trial_times.items():
             logging.info(f'{stim} - {len(trials)}')
         return None
-
 
 # %%
 
