@@ -4,7 +4,7 @@
 #taste_data
 """
 import logging
-
+from collections import namedtuple
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass
@@ -19,13 +19,11 @@ class TasteData:
     signals: pd.DataFrame
     time: pd.Series
     timestamps: dict
-    color_dict: dict
+    color_dict: namedtuple
     baseline: int = 0
     post: int = 0
 
     def __post_init__(self):
-
-        self.color_dict: dict
         self.taste_events = {}
         self.process(self.timestamps)
         self._authenticate()
@@ -74,7 +72,7 @@ class TasteData:
                 (self.time > (interv[0] - self.baseline)) &
                 (self.time < (interv[1] + self.post))].copy()
             df['time'] = self.time
-            df['colors'] = self.color_dict[event]
+            df['colors'] = self.color_dict.__getattribute__(event)
             df['events'] = event
             new_df = pd.concat([new_df, df], axis=0)
         new_df.sort_values(by='time')
@@ -93,7 +91,7 @@ class TasteData:
         """Create dictionary with each event and associated traces"""
         for color in np.unique(self.colors):
             event = \
-                [tastant for tastant, col in self.color_dict.items() if col in [color]][0]
+                [tastant for tastant, col in self.color_dict._asdict().items() if col in [color]][0]
             self.taste_events[event] = eventdata.loc[eventdata['colors'] == color]
 
     def get_events(self, lst):
