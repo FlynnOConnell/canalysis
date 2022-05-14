@@ -12,7 +12,7 @@ from __future__ import division
 import logging
 import pickle
 from dataclasses import dataclass
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Any
 
 import numpy as np
 import pandas as pd
@@ -27,9 +27,11 @@ def save(save_file_path, team):
     with open(save_file_path, 'wb') as f:
         pickle.dump(team, f)
 
+
 def load(save_file_path):
     with open(save_file_path, 'rb') as f:
         return pickle.load(f)
+
 
 @dataclass
 class Scoring(object):
@@ -37,7 +39,7 @@ class Scoring(object):
                  pred: np.ndarray,
                  true: np.ndarray,
                  desc: Optional[str] = '',
-                 mat: bool = False):
+                 mat: bool = False) -> None:
         """
         Class to manage scoring variables from fitted classifiers. 
 
@@ -47,10 +49,6 @@ class Scoring(object):
             Fitted model's "predicted" output.
         true : ndarray
             Descriptors of each predictable value.
-        classes : Iterable
-            Descriptors of each predictable value.
-        descriptor : Optional[str], optional
-            Description of what input was used. 
         mat : bool, optional
             Whether to output a Confusion Matrix. The default is False.
 
@@ -59,26 +57,25 @@ class Scoring(object):
         None.
         """
         # Input variables
-        self.predicted = pred
-        self.true = true
-        self.classes = np.unique(self.predicted)
-        self.descriptor = desc
-        self.report = self.get_report()
+        self.predicted: Iterable[Any] = pred
+        self.true: Iterable[Any] = true
+        self.classes: list = list(np.unique(self.predicted))
+        self.descriptor: str = desc
+        self.report: pd.DataFrame = self.get_report()
 
         if mat:
-            self.mat = self.get_confusion_matrix()
+            self.mat: Any = self.get_confusion_matrix()
         if desc is None:
             logging.info('No descriptor')
             pass
-    
 
     def get_report(self) -> pd.DataFrame:
         """ Get classification report"""
         if self.descriptor:
-            assert self.descriptor in ['train','training',
-                                       'test','testing',
-                                       'eval','val', 'evaluate']
-            
+            assert self.descriptor in ['train', 'training',
+                                       'test', 'testing',
+                                       'eval', 'val', 'evaluate']
+
         self.report = classification_report(
             self.true,
             self.predicted,
@@ -91,9 +88,9 @@ class Scoring(object):
     def get_confusion_matrix(self, caption: Optional[str] = '') -> object:
         """ Get confusion matrix"""
         mat = Plot.confusion_matrix(
-            self.true,
-            self.predicted,
+            y_true=self.true,
+            y_pred=self.predicted,
             labels=self.classes,
             caption=caption)
-        
+
         return mat
