@@ -7,9 +7,9 @@ Module (nn_utils): Class to handle data for import into SVM classifier.
 """
 import numpy as np
 
+
 class DataHandler:
     def __init__(self, data, target):
-        
         """
         Check and index specific data to feed into SVM. Accepted as input to sklearn.GridSearchCV().
         Features are the data used for regression and margin vectorizations.
@@ -22,7 +22,6 @@ class DataHandler:
         target : pd.Series | np.ndarray
             Labels/targets.
         """
-        
         assert data.shape[0] == target.shape[0]
         self.data = np.array(data)
         self.target = np.array(target)
@@ -43,5 +42,4 @@ class DataHandler:
         slice
             Indexed targets.
         """
-        assert type(self.data.index) == type(self.data[idx])
         return self.data[idx], self.target[idx]
