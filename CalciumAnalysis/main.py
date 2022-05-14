@@ -7,11 +7,10 @@ Module: Main code execution.
         Note: Neural network requires separate main.py in neuralnetwork subpackage.
 """
 import logging
-from CalciumAnalysis import config
 from data.calcium_data import CalciumData
 
 from misc.file_handling.file_handler import FileHandler
-from data.data_utils.taste_data import TasteData
+from taste_data import TasteData
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ def initialize_data(_filehandler: FileHandler):
 
 def sparse_event_data(ev_data):
     """Get specific subset of data based on particular events"""
-    taste_data = TasteData(ev_data.tracedata, ev_data.timestamps, ev_data.color_dict)
+    taste_data = TasteData(ev_data.tracedata, ev_data.time, ev_data.timestamps, ev_data.color_dict)
     return taste_data
 
 
