@@ -22,18 +22,19 @@ from sklearn.model_selection import (
 from sklearn.svm import SVC
 
 from graphs.graph_utils.graph_funcs import plot_learning_curve
-from neuralnetwork.nn_utils._props import _validate, _props
+from neuralnetwork.nn_utils._properties import _validate, _props
 from neuralnetwork.nn_utils.datahandler import DataHandler
 from neuralnetwork.nn_utils.scores import Scoring
 
 logger = logging.getLogger(__name__)
 
+
 # %%
 
 class Stage(Enum):
-    BASE = auto()
-    SPLIT = auto()
-    SCALE = auto()    
+    BASE = auto(int)
+    SPLIT = auto(int)
+    SCALE = auto(int)
 
 
 class SupportVectorMachine(_validate, _props):
@@ -87,7 +88,6 @@ class SupportVectorMachine(_validate, _props):
         self.scores_train = None
         self.scores_eval = None
 
-        
     @staticmethod
     def to_numpy(arg):
         if isinstance(arg, np.ndarray):
@@ -96,8 +96,7 @@ class SupportVectorMachine(_validate, _props):
             return arg.to_numpy()
         else:
             return np.array(arg)
-                
-      
+
     def split(self,
               train_size: float = 0.9,
               n_splits=1,
@@ -124,9 +123,9 @@ class SupportVectorMachine(_validate, _props):
                 n_splits=n_splits,
                 train_size=train_size,
                 **params)
-        else: 
+        else:
             cv = self.cv
-    
+
         train_index, test_index = next(cv.split(data, target))
         X_train, x_test = data[train_index], data[test_index]
         Y_train, y_test = target[train_index], target[test_index]
@@ -136,7 +135,7 @@ class SupportVectorMachine(_validate, _props):
         self.trainset['Y_train'] = Y_train
         self.trainset['y_test'] = y_test
         self.scale()
-        
+
         return None
 
     def scale(self, **kwargs):
@@ -153,7 +152,7 @@ class SupportVectorMachine(_validate, _props):
         -------
         None.
         """
-        _validate._is_split(self)
+        assert hasattr(self.trainset, 'x_test')
         if not kwargs:
             X_train = self.trainset['X_train']
             x_test = self.trainset['x_test']
@@ -168,7 +167,6 @@ class SupportVectorMachine(_validate, _props):
         self.trainset['x_test'] = self.to_numpy(x_test_scaled)
         return None
 
-
     def optimize_clf(self,
                      X_train=None,
                      Y_train=None,
@@ -176,8 +174,7 @@ class SupportVectorMachine(_validate, _props):
                      verbose=True,
                      refit=True,
                      **svcparams):
-        _validate._is_split(self)
-
+        assert hasattr(self.trainset, 'x_test')
         if param_grid:
             param_grid = param_grid
         else:
@@ -197,7 +194,7 @@ class SupportVectorMachine(_validate, _props):
         self.grid.fit(X_train, Y_train.ravel())
         print('**', '-' * 20, '*', '-' * 20, '**')
         print(f"Best params: {self.grid.best_params_}")
-        print('**', '-'*5)
+        print('**', '-' * 5)
         print(f"Score: {self.grid.best_score_}")
         # Use optimized parameters for SVC model
         kernel_best = self.grid.best_params_['kernel']
@@ -207,34 +204,27 @@ class SupportVectorMachine(_validate, _props):
         print('Model optimized')
         return None
 
-
     def fit_clf(self,
-                model=None,
-                learning_curve: bool = False,
-                **kwargs) -> object:
+                model=None) -> object:
         """
         Fit classifier to training data.
 
         Args:
-            **kwargs (dict): optional args for classifier.
+            model (model): optional, input custom model.
         """
-        _validate._is_split(self)
+        assert hasattr(self.trainset, 'x_test')
         X_train = self.trainset['X_train']
         Y_train = self.trainset['Y_train']
-        if model: 
-            self.model=model # If model proveed, override current model
+        if model:
+            self.model = model  # If model proveed, override current model
             logging.info(f'Model provided has been fit: {model}')
         self.model.fit(X_train, np.ravel(Y_train))
-        self.model_type = _validate._num_classes(Y_train)
         return None
-    
-    
+
     def predict_clf(self, x_test=None):
-        
-        _validate._is_split(self)
+        assert hasattr(self.trainset, 'x_test')
         if not x_test:
             x_test = self.trainset['x_test']
-        
         y_pred = self.model.predict(x_test)
         self.trainset['y_pred'] = y_pred
         y_true = self.trainset['y_test']
@@ -242,16 +232,14 @@ class SupportVectorMachine(_validate, _props):
         self.scores_train = Scoring(y_pred, y_true, desc='train', mat=True)
         return None
 
-
     def evaluate_clf(self):
         y_pred = self.model.predict(self.evaldata.data)
         y_true = self.evaldata.target
-        self.trainset['eval_y_pred'] = y_pred 
-        self.trainset['eval_y_true'] = y_true 
+        self.trainset['eval_y_pred'] = y_pred
+        self.trainset['eval_y_true'] = y_true
         _validate._full_predict(y_pred, y_true)
         self.scores_eval = Scoring(y_pred, y_true, desc='eval', mat=True)
         return None
-    
 
     def get_learning_curves(self,
                             estimator,
@@ -260,22 +248,18 @@ class SupportVectorMachine(_validate, _props):
         import matplotlib.pyplot as plt
         _, axes = plt.subplots(3, 2, figsize=(10, 15))
 
-        X = self.X
-        y = self.y
+        X = self.trainset['X_test']
+        y = self.trainset['y_test']
 
         # Cross validation with 50 iterations to get smoother mean test and train
         # score curves, each time with 20% data randomly selected as a validation set.
         title = title
-        estimator = estimator
-        plot_learning_curve(
-            title, X, y, axes=axes[:, 0], ylim=(0, 1.01), cv=self.cv)
+        plot_learning_curve(estimator, title, X, y, axes=axes[:, 0], ylim=(0, 1.01), cv=self.cv)
         kern = self.grid.best_params_['kernel']
         gam = self.grid.best_params_['gamma']
         C = self.grid.best_params_['C']
-        title = (f'SVC - kernel = {kern}, gamma = {gam}, C = {C}')
-        plot_learning_curve(
-            title, X, y, axes=axes[:, 1], ylim=(0, 1.01), cv=self.cv)
-
+        title = f'SVC - kernel = {kern}, gamma = {gam}, C = {C}'
+        plot_learning_curve(estimator, title, X, y, axes=axes[:, 1], ylim=(0, 1.01), cv=self.cv)
         plt.show()
 
 
