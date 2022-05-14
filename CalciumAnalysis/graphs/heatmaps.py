@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from data.calcium_data import CalciumData
 from matplotlib import rcParams
 from scipy.ndimage.filters import gaussian_filter
 
@@ -164,11 +163,12 @@ class Heatmap(object):
         set_pub()
         df = df.T
         if self.sigma is not None:
-            df = pd.DataFrame(gaussian_filter(data, sigma=self.sigma))
+            df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
         # We need to grab each column individually
         array = df.values
         # Fetch a pretty color palette:
-        c = sns.color_palette(self.cm, n_colors=df.shape[1], as_cmap=True)
+        if not self.cm:
+            self.cm = sns.color_palette(self.cm, n_colors=df.shape[1], as_cmap=True)
         # Plot data
         axs = axs or plt.gca()
         axs.axis('off')
@@ -213,19 +213,6 @@ class Heatmap(object):
         return fig, axs
 
 
-# %% Data Getters
+if __name__ == '__main__':
+    heatmaps = Heatmap()
 
-datadir = 'A:\\'
-animal = 'PGT13'
-date = '121021'
-data = CalciumData(datadir, animal, date)
-# %%
-taste = data.tastedata
-hm = taste.taste_events['Lick'].reset_index(drop=True).iloc[0:40].drop(['time',
-                                                                        'colors',
-                                                                        'events'], axis=1)
-# %%
-heatmaps = Heatmap()
-
-heatmaps.single(hm)
-heatmaps.columnwise(hm)
