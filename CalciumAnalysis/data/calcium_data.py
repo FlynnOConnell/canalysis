@@ -7,17 +7,16 @@ Module: Classes for data processing.
 """
 
 from __future__ import annotations
-from collections import namedtuple
 import logging
 from dataclasses import dataclass, field
 from typing import ClassVar
 from misc import funcs
 from file_handling.file_handler import FileHandler
 
-from data_utils.all_data import AllData
-from data_utils.trace_data import TraceData
-from data_utils.taste_data import TasteData
-from data_utils.event_data import EventData
+from all_data import AllData
+from trace_data import TraceData
+from taste_data import TasteData
+from event_data import EventData
 from graphs.graph_utils import Mixins
 from misc import excepts as e
 logger = logging.getLogger(__name__)
