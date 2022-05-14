@@ -423,14 +423,14 @@ class Plot(object):
 
         return None
 
-    def confusion_matrix(self,
+    @staticmethod
+    def confusion_matrix(
                          y_pred,
                          y_true,
                          labels: list,
                          xaxislabel: Optional[str] = None,
                          yaxislabel: Optional[str] = None,
-                         caption: Optional[str] = '',
-                         save_dir: str = None) -> np.array:
+                         caption: Optional[str] = '') -> np.array:
         """
         
 
@@ -448,8 +448,6 @@ class Plot(object):
             DESCRIPTION. The default is None.
         caption : Optional[str], optional
             DESCRIPTION. The default is ''.
-        save_dir : str, optional
-            DESCRIPTION. The default is None.
 
         Returns
         -------
@@ -479,10 +477,4 @@ class Plot(object):
                      caption,
                      fontsize='small')
         plt.show()
-        if save_dir:
-            plt.savefig(
-                self.save_dir
-                + '_confusionMatrix.png',
-                Addbbox_inches='tight', dpi=300)
-
         return mat
