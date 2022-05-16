@@ -6,12 +6,10 @@ Module(misc/file_helpers): File handling data-container class to keep all file-r
 from __future__ import annotations
 from collections import namedtuple
 import logging
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 import pandas as pd
 
-from CalciumAnalysis import config
 from misc import funcs
 
 logger = logging.getLogger(__name__)
@@ -64,9 +62,8 @@ class FileHandler:
         self._directory: Path = Path(_dir)
         self._tracename: Optional[str] = _tracename
         self._eventname: Optional[str] = _eventname
-        _gpioname: Optional[str] = _gpioname
-        # self.color_dict = config['COLORS']
-        self.color_dict: namedtuple = namedtuple('color_dict', config['COLORS'].keys())(**config['COLORS'])
+        self._gpioname: Optional[str] = _gpioname
+        self.color_dict: namedtuple
         self._validate()
 
         self.session: Path = Path(self.animal + self.date)
@@ -152,7 +149,7 @@ class FileHandler:
         if gpiofiles is None:
             raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._gpioname}"')
         if len(gpiofiles) > 1:
-            self.gpio_file = True
+            self._gpio_file = True
             logging.info(f'Multiple gpio-files found in {self.sessiondir} matching "{self._gpioname}":')
             for gpio_file in gpiofiles:
                 logging.info(f'{gpio_file}')

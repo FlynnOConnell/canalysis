@@ -32,12 +32,12 @@ class CalciumData(Mixins.CalPlots):
     tracedata: TraceData = field(init=False)
     eventdata: EventData = field(init=False)
     _tastedata: TasteData = field(init=False)
+    color_dict = FileHandler
 
     def __post_init__(self):
         self.date = self.filehandler.date
         self.animal = self.filehandler.animal
         self.data_dir = self.filehandler.directory
-        self.color_dict = self.filehandler.color_dict
 
         # Core
         self.tracedata: TraceData = self._set_tracedata()
