@@ -9,7 +9,7 @@ Module: Main code execution.
 import logging
 from data.calcium_data import CalciumData
 from parameters.data_params import *
-from file_handling.file_handler import FileHandler
+from data.data_utils.file_handler import FileHandler
 from taste_data import TasteData
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')

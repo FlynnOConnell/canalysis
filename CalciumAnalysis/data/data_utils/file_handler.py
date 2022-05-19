@@ -1,13 +1,16 @@
 """
 #file_helpers.py
 
-Module(misc/file_helpers): File handling data-container class to keep all file-related data.
+Module(misc/file_helpers): File handling data-container class to keep all file-related
+data.
 """
 from __future__ import annotations
-from collections import namedtuple
+
 import logging
+from collections import namedtuple
 from pathlib import Path
 from typing import Optional
+
 import pandas as pd
 
 from misc import funcs
@@ -48,14 +51,15 @@ class FileHandler:
         Use tree() to print current directory tree.
     """
 
-    def __init__(self,
-                 animal,
-                 date,
-                 _dir,
-                 _tracename: Optional[str] = 'traces',
-                 _eventname: Optional[str] = 'processed',
-                 _gpioname: Optional[str] = 'gpio.csv'
-                 ) -> None:
+    def __init__(
+            self,
+            animal,
+            date,
+            _dir,
+            _tracename: Optional[str] = 'traces',
+            _eventname: Optional[str] = 'processed',
+            _gpioname: Optional[str] = 'gpio.csv'
+            ) -> None:
 
         self.animal = animal
         self.date = date
@@ -79,7 +83,9 @@ class FileHandler:
         if not funcs.check_path(self._directory):
             raise AttributeError(f'Directory must contain "/", not {self._directory}')
         if funcs.check_numeric(self.animal) or funcs.check_path(self.animal):
-            raise AttributeError(f'Animal must not be only numeric or contain path characters, {self.animal}')
+            raise AttributeError(
+                f'Animal must not be only numeric or contain path characters, '
+                f'{self.animal}')
 
     @property
     def directory(self) -> Path:
@@ -125,9 +131,12 @@ class FileHandler:
     def get_tracedata(self) -> pd.DataFrame:
         tracefiles: list[Path] = self.get_traces()
         if tracefiles is None:
-            raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._tracename}"')
+            raise FileNotFoundError(
+                f'No files in {self.sessiondir} matching "{self._tracename}"')
         if len(tracefiles) > 1:
-            logging.info(f'Multiple trace-files found in {self.sessiondir} matching "{self._tracename}":')
+            logging.info(
+                f'Multiple trace-files found in {self.sessiondir} matching "'
+                f'{self._tracename}":')
             for tracefile in tracefiles:
                 logging.info(f'{tracefile.stem}')
         logging.info(f'Taking file: {tracefiles[0].stem}')
@@ -136,9 +145,12 @@ class FileHandler:
     def get_eventdata(self) -> pd.DataFrame:
         eventfiles: list[Path] = self.get_events()
         if eventfiles is None:
-            raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._eventname}"')
+            raise FileNotFoundError(
+                f'No files in {self.sessiondir} matching "{self._eventname}"')
         if len(eventfiles) > 1:
-            logging.info(f'Multiple event-files found in {self.sessiondir} matching "{self._eventname}":')
+            logging.info(
+                f'Multiple event-files found in {self.sessiondir} matching "'
+                f'{self._eventname}":')
             for event_file in eventfiles:
                 logging.info(f'{event_file}')
             logging.info(f'Taking file: {eventfiles[0]}')
@@ -147,10 +159,13 @@ class FileHandler:
     def get_gpiodata(self) -> pd.DataFrame:
         gpiofiles: list[Path] = self.get_gpio_files()
         if gpiofiles is None:
-            raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._gpioname}"')
+            raise FileNotFoundError(
+                f'No files in {self.sessiondir} matching "{self._gpioname}"')
         if len(gpiofiles) > 1:
             self._gpio_file = True
-            logging.info(f'Multiple gpio-files found in {self.sessiondir} matching "{self._gpioname}":')
+            logging.info(
+                f'Multiple gpio-files found in {self.sessiondir} matching "'
+                f'{self._gpioname}":')
             for gpio_file in gpiofiles:
                 logging.info(f'{gpio_file}')
             logging.info(f'Taking file: {gpiofiles[0]}')
