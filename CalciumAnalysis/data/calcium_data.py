@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import ClassVar
 from misc import funcs
-from file_handling.file_handler import FileHandler
+from data.data_utils.file_handler import FileHandler
 
 from all_data import AllData
 from trace_data import TraceData
@@ -26,13 +26,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CalciumData(Mixins.CalPlots):
-    alldata: ClassVar[AllData] = AllData.Instance()
 
     filehandler: FileHandler
     tracedata: TraceData = field(init=False)
     eventdata: EventData = field(init=False)
     _tastedata: TasteData = field(init=False)
     color_dict = FileHandler
+    alldata: ClassVar[AllData] = AllData.Instance()
 
     def __post_init__(self):
         self.date = self.filehandler.date
