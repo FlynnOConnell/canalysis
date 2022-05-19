@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-from file_handling.file_handler import FileHandler
+from data.data_utils.file_handler import FileHandler
 
 
 @dataclass(order=False)
@@ -78,6 +78,7 @@ class EventData:
             logging.info(f'{stim} - {len(trials)}')
         return None
 
+
 # %%
 
 def main():
@@ -85,7 +86,7 @@ def main():
     animal = 'PGT13'
     date = '121021'
     handler = FileHandler(datadir, animal, date)
-    eventdata: EventData = EventData(handler)
+    events_test: EventData = EventData(handler)
     return eventdata
 
 
