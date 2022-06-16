@@ -1,7 +1,7 @@
 
 
 from collections.abc import MutableMapping
-from misc.wrappers import Singleton
+from utils.wrappers import Singleton
 
 
 @Singleton
