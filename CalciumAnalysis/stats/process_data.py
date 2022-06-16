@@ -12,27 +12,34 @@ from typing import Tuple, Optional
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from data.calcium_data import CalciumData
-from misc import funcs
+from utils import funcs
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 
-class ProcessData(object):
-    def __init__(self, data):
+class ProcessData:
+    def __init__(self, data, outpath=None):
         assert isinstance(data, CalciumData)
+        self.outpath = outpath
+        if isinstance(outpath, str):
+            self.outpath = Path(outpath)
+
         self.signals = data.tracedata.signals
         self.time = data.tracedata.time
         self.cells = data.tracedata.cells
-        self.get_antibouts()
-        self.session = data.session
+
+        self.session = data.filehandler.session
         self.trial_times = data.eventdata.trial_times
         self.timestamps = data.eventdata.timestamps
-        self.get_antibouts()
+        self.antibouts = self.get_antibouts()
         self.sponts = self.get_sponts()
 
+
     @staticmethod
-    def PCA(df: pd.DataFrame,
+    def PCA(
+            df: pd.DataFrame,
             numcomp: Optional[int] = 2
             ):
 
@@ -43,7 +50,8 @@ class ProcessData(object):
         variance_ns = np.round(
             pca.explained_variance_ratio_ * 100, decimals=1)
         labels = [
-            'PC' + str(x) + f' - {variance_ns[x - 1]}%' for x in range(1, len(variance_ns) + 1)]
+            'PC' + str(x) + f' - {variance_ns[x - 1]}%' for x in
+            range(1, len(variance_ns) + 1)]
         df_ns = pd.DataFrame(data_fit, columns=labels)
 
         return df_ns, variance_ns
@@ -55,7 +63,6 @@ class ProcessData(object):
                 (self.time > (interv[0])) &
                 (self.time < (interv[1]))]
             antibouts = pd.concat([antibouts, df], axis=0)
-            antibouts.sort_values(by='time')
         return antibouts
 
     def get_sponts(self) -> pd.DataFrame | pd.Series:
@@ -65,15 +72,9 @@ class ProcessData(object):
                 (self.time > (interv[0])) &
                 (self.time < (interv[1]))]
             sponts = pd.concat([sponts, df], axis=0)
-            sponts.sort_values(by='time')
         return sponts
 
-    def get_stats(self,
-                  output: Optional[bool] = False,
-                  savedir: Optional[str] = '',
-                  ) -> Tuple[pd.DataFrame,
-                             pd.DataFrame,
-                             pd.DataFrame]:
+    def get_stats(self) -> pd.DataFrame | None:
 
         stats_df = pd.DataFrame(columns=[
             'File', 'Cell', 'Stimulus',
@@ -114,7 +115,7 @@ class ProcessData(object):
                     # Get peak signal & time
                     peak_signal = max(signal)
                     peak_ts = self.signals[self.signals[cell]
-                                                 == peak_signal, 'time'].iloc[0]
+                                           == peak_signal, 'time'].iloc[0]
                     if peak_ts <= trial + 2.4:
                         peak_ts = max(bltime) + 2.4
                         shift = 'yes'
@@ -125,7 +126,8 @@ class ProcessData(object):
                     time_lower = self.time[peak_window_ind[0]]
                     time_upper = self.time[peak_window_ind[1]]
                     response_window = np.array(self.signals[
-                                               peak_window_ind[0]:peak_window_ind[1], cell])
+                                               peak_window_ind[0]:peak_window_ind[1],
+                                               cell])
                     window_ts = [time_lower, time_upper]
                     mean_mag = np.mean(response_window)
                     dff = ((mean_mag - mean_bl) / mean_bl)
@@ -167,11 +169,11 @@ class ProcessData(object):
             track = len(stats_df)
             stats_df.loc[track] = d
         logging.info('Stats successfully completed.')
-        if output:
+
+        if self.outpath:
             print("Outputting data to Excel...")
-            with pd.ExcelWriter(str(savedir)
-                                + '/'
-                                + '_statistics.xlsx') as writer:
+            with pd.ExcelWriter(self.outpath / '/' / '_statistics.xlsx'
+                                ) as writer:
                 summary.to_excel(
                     writer, sheet_name='Summary', index=False)
                 raw_df.to_excel(
@@ -181,4 +183,6 @@ class ProcessData(object):
                 stats_df.to_excel(
                     writer, sheet_name='Trial Stats', index=False)
             print(' statistics successfully transferred to Excel!')
-        return stats_df, raw_df, summary
+            return None
+        else:
+            return stats_df
