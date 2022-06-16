@@ -1,7 +1,7 @@
 """
 #file_helpers.py
 
-Module(misc/file_helpers): File handling data-container class to keep all file-related
+Module(utils/file_helpers): File handling data-container class to keep all file-related
 data.
 """
 from __future__ import annotations
@@ -9,11 +9,12 @@ from __future__ import annotations
 import logging
 from collections import namedtuple
 from pathlib import Path
+from pprint import pprint
 from typing import Optional
 
 import pandas as pd
 
-from misc import funcs
+from utils import funcs
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -56,11 +57,12 @@ class FileHandler:
             animal,
             date,
             _dir,
-            _tracename: Optional[str] = 'traces',
+            _tracename: Optional[str] = 'trace',
             _eventname: Optional[str] = 'processed',
             _gpioname: Optional[str] = 'gpio.csv'
             ) -> None:
 
+        # TODO: glob for .csv and .xlxs
         self.animal = animal
         self.date = date
         self._directory: Path = Path(_dir)
@@ -73,6 +75,7 @@ class FileHandler:
         self.session: Path = Path(self.animal + self.date)
         self.animaldir: Path = Path(self._directory / self.animal)
         self.sessiondir: Path = Path(self.animaldir / self.date)
+        assert self.sessiondir.is_dir()
         self._gpio_file: Optional[bool] = False
         self._make_dirs()
 
@@ -120,7 +123,9 @@ class FileHandler:
         self._gpioname: str = new_gpioname
 
     def get_traces(self) -> list[Path]:
-        return [p for p in self.sessiondir.glob(f'*{self._tracename}*')]
+        for x in self.sessiondir.iterdir():
+            print(x)
+        return [p for p in self.sessiondir.glob(f'*{self._tracename}*.csv')]
 
     def get_events(self) -> list[Path]:
         return [p for p in self.sessiondir.glob(f'*{self._eventname}*')]
@@ -130,9 +135,13 @@ class FileHandler:
 
     def get_tracedata(self) -> pd.DataFrame:
         tracefiles: list[Path] = self.get_traces()
-        if tracefiles is None:
+        if not tracefiles:
+            files = self.search_files()
             raise FileNotFoundError(
-                f'No files in {self.sessiondir} matching "{self._tracename}"')
+                f'No files in {self.sessiondir} matching "{self._tracename}"'
+                f'Files found: {files}'
+            )
+
         if len(tracefiles) > 1:
             logging.info(
                 f'Multiple trace-files found in {self.sessiondir} matching "'
@@ -196,3 +205,15 @@ class FileHandler:
             spacer = '    ' * depth
             print(f'{spacer}-|{path.name}')
             return None
+
+    def search_files(self):
+        dirpath = self._directory
+        assert dirpath.is_dir()
+        file_list = []
+        for x in dirpath.iterdir():
+            if x.is_file():
+                file_list.append(x)
+        return file_list
+
+
+
