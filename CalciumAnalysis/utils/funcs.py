@@ -17,8 +17,8 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 
-from misc import excepts as e
-from misc.wrappers import typecheck
+from utils import excepts as e
+from utils.wrappers import typecheck
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -127,69 +127,6 @@ def remove_outliers(df,
     return df, colors
 
 
-def get_dir(data_dir: str,
-            _id: str,
-            date: str,
-            pick: int
-            ):
-    """
-    
-    From Home directory, set path to data files with pathlib object variable.
-    
-    Directory structure: 
-        -| Animal 
-        --| Date
-        ---| Results
-        -----| Graphs
-        -----| Statistics
-        ---| Data_traces*
-        ---| Data_gpio_processed*
-
-    Args:
-        data_dir (str): Path to directory
-        pick (int) = index of files to choose.
-        _id (str): Current animal ID
-        date (str): Current session date  
-        
-    Returns:
-        tracedata (pd.DataFrame): DataFrame of cell signals
-        eventdata (pd.DataFrame): DataFrame of event times.
-        session (str): Concatenated name of animalID_Date
-        
-    """
-
-    os.chdir(data_dir)
-    datapath = Path(data_dir) / _id / date
-
-    files = (glob(os.path.join(datapath, '*traces*')))
-    logging.info(f'{len(files)} trace files found:')
-    for file in files:
-        file = Path(file)
-        logging.info(f'{file.stem}')
-        logging.info('-' * 15)
-
-    if len(files) > 1:
-        if pick == 0:
-            tracepath = Path(files[0])
-            logging.info('Taking trace file: {}'.format(tracepath.name))
-        else:
-            tracepath = Path(files[pick])
-            logging.info('Taking trace file: {}'.format(tracepath.name))
-    elif len(files) == 1:
-        tracepath = Path(files[0])
-    else:
-        logging.info(f'Files for {_id}, {date} not found.')
-        raise FileNotFoundError
-
-    eventpath = Path(glob(os.path.join(datapath, '*processed*'))[0])
-    tracedata = pd.read_csv(tracepath, low_memory=False)
-    eventdata = pd.read_csv(eventpath, low_memory=False)
-
-    return tracedata, eventdata
-
-
-# Data Validation
-
 
 @typecheck(Iterable[any])
 def dup_check(signal: Iterable[any],
@@ -254,7 +191,6 @@ def get_peak_window(time: Iterable[any], peak: float) -> list:
     return window_ind
 
 
-# @typecheck(Iterable[any], Iterable[any], bool)
 def get_matched_time(time: Iterable[any],
                      match: Iterable[any],
                      return_index: Optional[bool] = False) -> list:
