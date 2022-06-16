@@ -8,7 +8,8 @@ from collections import namedtuple
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass
-from misc import funcs
+from utils import funcs
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
@@ -65,17 +66,18 @@ class TasteData:
             Call to method where specific attributes are set.
 
         """
-        logging.info('Setting taste data')
+        logging.info('Setting taste data...')
         new_df = pd.DataFrame()
         for event, interv in funcs.iter_events(timestamps):
             df = self.signals.loc[
                 (self.time > (interv[0] - self.baseline)) &
                 (self.time < (interv[1] + self.post))].copy()
             df['time'] = self.time
-            df['colors'] = self.color_dict.__getattribute__(event)
+            df['colors'] = self.color_dict[event]
             df['events'] = event
             new_df = pd.concat([new_df, df], axis=0)
         new_df.sort_values(by='time')
+        logging.info('Taste data set.')
         return self._set_data(new_df)
 
     def _set_data(self, df):
@@ -91,7 +93,7 @@ class TasteData:
         """Create dictionary with each event and associated traces"""
         for color in np.unique(self.colors):
             event = \
-                [tastant for tastant, col in self.color_dict._asdict().items() if col in [color]][0]
+                [tastant for tastant, col in self.color_dict.items() if col in [color]][0]
             self.taste_events[event] = eventdata.loc[eventdata['colors'] == color]
 
     def get_events(self, lst):
