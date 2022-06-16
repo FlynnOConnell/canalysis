@@ -17,7 +17,8 @@ from data.data_utils.file_handler import FileHandler
 
 @dataclass(order=False)
 class EventData:
-    filehandler: FileHandler = FileHandler
+    filehandler: FileHandler
+    color_dict: dict
     timestamps: field = field(init=False, default_factory=dict)
     trial_times: field = field(init=False, default_factory=dict)
     # Initialize empty placeholders to fill later
@@ -29,7 +30,7 @@ class EventData:
         self.timestamps: dict = self.__get_timestamps()
         self.drylicks = [x for x in self.timestamps['Lick'] if x not in self.__allstim]
         self.trial_times: dict = self.__get_trial_times()
-        self.color_dict: dict = self.filehandler.color_dict
+
 
     def __len__(self):
         return len(self.numlicks)
@@ -77,18 +78,3 @@ class EventData:
         for stim, trials in self.trial_times.items():
             logging.info(f'{stim} - {len(trials)}')
         return None
-
-
-# %%
-
-def main():
-    datadir = '/Users/flynnoconnell/Documents/Work/Data'
-    animal = 'PGT13'
-    date = '121021'
-    handler = FileHandler(datadir, animal, date)
-    events_test: EventData = EventData(handler)
-    return eventdata
-
-
-if __name__ == "__main__":
-    eventdata = main()
