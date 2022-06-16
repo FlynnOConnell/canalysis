@@ -13,7 +13,7 @@
 # import numpy as np
 # import pandas as pd
 # from data.calcium_data import CalciumData
-# from misc import funcs
+# from utils import funcs
 #
 #
 # def get_tastant_dicts(tastant,
