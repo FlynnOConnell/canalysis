@@ -6,11 +6,15 @@
 Module: Main code execution. 
         Note: Neural network requires separate main.py in neuralnetwork subpackage.
 """
+from __future__ import annotations
+
 import logging
 from data.calcium_data import CalciumData
-from parameters.data_params import *
+# from parameters.data_params import *
 from data.data_utils.file_handler import FileHandler
-from taste_data import TasteData
+from data.taste_data import TasteData
+from stats.process_data import ProcessData
+import pandas as pd
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -18,20 +22,39 @@ logger = logging.getLogger(__name__)
 
 # %% Some examples on usage of different modules.
 
+color_dict = {
+    'ArtSal' : 'blue',
+    'Citric' : 'yellow',
+    'Lick'   : 'darkgray',
+    'MSG'    : 'orange',
+    'NaCl'   : 'green',
+    'Quinine': 'red',
+    'Rinse'  : 'lightsteelblue',
+    'Sucrose': 'purple'
+}
+
+
 def initialize_data(_filehandler: FileHandler):
-    _data = CalciumData(_filehandler)
+    _data = CalciumData(_filehandler, color_dict)
     return _data
 
 
 def sparse_event_data(ev_data):
     """Get specific subset of data based on particular events"""
-    taste_data = TasteData(ev_data.tracedata, ev_data.time, ev_data.timestamps, ev_data.color_dict)
+    taste_data = TasteData(ev_data.tracedata, ev_data.time, ev_data.timestamps,
+                           ev_data.color_dict)
     return taste_data
 
 
+def statistics(_data) -> pd.DataFrame | None:
+    stats = ProcessData(_data)
+    stats = stats.get_stats()
+    return stats
+
 if __name__ == "__main__":
-    _animal = data_params.config['SINGLE']['animal']
-    _date = data_params.config['SINGLE']['date']
-    _dir = data_params.config['DIRS']['HOME']
+    _animal = 'PGT13'
+    _date = '051922'
+    _dir = 'A:/'
     filehandler = FileHandler(_animal, _date, _dir)
     data = initialize_data(filehandler)
+    stat_df = statistics(data)
