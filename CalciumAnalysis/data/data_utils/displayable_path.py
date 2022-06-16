@@ -1,7 +1,7 @@
 """
 # displayable_path.py
 
-Module(misc/file_helpers): Class for displaying path tree.
+Module(utils/file_helpers): Class for displaying path tree.
 """
 from __future__ import annotations
 
