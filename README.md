@@ -21,7 +21,6 @@
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=?style=plastic&logo=python&logoColor=ffdd54)
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=plastic&logo=c%2B%2B&logoColor=white)
-![C](https://img.shields.io/badge/c-%2300599C.svg?style=plastic&logo=c&logoColor=white)
 [![GitHub license](https://badgen.net/github/license/Naereen/Strapdown.js)](https://github.com/NeuroPyPy/CalciumAnalysis/blob/master/LICENSE)
 
 [![CodeFactor](https://img.shields.io/codefactor/grade/github/NeuroPyPy/CalciumAnalysis/master?style=plastic)](https://www.codefactor.io/repository/github/neuropypy/calciumanalysis)
@@ -36,6 +35,8 @@
 
 ---
 ### Directory Structure
+For data loading, directories should be formatted a particular way that can be easily 
+modified by configuring `data.data_utils.file_handler`.
 ```bash
 ./data/
 ├── Animal 1
@@ -56,7 +57,7 @@
 
 ```
 ---
-### Config
+### Parameters and Directories
 A configuration file `config.yaml` contains defaults that can be set in a single top-level file.
 
 1. `DIRS:` - directories for loading and saving data
@@ -107,6 +108,7 @@ A configuration file `config.yaml` contains defaults that can be set in a single
   * Layer for linear trend normalization
   * Any additional feature extraction layers i.e. temporal coding [[2]](#2), latency, duration, etc.
 * Incorperate dataflow-based modeling design i.e. mapping actors to threads and the vectorization of actors (see [[3]](#3))
+* Format all docstrings to NumPy style
 
 
 
