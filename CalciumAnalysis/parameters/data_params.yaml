@@ -1,6 +1,6 @@
 
 # Load a single session
-SINGLE:
+SESSION:
   animal: 'PGT08'
   date: '071621'                # for single day analysis
   dates: ['070121, 071621']     # iterate for multi-day analysis
