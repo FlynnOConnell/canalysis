@@ -17,7 +17,8 @@ import pandas as pd
 from utils import funcs
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(message)s')
+logger.setLevel(logging.DEBUG)
 
 
 class FileHandler:
@@ -78,6 +79,7 @@ class FileHandler:
         assert self.sessiondir.is_dir()
         self._gpio_file: Optional[bool] = False
         self._make_dirs()
+
 
     def _validate(self):
         """Validate format of input data. Raises AttributeErrors for each check."""

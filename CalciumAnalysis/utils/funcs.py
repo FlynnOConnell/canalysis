@@ -18,7 +18,7 @@ import pandas as pd
 import scipy.stats as stats
 
 from utils import excepts as e
-from utils.wrappers import typecheck
+from misc.wrappers import typecheck
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(message)s')
