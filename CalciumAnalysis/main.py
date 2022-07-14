@@ -19,7 +19,6 @@ import pandas as pd
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
-
 # %% Some examples on usage of different modules.
 
 color_dict = {
@@ -50,6 +49,7 @@ def statistics(_data) -> pd.DataFrame | None:
     stats = ProcessData(_data)
     stats = stats.get_stats()
     return stats
+
 
 if __name__ == "__main__":
     _animal = 'PGT13'
