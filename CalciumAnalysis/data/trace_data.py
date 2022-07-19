@@ -74,17 +74,3 @@ class TraceData:
         self.tracedata = _df
         return None
 
-
-# %%
-
-def main():
-    datadir = '/Users/flynnoconnell/Documents/Work/Data'
-    animal = 'PGT13'
-    date = '121021'
-    handler = FileHandler(datadir, animal, date)
-    traces = TraceData(handler)
-    return traces
-
-
-if __name__ == "__main__":
-    tracedata = main()

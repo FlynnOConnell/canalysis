@@ -19,11 +19,12 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 
 
-def get_handles(color_dict: dict,
-                marker: Optional[str] = None,
-                linestyle: Optional[int] = 'none',
-                **kwargs
-                ) -> Tuple[list, list]:
+def get_handles(
+        color_dict: dict,
+        marker: Optional[str] = None,
+        linestyle: Optional[int] = 'none',
+        **kwargs
+        ) -> Tuple[list, list]:
     """
     Get matplotlib handles for input dictionary.
     Args:
@@ -36,7 +37,9 @@ def get_handles(color_dict: dict,
     """
     proxy, label = [], []
     for t, c in color_dict.items():
-        proxy.append(lines.Line2D([0], [0], marker=marker, markerfacecolor=c, linestyle=linestyle, **kwargs))
+        proxy.append(
+            lines.Line2D([0], [0], marker=marker, markerfacecolor=c, linestyle=linestyle,
+                         **kwargs))
         label.append(t)
     return proxy, label
 
@@ -90,16 +93,17 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
 
+
 def plot_learning_curve(
-    estimator,
-    title,
-    X,
-    y,
-    axes=None,
-    ylim=None,
-    cv=None,
-    n_jobs=None,
-    train_sizes=np.linspace(0.1, 1.0, 5),
+        estimator,
+        title,
+        X,
+        y,
+        axes=None,
+        ylim=None,
+        cv=None,
+        n_jobs=None,
+        train_sizes=np.linspace(0.1, 1.0, 5),
 ):
     """
     Generate 3 plots: the test and training learning curve, the training
@@ -233,21 +237,22 @@ def plot_learning_curve(
 
     return plt
 
+
 def main():
     fig, axes = plt.subplots(3, 2, figsize=(10, 15))
-    
+
     X, y = load_digits(return_X_y=True)
-    
+
     title = "Learning Curves (Naive Bayes)"
     # Cross validation with 50 iterations to get smoother mean test and train
     # score curves, each time with 20% data randomly selected as a validation set.
     cv = ShuffleSplit(n_splits=50, test_size=0.2, random_state=0)
-    
+
     estimator = GaussianNB()
     plot_learning_curve(
         estimator, title, X, y, axes=axes[:, 0], ylim=(0.7, 1.01), cv=cv, n_jobs=4
     )
-    
+
     title = r"Learning Curves (SVM, RBF kernel, $\gamma=0.001$)"
     # SVC is more expensive so we do a lower number of CV iterations:
     cv = ShuffleSplit(n_splits=5, test_size=0.2, random_state=0)
@@ -255,10 +260,9 @@ def main():
     plot_learning_curve(
         estimator, title, X, y, axes=axes[:, 1], ylim=(0.7, 1.01), cv=cv, n_jobs=4
     )
-    
+
     plt.show()
 
- 
+
 if __name__ == 'main':
     main()
-

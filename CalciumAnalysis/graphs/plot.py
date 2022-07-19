@@ -22,6 +22,7 @@ from data.calcium_data import CalciumData
 from matplotlib import rcParams
 
 import graphs.graph_utils.graph_funcs as gr_func
+from data.trace_data import TraceData
 
 
 def set_pub():
@@ -42,7 +43,7 @@ logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
 class Plot(object):
 
     def __init__(self,
-                 data: pd.DataFrame = None,
+                 data: pd.DataFrame | Any = None,
                  colors: Optional[Iterable] = None,
                  cmap: str = 'magma',
                  dpi: Optional[int] = 600,
@@ -78,7 +79,7 @@ class Plot(object):
         self.dpi = dpi
         self.save_dir = save_dir
         self.facecolor = 'white'
-        self.color_dict = CalciumData.color_dict
+        self.color_dict = None,
         self.cmap = plt.get_cmap(cmap)
 
         self.kwargs = kwargs

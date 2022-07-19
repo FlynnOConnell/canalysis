@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import logging
 from data.calcium_data import CalciumData
-# from parameters.data_params import *
+
 from data.data_utils.file_handler import FileHandler
 from data.taste_data import TasteData
 from stats.process_data import ProcessData
+from graphs.plot import Plot
 import pandas as pd
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -53,8 +54,10 @@ def statistics(_data) -> pd.DataFrame | None:
 
 if __name__ == "__main__":
     _animal = 'PGT13'
-    _date = '051922'
+    _date = '052622'
     _dir = 'A:/'
     filehandler = FileHandler(_animal, _date, _dir)
     data = initialize_data(filehandler)
-    stat_df = statistics(data)
+
+    graph = Plot(data.tracedata)
+
