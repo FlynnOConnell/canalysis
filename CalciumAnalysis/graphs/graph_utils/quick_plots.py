@@ -89,7 +89,7 @@ class QuickPlot:
             new_N = int(len(FFT) / 2)
             f_nat = 1
             new_X = np.linspace(10 ** -12, f_nat / 2, new_N, endpoint=True)
-            new_Xph = 1.0 / (new_X)
+            new_Xph = 1.0 / new_X
             FFT_abs = np.abs(FFT)
             plt.plot(new_Xph, 2 * FFT_abs[0:int(len(FFT) / 2.)] / len(new_Xph),
                      color='black')
