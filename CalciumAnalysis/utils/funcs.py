@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import logging
 import math
-import os
-from glob import glob
 from pathlib import Path
 from typing import Tuple, Iterable, Optional, Sized, Any
 import itertools
@@ -18,13 +16,14 @@ import pandas as pd
 import scipy.stats as stats
 
 from utils import excepts as e
-from misc.wrappers import typecheck
+from utils.wrappers import typecheck
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 
 # %% COLLAPSE DATA STRUCTURES
+
 
 def peek(iterable) -> tuple[Any, itertools.chain] | None:
     try:
@@ -42,7 +41,7 @@ def check_numeric(my_str: str):
 
 def check_path(my_str: str | Path):
     """ Return boolean True if string is a path, otherwise False."""
-    return isinstance(my_str, Path) or any(x in my_str for x in ['/', '\\'])
+    return isinstance(my_str, Path) or any(x in my_str for x in ["/", "\\"])
 
 
 def unzip(val):
@@ -53,7 +52,7 @@ def unzip(val):
 def keys_exist(element, *keys):
     """Check if *keys (nested) exists in `element` (dict)"""
     if len(keys) == 0:
-        raise AttributeError('keys_exists() expects at least two arguments, one given.')
+        raise AttributeError("keys_exists() expects at least two arguments, one given.")
     _element = element
     for key in keys:
         try:
@@ -78,18 +77,17 @@ def flatten(lst: Iterable) -> list:
 
 
 @typecheck(Iterable, int)
-def interval(lst: Iterable[any],
-             gap: Optional[int] = 1,
-             outer: bool = False
-             ) -> list[tuple[Any, Any]]:
+def interval(
+    lst: Iterable[any], gap: Optional[int] = 1, outer: bool = False
+) -> list[tuple[Any, Any]]:
     """
     Create intervals where there elements are separated by either:
         -less than gap. 
         -more than gap.
 
     Args:
-        lst (list): Iterable to search.
-        gap (int): length of interval.
+        lst (Iterable): Iterable to search.
+        gap (int | float): length of interval.
         outer (bool): Makes larger than (gap) intervals.
     Returns:
          interv (list): New list with created interval.
@@ -99,10 +97,8 @@ def interval(lst: Iterable[any],
     for v in lst:
         if not tmp:
             tmp.append(v)
-
         elif abs(tmp[-1] - v) < gap:
             tmp.append(v)
-
         elif outer:
             interv.append(tuple((tmp[-1], v)))
             tmp = [v]
@@ -113,24 +109,20 @@ def interval(lst: Iterable[any],
 
 
 @typecheck(pd.DataFrame, pd.Series, int)
-def remove_outliers(df,
-                    colors,
-                    std: Optional[int] = 2
-                    ) -> Tuple[pd.DataFrame, pd.Series]:
+def remove_outliers(
+    df, colors, std: Optional[int] = 2
+) -> Tuple[pd.DataFrame, pd.Series]:
     df.reset_index(drop=True, inplace=True)
     colors.reset_index(drop=True, inplace=True)
     ind = (np.abs(stats.zscore(df)) < std).all(axis=1)
     df[ind] = df
     colors[ind] = colors
     assert colors.shape[0] == df.shape[0]
-
     return df, colors
 
 
-
 @typecheck(Iterable[any])
-def dup_check(signal: Iterable[any],
-              peak_signal: float | int) -> None:
+def dup_check(signal: Iterable[any], peak_signal: float | int) -> None:
     """
     Check if multiple peak signals are present in taste-response moving window. 
 
@@ -191,9 +183,9 @@ def get_peak_window(time: Iterable[any], peak: float) -> list:
     return window_ind
 
 
-def get_matched_time(time: Iterable[any],
-                     match: Iterable[any],
-                     return_index: Optional[bool] = False) -> list:
+def get_matched_time(
+    time: Iterable[any], match: Iterable[any], return_index: Optional[bool] = False
+) -> list:
     """
     Finds the closest number in tracedata time to the input. Can be a single value, or list.
 

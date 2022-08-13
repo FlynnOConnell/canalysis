@@ -17,6 +17,7 @@ from data.data_utils.file_handler import FileHandler
 
 # %%
 
+
 @dataclass
 class TraceData:
     filehandler: FileHandler = FileHandler
@@ -35,18 +36,17 @@ class TraceData:
         return hash(repr(self))
 
     def _get_zscores(self) -> pd.DataFrame:
-
         zscores = pd.DataFrame(columns=self.signals.columns)
         for cell in self.signals.columns:
             allsignal = self.signals[cell]
             zscore = pd.Series(stats.zscore(allsignal))
             zscores[cell] = zscore
-        zscores['time'] = self.time
+        zscores["time"] = self.time
         return zscores
 
     def _set_trace_signals(self) -> pd.DataFrame:
         temp = self.tracedata.copy()
-        temp.pop('time')
+        temp.pop("time")
         self.signals = temp
         return temp
 
@@ -58,19 +58,18 @@ class TraceData:
 
         def check_if_accepted(_df):
             # If any cells marked as "accepted", use only those cells
-            accepted_col = [col for col in _df.columns if ' accepted' in col]
+            accepted_col = [col for col in _df.columns if " accepted" in col]
             return accepted_col
 
         accept = check_if_accepted(_df)
         if accept:
-            accepted = np.where(_df.loc[0, :] == ' accepted')[0]
+            accepted = np.where(_df.loc[0, :] == " accepted")[0]
             _df = _df.iloc[:, np.insert(accepted, 0, 0)]
         _df = _df.drop(0)
-        _df = _df.rename(columns={' ': 'time'})
+        _df = _df.rename(columns={" ": "time"})
         _df = _df.astype(float)
         _df = _df.reset_index(drop=True)
-        _df.columns = [column.replace(' ', '') for column in _df.columns]
-        _df['time'] = np.round(_df['time'], 1)
+        _df.columns = [column.replace(" ", "") for column in _df.columns]
+        _df["time"] = np.round(_df["time"], 1)
         self.tracedata = _df
         return None
-

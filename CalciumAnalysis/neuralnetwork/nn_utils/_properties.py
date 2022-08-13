@@ -39,5 +39,5 @@ class _props:
     def model(self, new_model):
         if new_model:
             _validate._check_fitted(new_model)
-            print(f'Model set: {new_model}')
+            print(f"Model set: {new_model}")
         self._model = new_model

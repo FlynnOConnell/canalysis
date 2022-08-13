@@ -54,10 +54,10 @@ class DisplayablePath:
     └── index.rst
     """
 
-    display_filename_prefix_middle = '├──'
-    display_filename_prefix_last = '└──'
-    display_parent_prefix_middle = '    '
-    display_parent_prefix_last = '│   '
+    display_filename_prefix_middle = "├──"
+    display_filename_prefix_last = "└──"
+    display_parent_prefix_middle = "    "
+    display_parent_prefix_last = "│   "
 
     def __init__(self, path: str, parent_path, is_last) -> None:
 
@@ -72,7 +72,7 @@ class DisplayablePath:
     @property
     def displayname(self):
         if self.path.is_dir():
-            return self.path.name + '/'
+            return self.path.name + "/"
         return self.path.name
 
     @classmethod
@@ -83,18 +83,17 @@ class DisplayablePath:
         displayable_root = cls(root, parent, is_last)
         yield displayable_root
 
-        children = sorted(list(path
-                               for path in root.iterdir()
-                               if criteria(path)),
-                          key=lambda s: str(s).lower())
+        children = sorted(
+            list(path for path in root.iterdir() if criteria(path)),
+            key=lambda s: str(s).lower(),
+        )
         count = 1
         for path in children:
             is_last = count == len(children)
             if path.is_dir():
-                yield from cls.make_tree(path,
-                                         parent=displayable_root,
-                                         is_last=is_last,
-                                         criteria=criteria)
+                yield from cls.make_tree(
+                    path, parent=displayable_root, is_last=is_last, criteria=criteria
+                )
             else:
                 yield cls(path, displayable_root, is_last)
             count += 1
@@ -106,25 +105,28 @@ class DisplayablePath:
     @property
     def displayname(self):
         if self.path.is_dir():
-            return self.path.name + '/'
+            return self.path.name + "/"
         return self.path.name
 
     def displayable(self):
         if self.parent is None:
             return self.displayname
 
-        _filename_prefix = (self.display_filename_prefix_last
-                            if self.is_last
-                            else self.display_filename_prefix_middle)
+        _filename_prefix = (
+            self.display_filename_prefix_last
+            if self.is_last
+            else self.display_filename_prefix_middle
+        )
 
-        parts = ['{!s} {!s}'.format(_filename_prefix,
-                                    self.displayname)]
+        parts = ["{!s} {!s}".format(_filename_prefix, self.displayname)]
 
         parent = self.parent
         while parent and parent.parent is not None:
-            parts.append(self.display_parent_prefix_middle
-                         if parent.is_last
-                         else self.display_parent_prefix_last)
+            parts.append(
+                self.display_parent_prefix_middle
+                if parent.is_last
+                else self.display_parent_prefix_last
+            )
             parent = parent.parent
 
-        return ''.join(reversed(parts))
+        return "".join(reversed(parts))

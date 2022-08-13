@@ -27,29 +27,31 @@ from data.trace_data import TraceData
 
 def set_pub():
     # Function to set some easy params and avoid some annoying bugs
-    rcParams.update({
-        "font.weight": "bold",
-        "axes.labelweight": 'bold',
-        'axes.facecolor': 'w',
-        "axes.labelsize": 15,
-        "lines.linewidth": 1,
-    })
+    rcParams.update(
+        {
+            "font.weight": "bold",
+            "axes.labelweight": "bold",
+            "axes.facecolor": "w",
+            "axes.labelsize": 15,
+            "lines.linewidth": 1,
+        }
+    )
 
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
 
 
-class Plot(object):
-
-    def __init__(self,
-                 data: pd.DataFrame | Any = None,
-                 colors: Optional[Iterable] = None,
-                 cmap: str = 'magma',
-                 dpi: Optional[int] = 600,
-                 save_dir: str = None,
-                 **kwargs
-                 ):
+class Plot:
+    def __init__(
+        self,
+        data: pd.DataFrame | Any = None,
+        colors: Optional[Iterable] = None,
+        cmap: str = "magma",
+        dpi: Optional[int] = 600,
+        save_dir: str = None,
+        **kwargs,
+    ):
         """
         Class with graphing utilities. 
         
@@ -78,29 +80,30 @@ class Plot(object):
         self.colors = colors
         self.dpi = dpi
         self.save_dir = save_dir
-        self.facecolor = 'white'
-        self.color_dict = None,
+        self.facecolor = "white"
+        self.color_dict = (None,)
         self.cmap = plt.get_cmap(cmap)
 
         self.kwargs = kwargs
         self.checks = {}
 
-    def scatter(self,
-                df: pd.DataFrame = None,
-                ax=None,
-                colors: Iterable | Any = None,
-                title: Optional[str] = None,
-                legend: Optional[bool] = True,
-                size: int = 5,
-                marker: str = 'o',
-                alpha: Optional[int] = 1,
-                conf_interv: Optional[bool] = False,
-                savefig: Optional[bool] = False,
-                msg: Optional[str] = 'nomsg',
-                bbox_inches: str = 'tight',
-                facecolor: str = 'white',
-                **kwargs,
-                ) -> None:
+    def scatter(
+        self,
+        df: pd.DataFrame = None,
+        ax=None,
+        colors: Iterable | Any = None,
+        title: Optional[str] = None,
+        legend: Optional[bool] = True,
+        size: int = 5,
+        marker: str = "o",
+        alpha: Optional[int] = 1,
+        conf_interv: Optional[bool] = False,
+        savefig: Optional[bool] = False,
+        msg: Optional[str] = "nomsg",
+        bbox_inches: str = "tight",
+        facecolor: str = "white",
+        **kwargs,
+    ) -> None:
         """
             Plot 2D/3D scatter plot with matplotlib.
 
@@ -143,8 +146,8 @@ class Plot(object):
         """
         set_pub()
 
-        if 'colors' in df.columns:
-            colors = df.pop('colors')
+        if "colors" in df.columns:
+            colors = df.pop("colors")
 
         fig = plt.figure()
         fig.set_dpi(self.dpi)
@@ -153,54 +156,64 @@ class Plot(object):
         y = df.iloc[:, 1]
         ax = ax or fig.gca()
 
-        ax.set_xlabel(df.columns[0], weight='bold')
-        ax.set_ylabel(df.columns[1], weight='bold')
-        ax.patch.set_facecolor = 'white'
-        ax.scatter(x, y,
-                   c=colors,
-                   s=size,
-                   marker=marker,
-                   alpha=alpha,
-                   facecolor=facecolor,
-                   **kwargs
-                   )
+        ax.set_xlabel(df.columns[0], weight="bold")
+        ax.set_ylabel(df.columns[1], weight="bold")
+        ax.patch.set_facecolor = "white"
+        ax.scatter(
+            x,
+            y,
+            c=colors,
+            s=size,
+            marker=marker,
+            alpha=alpha,
+            facecolor=facecolor,
+            **kwargs,
+        )
 
         df.reset_index(drop=True, inplace=True)
         colors.reset_index(drop=True, inplace=True)
 
         if conf_interv:
             for color in np.unique(colors):
-                _df = df.loc[(df['colors'] == color)]
+                _df = df.loc[(df["colors"] == color)]
                 gr_func.confidence_ellipse(
                     _df.iloc[:, 0],
                     _df.iloc[:, 1],
                     ax,
                     facecolor=color,
-                    edgecolor='k',
-                    linestyle='--',
+                    edgecolor="k",
+                    linestyle="--",
                     linewidth=2,
-                    alpha=0.08)
+                    alpha=0.08,
+                )
         if title:
-            ax.set_title(f'{title}', fontweight='bold')
+            ax.set_title(f"{title}", fontweight="bold")
         if legend:
-            proxy, label = gr_func.get_handles(self.color_dict, marker='o', markersize=size, alpha=1)
-            ax.legend(handles=proxy,
-                      labels=label,
-                      loc='lower right',
-                      prop={'size': 6},
-                      bbox_to_anchor=(1.05, 1),
-                      ncol=2,
-                      numpoints=1)
+            proxy, label = gr_func.get_handles(
+                self.color_dict, marker="o", markersize=size, alpha=1
+            )
+            ax.legend(
+                handles=proxy,
+                labels=label,
+                loc="lower right",
+                prop={"size": 6},
+                bbox_to_anchor=(1.05, 1),
+                ncol=2,
+                numpoints=1,
+            )
 
         plt.show()
         if savefig:
-            fig.savefig(self.save_dir + f'/{title}_{msg}.png',
-                        bbox_inches=bbox_inches, dpi=self.dpi, facecolor=self.facecolor)
+            fig.savefig(
+                self.save_dir + f"/{title}_{msg}.png",
+                bbox_inches=bbox_inches,
+                dpi=self.dpi,
+                facecolor=self.facecolor,
+            )
         return None
 
     @staticmethod
-    def skree(variance: np.ndarray,
-              title: str = '') -> None:
+    def skree(variance: np.ndarray, title: str = "") -> None:
         """
         Line chart skree plot.
 
@@ -217,37 +230,40 @@ class Plot(object):
             DESCRIPTION.
         """
         lab = np.arange(len(variance)) + 1
-        plt.plot(lab, variance, 'o-', linewidth=2, color='blue')
-        plt.title(f'{title}' + 'Scree Plot')
-        plt.xlabel('Principal Component')
-        plt.ylabel('Variance Explained (%)')
-        leg = plt.legend(['Eigenvalues from SVD'],
-                         loc='best',
-                         borderpad=0.3,
-                         shadow=False,
-                         prop=fm.FontProperties(size='small'),
-                         markerscale=0.4)
+        plt.plot(lab, variance, "o-", linewidth=2, color="blue")
+        plt.title(f"{title}" + "Scree Plot")
+        plt.xlabel("Principal Component")
+        plt.ylabel("Variance Explained (%)")
+        leg = plt.legend(
+            ["Eigenvalues from SVD"],
+            loc="best",
+            borderpad=0.3,
+            shadow=False,
+            prop=fm.FontProperties(size="small"),
+            markerscale=0.4,
+        )
         leg.get_frame().set_alpha(1)
         plt.show()
 
         return None
 
-    def scatter_3d(self,
-                   df: pd.DataFrame = None,
-                   color_dict: dict = None,
-                   color: pd.Series = None,
-                   title: Optional[str] = None,
-                   size: int = 5,
-                   marker: str = 'o',
-                   alpha: int = 1,
-                   conf_interv: bool = True,
-                   savefig: Optional[bool] = False,
-                   msg: Optional[str] = None,
-                   caption: Optional[str] = None,
-                   dpi: int = 500,
-                   bbox_inches: str = 'tight',
-                   facecolor: str = 'white'
-                   ) -> None:
+    def scatter_3d(
+        self,
+        df: pd.DataFrame = None,
+        color_dict: dict = None,
+        color: pd.Series = None,
+        title: Optional[str] = None,
+        size: int = 5,
+        marker: str = "o",
+        alpha: int = 1,
+        conf_interv: bool = True,
+        savefig: Optional[bool] = False,
+        msg: Optional[str] = None,
+        caption: Optional[str] = None,
+        dpi: int = 500,
+        bbox_inches: str = "tight",
+        facecolor: str = "white",
+    ) -> None:
         """
         Plot 3D scatter plot with matplotlib.
 
@@ -287,8 +303,8 @@ class Plot(object):
 
         assert isinstance(df, pd.DataFrame)
 
-        if 'colors' in df.columns:
-            self.colors = df.pop('colors')
+        if "colors" in df.columns:
+            self.colors = df.pop("colors")
 
         color = self.colors
         fig = plt.figure()
@@ -298,74 +314,77 @@ class Plot(object):
         y = df.iloc[:, 1]
         z = df.iloc[:, 2]
 
-        ax = fig.add_subplot(projection='3d')
-        ax.set_xlabel(df.columns[0], weight='bold')
-        ax.set_ylabel(df.columns[1], weight='bold')
-        ax.set_zlabel(df.columns[2], weight='bold')
+        ax = fig.add_subplot(projection="3d")
+        ax.set_xlabel(df.columns[0], weight="bold")
+        ax.set_ylabel(df.columns[1], weight="bold")
+        ax.set_zlabel(df.columns[2], weight="bold")
 
-        ax.patch.set_facecolor = 'white'
+        ax.patch.set_facecolor = "white"
 
-        ax.scatter(x,
-                   y,
-                   z,
-                   c=color,
-                   s=size,
-                   marker=marker,
-                   alpha=alpha,
-                   facecolor='white'
-                   )
+        ax.scatter(
+            x, y, z, c=color, s=size, marker=marker, alpha=alpha, facecolor="white"
+        )
 
         df.reset_index(drop=True, inplace=True)
         color.reset_index(drop=True, inplace=True)
 
         if conf_interv:
             for color in np.unique(color):
-                _df = df.loc[(df['colors'] == color)]
+                _df = df.loc[(df["colors"] == color)]
 
                 gr_func.confidence_ellipse(
                     _df.iloc[:, 0],
                     _df.iloc[:, 1],
                     ax,
                     facecolor=color,
-                    edgecolor='k',
-                    linestyle='--',
+                    edgecolor="k",
+                    linestyle="--",
                     linewidth=2,
-                    alpha=0.08)
+                    alpha=0.08,
+                )
 
-        ax.set_title(f'{title}', fontweight='bold')
+        ax.set_title(f"{title}", fontweight="bold")
 
-        proxy, label = gr_func.get_handles(color_dict, marker='o', markersize=5, alpha=1)
-        ax.grid(linewidth=.1)
-        ax.legend(handles=proxy,
-                  labels=label,
-                  loc='lower right',
-                  prop={'size': 6},
-                  bbox_to_anchor=(1.05, 1),
-                  ncol=2,
-                  numpoints=1)
+        proxy, label = gr_func.get_handles(
+            color_dict, marker="o", markersize=5, alpha=1
+        )
+        ax.grid(linewidth=0.1)
+        ax.legend(
+            handles=proxy,
+            labels=label,
+            loc="lower right",
+            prop={"size": 6},
+            bbox_to_anchor=(1.05, 1),
+            ncol=2,
+            numpoints=1,
+        )
 
         if caption:
-            fig.text(0, -.03,
-                     caption,
-                     fontstyle='italic',
-                     fontsize='small')
+            fig.text(0, -0.03, caption, fontstyle="italic", fontsize="small")
 
         plt.show()
         if savefig:
-            fig.savefig(self.save_dir + f'/{msg}_{title}.png',
-                        bbox_inches=bbox_inches, dpi=500, facecolor=self.facecolor)
-            logging.info(f'Fig saved to {self.save_dir}: {bbox_inches}, {dpi}, {facecolor}')
+            fig.savefig(
+                self.save_dir + f"/{msg}_{title}.png",
+                bbox_inches=bbox_inches,
+                dpi=500,
+                facecolor=self.facecolor,
+            )
+            logging.info(
+                f"Fig saved to {self.save_dir}: {bbox_inches}, {dpi}, {facecolor}"
+            )
 
         return None
 
-    def plot_3d_ani(self,
-                    session: str,
-                    df: pd.DataFrame,
-                    color_dict: dict,
-                    size: int = 5,
-                    marker: str = 'o',
-                    alpha: int = 1
-                    ) -> None:
+    def plot_3d_ani(
+        self,
+        session: str,
+        df: pd.DataFrame,
+        color_dict: dict,
+        size: int = 5,
+        marker: str = "o",
+        alpha: int = 1,
+    ) -> None:
         """
             Animated 3D Scatter plot.
             Plot gets saved to a temporary html file (location provided by save_dir).
@@ -387,36 +406,39 @@ class Plot(object):
         z = df.iloc[:, 2]
 
         fig = plt.figure()
-        ax = fig.gca(projection='3d')
+        ax = fig.gca(projection="3d")
 
-        ax.set_xlabel('PC1')
-        ax.set_ylabel('PC2')
-        ax.set_zlabel('PC3')
-        ax.set_title('{}'.format(session) + ' ' + 'PCA')
+        ax.set_xlabel("PC1")
+        ax.set_ylabel("PC2")
+        ax.set_zlabel("PC3")
+        ax.set_title("{}".format(session) + " " + "PCA")
         ax.scatter(x, y, z, c=self.colors, s=size, marker=marker, alpha=alpha)
 
         proxy, label = gr_func.get_handles(color_dict)
-        ax.legend(handles=proxy,
-                  labels=label,
-                  loc='upper right',
-                  prop={'size': 6},
-                  bbox_to_anchor=(1, 1),
-                  ncol=2,
-                  numpoints=1)
+        ax.legend(
+            handles=proxy,
+            labels=label,
+            loc="upper right",
+            prop={"size": 6},
+            bbox_to_anchor=(1, 1),
+            ncol=2,
+            numpoints=1,
+        )
 
         def init():
             ax.plot(x, y, z, linewidth=0, antialiased=False)
-            return fig,
+            return (fig,)
 
         def animate(i):
-            ax.view_init(elev=30., azim=3.6 * i)
-            return fig,
+            ax.view_init(elev=30.0, azim=3.6 * i)
+            return (fig,)
 
-        ani = animation.FuncAnimation(fig, animate, init_func=init,
-                                      frames=400, interval=100, blit=True)
+        ani = animation.FuncAnimation(
+            fig, animate, init_func=init, frames=400, interval=100, blit=True
+        )
 
         data = HTML(ani.to_html5_video())
-        with open('/Users/flynnoconnell/Pictures', 'wb') as f:
+        with open("/Users/flynnoconnell/Pictures", "wb") as f:
             f.write(data.data.encode("UTF-8"))
 
         url = self.save_dir
@@ -426,12 +448,13 @@ class Plot(object):
 
     @staticmethod
     def confusion_matrix(
-                         y_pred,
-                         y_true,
-                         labels: list,
-                         xaxislabel: Optional[str] = None,
-                         yaxislabel: Optional[str] = None,
-                         caption: Optional[str] = '') -> np.array:
+        y_pred,
+        y_true,
+        labels: list,
+        xaxislabel: Optional[str] = None,
+        yaxislabel: Optional[str] = None,
+        caption: Optional[str] = "",
+    ) -> np.array:
         """
         
 
@@ -458,24 +481,30 @@ class Plot(object):
         """
 
         import seaborn as sns
+
         sns.set()
         from sklearn.metrics import confusion_matrix
+
         set_pub()
         mat = confusion_matrix(y_pred, y_true)
-        sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
-                    xticklabels=labels,
-                    yticklabels=labels)
+        sns.heatmap(
+            mat.T,
+            square=True,
+            annot=True,
+            fmt="d",
+            cbar=False,
+            xticklabels=labels,
+            yticklabels=labels,
+        )
         if xaxislabel:
             plt.xlabel(xaxislabel)
         else:
-            plt.xlabel('true label')
+            plt.xlabel("true label")
         if yaxislabel:
             plt.ylabel(yaxislabel)
         else:
-            plt.ylabel('predicted label')
+            plt.ylabel("predicted label")
         if caption:
-            plt.text(0, -.03,
-                     caption,
-                     fontsize='small')
+            plt.text(0, -0.03, caption, fontsize="small")
         plt.show()
         return mat

@@ -18,13 +18,15 @@ from scipy.ndimage.filters import gaussian_filter
 
 def set_pub():
     """Update matplotlib backend default styles to be bigger and bolder."""
-    rcParams.update({
-        "font.weight": "bold",
-        "axes.labelweight": 'bold',
-        'axes.facecolor': 'w',
-        "axes.labelsize": 15,
-        "lines.linewidth": 1,
-    })
+    rcParams.update(
+        {
+            "font.weight": "bold",
+            "axes.labelweight": "bold",
+            "axes.facecolor": "w",
+            "axes.labelsize": 15,
+            "lines.linewidth": 1,
+        }
+    )
 
 
 # %%
@@ -33,19 +35,20 @@ def set_pub():
 class Heatmap(object):
     # Initialize the attributes to apply to our heatmaps
     # nearly all optional and can be ignored.
-    def __init__(self,
-                 save_dir: str | None = '',
-                 cm: str = 'magma',
-                 _id: str | None = '',
-                 title: str | None = '',
-                 sigma: int | None = None,
-                 square: bool = False,
-                 colorbar: bool = False,
-                 robust: bool = False,
-                 line_loc: Optional[int] = 0,
-                 line_width: Optional[int] = 3,
-                 line_color: str = 'white'
-                 ):
+    def __init__(
+        self,
+        save_dir: str | None = "",
+        cm: str = "magma",
+        _id: str | None = "",
+        title: str | None = "",
+        sigma: int | None = None,
+        square: bool = False,
+        colorbar: bool = False,
+        robust: bool = False,
+        line_loc: Optional[int] = 0,
+        line_width: Optional[int] = 3,
+        line_color: str = "white",
+    ):
         self.save_dir = save_dir
         self.cm = plt.get_cmap(cm)
         self._id = _id
@@ -100,9 +103,7 @@ class Heatmap(object):
             my_heatmap.single(data)
         """
 
-    def nested(self,
-               data_dict: dict,
-               **axargs):
+    def nested(self, data_dict: dict, **axargs):
         """
         Plot multiple heatmaps from a nested dictionary. One heatmap for each dict.key, with the heatmap title
         corresponding to that key. Within each key is a pandas DataFrame containing the heatmap data.
@@ -127,19 +128,24 @@ class Heatmap(object):
                 df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
             # Plot data
             fig, axs = plt.subplots()
-            sns.heatmap(df, square=self.square, cbar=self.colorbar, robust=self.robust, **axargs)
-            axs.axis('off')
+            sns.heatmap(
+                df, square=self.square, cbar=self.colorbar, robust=self.robust, **axargs
+            )
+            axs.axis("off")
             if self.line_loc:
-                axs.axvline(x=self.line_loc, color=self.line_color, linewidth=self.line_width)
+                axs.axvline(
+                    x=self.line_loc, color=self.line_color, linewidth=self.line_width
+                )
             if self.save_dir:
-                plt.savefig(f'{self.save_dir}/{self._id}.png',
-                            dpi=400, bbox_inches='tight', pad_inches=0.01)
-            return fig, axs
+                plt.savefig(
+                    f"{self.save_dir}/{self._id}.png",
+                    dpi=400,
+                    bbox_inches="tight",
+                    pad_inches=0.01,
+                )
+            return fig
 
-    def columnwise(self,
-                   df: pd.DataFrame,
-                   axs: object = None,
-                   ):
+    def columnwise(self, df: pd.DataFrame, axs: object = None):
         """
         Plot heatmap with colorbar normalized for each individual column. Because of
         this, pre-stimulus activity may show high values.
@@ -164,31 +170,35 @@ class Heatmap(object):
         df = df.T
         if self.sigma is not None:
             df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
-        # We need to grab each column individually
         array = df.values
-        # Fetch a pretty color palette:
         if not self.cm:
             self.cm = sns.color_palette(self.cm, n_colors=df.shape[1], as_cmap=True)
-        # Plot data
         axs = axs or plt.gca()
-        axs.axis('off')
-        # We need to mask/hide the rest of the columns that aren't being included
-        premask = np.tile(np.arange(array.shape[1]), array.shape[0]).reshape(array.shape)
+        axs.axis("off")
+        #  Mask/hide the rest of the columns that aren't being included
+        premask = np.tile(np.arange(array.shape[1]), array.shape[0]).reshape(
+            array.shape
+        )
         if self.title:
             axs.set_title(self.title)
         images: list = []
         for i in range(array.shape[1]):
             col = np.ma.array(array, mask=premask != i)
-            im = axs.imshow(col, cmap=self.cm, aspect='auto')
+            im = axs.imshow(col, cmap=self.cm, aspect="auto")
             if self.save_dir:
-                plt.savefig(f'{self.save_dir}/){self._id}.png',
-                            dpi=400, bbox_inches='tight', pad_inches=0.01)
+                plt.savefig(
+                    f"{self.save_dir}/){self._id}.png",
+                    dpi=400,
+                    bbox_inches="tight",
+                    pad_inches=0.01,
+                )
             images.append(im)
+            plt.show()
         return images
 
-    def single(self,
-               df: pd.DataFrame,
-               ):
+    def single(
+        self, df: pd.DataFrame,
+    ):
         """
         Plot single heatmap with seaborn library.
 
@@ -202,17 +212,25 @@ class Heatmap(object):
         if self.sigma:
             df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
         fig, axs = plt.subplots()
-        sns.heatmap(df, square=self.square, cbar=self.colorbar, cmap=self.cm, robust=self.robust)
-        axs.axis('off')
+        sns.heatmap(
+            df, square=self.square, cbar=self.colorbar, cmap=self.cm, robust=self.robust
+        )
+        axs.axis("off")
+        axs.set_title(self.title)
         if self.line_loc:
-            axs.axvline(x=self.line_loc, color=self.line_color, linewidth=self.line_width)
+            axs.axvline(
+                x=self.line_loc, color=self.line_color, linewidth=self.line_width
+            )
         if self.save_dir:
-            plt.savefig(f'{self.save_dir}/{self._id}.png',
-                        dpi=400, bbox_inches='tight', pad_inches=0.01)
+            plt.savefig(
+                f"{self.save_dir}/{self._id}.png",
+                dpi=400,
+                bbox_inches="tight",
+                pad_inches=0.01,
+            )
         plt.show()
-        return fig, axs
+        return fig
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     heatmaps = Heatmap()
-

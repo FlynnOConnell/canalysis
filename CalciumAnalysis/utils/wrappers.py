@@ -18,7 +18,7 @@ def log_time(func):
         val = func(*args, **kwargs)
         end = time()
         duration = end - start
-        print(f'{func.__name__} took {duration} seconds to run')
+        print(f"{func.__name__} took {duration} seconds to run")
         return val
 
     return wrapper
@@ -45,9 +45,7 @@ def typecheck(*args1, isclassmethod=False):
             args = args2[1:] if isclassmethod else args2
             for (arg2, arg1) in zip(args, args1):
                 if not isinstance(arg2, arg1):
-                    raise TypeError(
-                        f'Expected type: {arg1}, actual type: {type(arg2)}'
-                    )
+                    raise TypeError(f"Expected type: {arg1}, actual type: {type(arg2)}")
             return func(*args2, **keywords)
 
         return wrapper
@@ -85,7 +83,7 @@ class Singleton:
             return self._instance
 
     def __call__(self):
-        raise TypeError('Singletons must be accessed through `Instance()`.')
+        raise TypeError("Singletons must be accessed through `Instance()`.")
 
     def __instancecheck__(self, inst):
         return isinstance(inst, self._decorated)

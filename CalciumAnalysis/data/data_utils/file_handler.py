@@ -17,7 +17,7 @@ import pandas as pd
 from utils import funcs
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG, format='%(message)s')
+logging.basicConfig(level=logging.DEBUG, format="%(message)s")
 logger.setLevel(logging.DEBUG)
 
 
@@ -54,22 +54,25 @@ class FileHandler:
     """
 
     def __init__(
-            self,
-            animal,
-            date,
-            _dir,
-            _tracename: Optional[str] = 'trace',
-            _eventname: Optional[str] = 'processed',
-            _gpioname: Optional[str] = 'gpio.csv'
-            ) -> None:
+        self,
+        animal,
+        date,
+        dir,
+        tracename: Optional[str] = "trace",
+        eventname: Optional[str] = "processed",
+        _gpioname: Optional[str] = "gpio.csv",
+        eatingname: Optional[str] = None,
+    ) -> None:
 
         # TODO: glob for .csv and .xlxs
         self.animal = animal
         self.date = date
-        self._directory: Path = Path(_dir)
-        self._tracename: Optional[str] = _tracename
-        self._eventname: Optional[str] = _eventname
+        self._directory: Path = Path(dir)
+        self._tracename: Optional[str] = tracename
+        self._eventname: Optional[str] = eventname
         self._gpioname: Optional[str] = _gpioname
+        self._eatingname: Optional[str] = eatingname
+
         self.color_dict: namedtuple
         self._validate()
 
@@ -80,17 +83,17 @@ class FileHandler:
         self._gpio_file: Optional[bool] = False
         self._make_dirs()
 
-
     def _validate(self):
         """Validate format of input data. Raises AttributeErrors for each check."""
         if not funcs.check_numeric(self.date):
-            raise AttributeError(f'Date must be all numeric, not {self.date}')
+            raise AttributeError(f"Date must be all numeric, not {self.date}")
         if not funcs.check_path(self._directory):
             raise AttributeError(f'Directory must contain "/", not {self._directory}')
         if funcs.check_numeric(self.animal) or funcs.check_path(self.animal):
             raise AttributeError(
-                f'Animal must not be only numeric or contain path characters, '
-                f'{self.animal}')
+                f"Animal must not be only numeric or contain path characters, "
+                f"{self.animal}"
+            )
 
     @property
     def directory(self) -> Path:
@@ -124,16 +127,27 @@ class FileHandler:
     def gpioname(self, new_gpioname: str):
         self._gpioname: str = new_gpioname
 
+    @property
+    def eatingname(self) -> str:
+        return self._eatingname
+
+    @eatingname.setter
+    def eatingname(self, new_eatingname: str):
+        self._eatingname: str = new_eatingname
+
     def get_traces(self) -> list[Path]:
         for x in self.sessiondir.iterdir():
             print(x)
-        return [p for p in self.sessiondir.glob(f'*{self._tracename}*.csv')]
+        return [p for p in self.sessiondir.glob(f"*{self._tracename}*.csv")]
 
     def get_events(self) -> list[Path]:
-        return [p for p in self.sessiondir.glob(f'*{self._eventname}*')]
+        return [p for p in self.sessiondir.glob(f"*{self._eventname}*")]
 
     def get_gpio_files(self) -> list[Path]:
-        return [p for p in self.sessiondir.glob(f'*{self._gpioname}*')]
+        return [p for p in self.sessiondir.glob(f"*{self._gpioname}*")]
+
+    def get_eating_files(self) -> list[Path]:
+        return [p for p in self.sessiondir.glob(f"*{self._eatingname}*")]
 
     def get_tracedata(self) -> pd.DataFrame:
         tracefiles: list[Path] = self.get_traces()
@@ -141,46 +155,68 @@ class FileHandler:
             files = self.search_files()
             raise FileNotFoundError(
                 f'No files in {self.sessiondir} matching "{self._tracename}"'
-                f'Files found: {files}'
+                f"Files found: {files}"
             )
 
         if len(tracefiles) > 1:
             logging.info(
                 f'Multiple trace-files found in {self.sessiondir} matching "'
-                f'{self._tracename}":')
+                f'{self._tracename}":'
+            )
             for tracefile in tracefiles:
-                logging.info(f'{tracefile.stem}')
-        logging.info(f'Taking file: {tracefiles[0].stem}')
+                logging.info(f"{tracefile.stem}")
+        logging.info(f"Taking file: {tracefiles[0].stem}")
         return pd.read_csv(str(tracefiles[0]), low_memory=False)
 
     def get_eventdata(self) -> pd.DataFrame:
         eventfiles: list[Path] = self.get_events()
         if eventfiles is None:
             raise FileNotFoundError(
-                f'No files in {self.sessiondir} matching "{self._eventname}"')
+                f'No files in {self.sessiondir} matching "{self._eventname}"'
+            )
         if len(eventfiles) > 1:
             logging.info(
                 f'Multiple event-files found in {self.sessiondir} matching "'
-                f'{self._eventname}":')
+                f'{self._eventname}":'
+            )
             for event_file in eventfiles:
-                logging.info(f'{event_file}')
-            logging.info(f'Taking file: {eventfiles[0]}')
+                logging.info(f"{event_file}")
+            logging.info(f"Taking file: {eventfiles[0]}")
         return pd.read_csv(str(eventfiles[0]), low_memory=False)
 
     def get_gpiodata(self) -> pd.DataFrame:
         gpiofiles: list[Path] = self.get_gpio_files()
         if gpiofiles is None:
             raise FileNotFoundError(
-                f'No files in {self.sessiondir} matching "{self._gpioname}"')
+                f'No files in {self.sessiondir} matching "{self._gpioname}"'
+            )
         if len(gpiofiles) > 1:
             self._gpio_file = True
             logging.info(
                 f'Multiple gpio-files found in {self.sessiondir} matching "'
-                f'{self._gpioname}":')
+                f'{self._gpioname}":'
+            )
             for gpio_file in gpiofiles:
-                logging.info(f'{gpio_file}')
-            logging.info(f'Taking file: {gpiofiles[0]}')
+                logging.info(f"{gpio_file}")
+            logging.info(f"Taking file: {gpiofiles[0]}")
         return pd.read_csv(str(gpiofiles[0]), low_memory=False)
+
+    def get_eatingdata(self) -> pd.DataFrame:
+        eatingfiles: list[Path] = self.get_eating_files()
+        if eatingfiles is None:
+            raise FileNotFoundError(
+                f'No files in {self.sessiondir} matching "{self._eatingname}"'
+            )
+        if len(eatingfiles) > 1:
+            logging.info(
+                f'Multiple eating-files found in {self.sessiondir} matching "'
+                f'{self._eatingname}":'
+            )
+            for eating_file in eatingfiles:
+                logging.info(f"{eating_file}")
+            logging.info(f"Taking file: {eatingfiles[0]}")
+        logging.info("Eating data set.")
+        return pd.read_csv(str(eatingfiles[0]), low_memory=False)
 
     def unique_path(self, filename) -> Path:
         counter = 0
@@ -201,11 +237,11 @@ class FileHandler:
         return str(self._directory.home())
 
     def tree(self) -> None:
-        print(f'-|{self._directory}')
-        for path in sorted(self.sessiondir.rglob('[!.]*')):  # exclude .files
+        print(f"-|{self._directory}")
+        for path in sorted(self.sessiondir.rglob("[!.]*")):  # exclude .files
             depth = len(path.relative_to(self.sessiondir).parts)
-            spacer = '    ' * depth
-            print(f'{spacer}-|{path.name}')
+            spacer = "    " * depth
+            print(f"{spacer}-|{path.name}")
             return None
 
     def search_files(self):
@@ -217,5 +253,16 @@ class FileHandler:
                 file_list.append(x)
         return file_list
 
+    @staticmethod
+    def uniquify(path: Path | str):
+        if isinstance(path, str):
+            path = Path(path)
+        assert hasattr(path, "stem")
 
-
+        counter = 1
+        while path.is_file:
+            counter += 1
+            path = path.parent / str(
+                path.stem + "_(" + str(counter) + ")" + path.anchor
+            )
+        return str(path)

@@ -12,7 +12,7 @@ from utils import funcs
 
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(name)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
 
 
 @dataclass
@@ -36,12 +36,12 @@ class TasteData:
         df_0 = pd.DataFrame(columns=self.signals.columns)
         df_1 = pd.DataFrame()
         for key, df in self.taste_events.items():
-            df = df.drop(['time', 'colors'], axis=1)
+            df = df.drop(["time", "colors"], axis=1)
             if key in class_0:
-                df['binary'] = '0'
+                df["binary"] = "0"
                 df_0 = pd.concat([df_0, df], axis=0)
             if key in class_1:
-                df['binary'] = '1'
+                df["binary"] = "1"
                 df_1 = pd.concat([df_1, df], axis=0)
         return pd.concat([df_0, df_1], axis=0)
 
@@ -66,35 +66,37 @@ class TasteData:
             Call to method where specific attributes are set.
 
         """
-        logging.info('Setting taste data...')
+        logging.info("Setting taste data...")
         new_df = pd.DataFrame()
         for event, interv in funcs.iter_events(timestamps):
             df = self.signals.loc[
-                (self.time > (interv[0] - self.baseline)) &
-                (self.time < (interv[1] + self.post))].copy()
-            df['time'] = self.time
-            df['colors'] = self.color_dict[event]
-            df['events'] = event
+                (self.time > (interv[0] - self.baseline))
+                & (self.time < (interv[1] + self.post))
+            ].copy()
+            df["time"] = self.time
+            df["colors"] = self.color_dict[event]
+            df["events"] = event
             new_df = pd.concat([new_df, df], axis=0)
-        new_df.sort_values(by='time')
-        logging.info('Taste data set.')
+        new_df.sort_values(by="time")
+        logging.info("Taste data set.")
         return self._set_data(new_df)
 
     def _set_data(self, df):
         """Set new attributes from processed CalciumData"""
         eventdata = df.copy()
-        self.time = df.pop('time')
-        self.events = df.pop('events')
-        self.colors = df.pop('colors')
+        self.time = df.pop("time")
+        self.events = df.pop("events")
+        self.colors = df.pop("colors")
         self.signals = df
         return self._split(eventdata)
 
     def _split(self, eventdata):
         """Create dictionary with each event and associated traces"""
         for color in np.unique(self.colors):
-            event = \
-                [tastant for tastant, col in self.color_dict.items() if col in [color]][0]
-            self.taste_events[event] = eventdata.loc[eventdata['colors'] == color]
+            event = [
+                tastant for tastant, col in self.color_dict.items() if col in [color]
+            ][0]
+            self.taste_events[event] = eventdata.loc[eventdata["colors"] == color]
 
     def get_events(self, lst):
         """

@@ -24,22 +24,24 @@ logger = logging.getLogger(__name__)
 
 
 def save(save_file_path, team):
-    with open(save_file_path, 'wb') as f:
+    with open(save_file_path, "wb") as f:
         pickle.dump(team, f)
 
 
 def load(save_file_path):
-    with open(save_file_path, 'rb') as f:
+    with open(save_file_path, "rb") as f:
         return pickle.load(f)
 
 
 @dataclass
 class Scoring(object):
-    def __init__(self,
-                 pred: np.ndarray,
-                 true: np.ndarray,
-                 desc: Optional[str] = '',
-                 mat: bool = False) -> None:
+    def __init__(
+        self,
+        pred: np.ndarray,
+        true: np.ndarray,
+        desc: Optional[str] = "",
+        mat: bool = False,
+    ) -> None:
         """
         Class to manage scoring variables from fitted classifiers. 
 
@@ -66,31 +68,39 @@ class Scoring(object):
         if mat:
             self.mat: Any = self.get_confusion_matrix()
         if desc is None:
-            logging.info('No descriptor')
+            logging.info("No descriptor")
             pass
 
     def get_report(self) -> pd.DataFrame:
         """ Get classification report"""
         if self.descriptor:
-            assert self.descriptor in ['train', 'training',
-                                       'test', 'testing',
-                                       'eval', 'val', 'evaluate']
+            assert self.descriptor in [
+                "train",
+                "training",
+                "test",
+                "testing",
+                "eval",
+                "val",
+                "evaluate",
+            ]
 
         self.report = classification_report(
             self.true,
             self.predicted,
             target_names=self.classes,
             labels=self.classes,
-            output_dict=True)
+            output_dict=True,
+        )
         report_df = pd.DataFrame(data=self.report).transpose()
         return report_df
 
-    def get_confusion_matrix(self, caption: Optional[str] = '') -> object:
+    def get_confusion_matrix(self, caption: Optional[str] = "") -> object:
         """ Get confusion matrix"""
         mat = Plot.confusion_matrix(
             y_true=self.true,
             y_pred=self.predicted,
             labels=self.classes,
-            caption=caption)
+            caption=caption,
+        )
 
         return mat

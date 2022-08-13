@@ -28,11 +28,12 @@ class _validate:
     @staticmethod
     def _num_classes(classes):
         if len(np.unique(classes)) == 2:
-            print('Estimator class type: Multivariate')
-            return 'binary'
+            print("Estimator class type: Multivariate")
+            return "binary"
         elif len(np.unique(classes)) > 2:
-            print('Estimator class type: Multivariate')
+            print("Estimator class type: Multivariate")
             return "multivariate"
         else:
-            raise AttributeError('Number of classes do not match binary or multivariate')
-
+            raise AttributeError(
+                "Number of classes do not match binary or multivariate"
+            )

@@ -6,13 +6,14 @@ Module (data.data_utils): Process event/gpio data exported from _video_gpio.isxd
 """
 from __future__ import annotations
 
-from typing import Sized
+from typing import Sized, Iterable
 import logging
 from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
 from data.data_utils.file_handler import FileHandler
+from utils import funcs
 
 
 @dataclass(order=False)
@@ -25,12 +26,14 @@ class EventData:
     numlicks: Sized | int = field(default_factory=list)
     drylicks: list = field(default_factory=list)
     __allstim: list = field(default_factory=list)
+    alltastestim: list = field(default_factory=list)
+    nonreinforced: Iterable = field(default_factory=list)
 
     def __post_init__(self):
         self.timestamps: dict = self.__get_timestamps()
-        self.drylicks = [x for x in self.timestamps['Lick'] if x not in self.__allstim]
+        self.drylicks = [x for x in self.timestamps["Lick"] if x not in self.__allstim]
         self.trial_times: dict = self.__get_trial_times()
-
+        self.nonreinforced: list = self.__get_nonreinforced()
 
     def __len__(self):
         return len(self.numlicks)
@@ -38,20 +41,36 @@ class EventData:
     def __get_timestamps(self):
         timestamps: dict = {}
         data: pd.DataFrame = self.filehandler.get_eventdata()
-        events = data.rename(columns={'Time(s)': 'time'})
+        events = data.rename(columns={"Time(s)": "time"})
         for stimulus in events.columns[1:]:
             timestamps[stimulus] = list(
-                events['time'].iloc[np.where(
-                    events[stimulus] == 1)[0]])
-            if stimulus != 'Lick':
+                events["time"].iloc[np.where(events[stimulus] == 1)[0]]
+            )
+            if stimulus != "Lick":
                 self.__allstim.extend(timestamps[stimulus])
-        self.numlicks: Sized | int = len(timestamps['Lick'])
+            if stimulus != "Lick" and stimulus != "ArtSal":
+                self.alltastestim.extend(timestamps[stimulus])
+        self.numlicks: Sized | int = len(timestamps["Lick"])
+        self.alltastestim.sort()
         return timestamps
+
+    def __get_nonreinforced(self):
+        times = []
+        lickstamps = np.array(self.timestamps["Lick"])
+        intervals = funcs.interval(self.alltastestim, 2)
+        for iteration, interv in enumerate(intervals):
+            times.extend(
+                lickstamps[
+                    np.where((lickstamps >= interv[0]) & (lickstamps <= interv[1]))
+                ]
+            )
+        nr = np.setdiff1d(lickstamps, times)
+        return nr
 
     def __get_trial_times(self) -> dict:
         trial_times: dict = {}
         for stim, tslist in self.timestamps.items():
-            if stim != 'Lick' and stim != 'Rinse' and len(self.timestamps[stim]) > 0:
+            if stim != "Lick" and stim != "ArtSal" and len(self.timestamps[stim]) > 0:
                 # Get list of tastant deliveries
                 tslist.sort()
                 tslist = np.array(tslist)
@@ -64,17 +83,15 @@ class EventData:
                         print(f"Deleted timestamp {nxt}")
                 # Add each tastant delivery preceded by a drylick (trial start).
                 for ts in tslist:
-                    last_stimtime = tslist[np.where(
-                        tslist == ts)[0] - 1]
-                    last_drytime = self.drylicks[np.where(
-                        self.drylicks < ts)[0][-1]]
+                    last_stimtime = tslist[np.where(tslist == ts)[0] - 1]
+                    last_drytime = self.drylicks[np.where(self.drylicks < ts)[0][-1]]
                     if last_drytime > last_stimtime:
                         times.append(ts)
-                self.trial_times[stim] = times
+                trial_times[stim] = times
         return trial_times
 
     def get_trials(self) -> None:
         """Print number of instances of each event"""
         for stim, trials in self.trial_times.items():
-            logging.info(f'{stim} - {len(trials)}')
+            logging.info(f"{stim} - {len(trials)}")
         return None

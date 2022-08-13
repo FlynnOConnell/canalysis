@@ -20,11 +20,11 @@ from sklearn.svm import SVC
 
 
 def get_handles(
-        color_dict: dict,
-        marker: Optional[str] = None,
-        linestyle: Optional[int] = 'none',
-        **kwargs
-        ) -> Tuple[list, list]:
+    color_dict: dict,
+    marker: Optional[str] = None,
+    linestyle: Optional[int] = "none",
+    **kwargs
+) -> Tuple[list, list]:
     """
     Get matplotlib handles for input dictionary.
     Args:
@@ -38,13 +38,20 @@ def get_handles(
     proxy, label = [], []
     for t, c in color_dict.items():
         proxy.append(
-            lines.Line2D([0], [0], marker=marker, markerfacecolor=c, linestyle=linestyle,
-                         **kwargs))
+            lines.Line2D(
+                [0],
+                [0],
+                marker=marker,
+                markerfacecolor=c,
+                linestyle=linestyle,
+                **kwargs
+            )
+        )
         label.append(t)
     return proxy, label
 
 
-def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
+def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs):
     """
     Create a covariance confidence ellipse of `x` and `y`
             
@@ -75,35 +82,39 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor='none', **kwargs):
     # obtain the eigenvalues (special case)
     ell_radius_x = np.sqrt(1 + pearson)
     ell_radius_y = np.sqrt(1 - pearson)
-    ellipse = Ellipse((0, 0),
-                      width=ell_radius_x * 2,
-                      height=ell_radius_y * 2,
-                      facecolor=facecolor,
-                      **kwargs)
-    # Calculating the stdandard deviation of x 
+    ellipse = Ellipse(
+        (0, 0),
+        width=ell_radius_x * 2,
+        height=ell_radius_y * 2,
+        facecolor=facecolor,
+        **kwargs
+    )
+    # Calculating the stdandard deviation of x
     scale_x = np.sqrt(cov[0, 0]) * n_std
     mean_x = np.mean(x)
-    # calculating the stdandard deviation of y 
+    # calculating the stdandard deviation of y
     scale_y = np.sqrt(cov[1, 1]) * n_std
     mean_y = np.mean(y)
-    transf = transforms.Affine2D() \
-        .rotate_deg(45) \
-        .scale(scale_x, scale_y) \
+    transf = (
+        transforms.Affine2D()
+        .rotate_deg(45)
+        .scale(scale_x, scale_y)
         .translate(mean_x, mean_y)
+    )
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
 
 
 def plot_learning_curve(
-        estimator,
-        title,
-        X,
-        y,
-        axes=None,
-        ylim=None,
-        cv=None,
-        n_jobs=None,
-        train_sizes=np.linspace(0.1, 1.0, 5),
+    estimator,
+    title,
+    X,
+    y,
+    axes=None,
+    ylim=None,
+    cv=None,
+    n_jobs=None,
+    train_sizes=np.linspace(0.1, 1.0, 5),
 ):
     """
     Generate 3 plots: the test and training learning curve, the training
@@ -264,5 +275,5 @@ def main():
     plt.show()
 
 
-if __name__ == 'main':
+if __name__ == "main":
     main()

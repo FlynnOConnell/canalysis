@@ -1,7 +1,5 @@
-
-
 from collections.abc import MutableMapping
-from misc.wrappers import Singleton
+from utils.wrappers import Singleton
 
 
 @Singleton
@@ -37,8 +35,10 @@ class AllData(MutableMapping):
 
     def __str__(self):
         return "\n".join(
-            f"{key} - {len(value)} sessions." for key, value in self.__dict__.items())
+            f"{key} - {len(value)} sessions." for key, value in self.__dict__.items()
+        )
 
     def __repr__(self):
         return "\n".join(
-            f"{key} - {len(value)} sessions." for key, value in self.__dict__.items())
+            f"{key} - {len(value)} sessions." for key, value in self.__dict__.items()
+        )
