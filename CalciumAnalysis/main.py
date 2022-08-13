@@ -19,7 +19,6 @@ from data.taste_data import TasteData
 from analysis.process_data import ProcessData
 from graphs.plot import Plot
 import pandas as pd
-from utils import funcs
 import faulthandler
 
 faulthandler.enable()
