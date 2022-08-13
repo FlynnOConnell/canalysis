@@ -18,11 +18,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from IPython.display import HTML
-from data.calcium_data import CalciumData
 from matplotlib import rcParams
 
 import graphs.graph_utils.graph_funcs as gr_func
-from data.trace_data import TraceData
 
 
 def set_pub():
@@ -81,7 +79,7 @@ class Plot:
         self.dpi = dpi
         self.save_dir = save_dir
         self.facecolor = "white"
-        self.color_dict = (None,)
+        self.color_dict = None
         self.cmap = plt.get_cmap(cmap)
 
         self.kwargs = kwargs
@@ -427,11 +425,11 @@ class Plot:
 
         def init():
             ax.plot(x, y, z, linewidth=0, antialiased=False)
-            return (fig,)
+            return fig,
 
         def animate(i):
             ax.view_init(elev=30.0, azim=3.6 * i)
-            return (fig,)
+            return fig,
 
         ani = animation.FuncAnimation(
             fig, animate, init_func=init, frames=400, interval=100, blit=True
