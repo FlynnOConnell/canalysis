@@ -19,7 +19,7 @@ import matplotlib
 
 # matplotlib.use('Qt4Agg')
 from matplotlib import pyplot as plt
-
+from scipy import stats
 from .all_data import AllData
 from .trace_data import TraceData
 from .taste_data import TasteData
@@ -114,13 +114,13 @@ class CalciumData(Mixins.CalPlots):
         ev_time = funcs.get_matched_time(
             self.tracedata.time, self.eventdata.nonreinforced
         )
-        nr_signal = self.tracedata.tracedata.loc[
-            self.tracedata.tracedata["time"].isin(ev_time)
+        nr_signal = self.tracedata.zscores.loc[
+            self.tracedata.zscores["time"].isin(ev_time)
         ].drop("time", axis=1)
         avgs = {}
         for column in nr_signal.columns:
-            mean = nr_signal[column].mean()
-            avgs[column] = mean
+            zscore = stats.zscore(nr_signal[column])
+            avgs[column] = zscore
         return avgs
 
     def _authenticate(self):
@@ -212,7 +212,6 @@ class CalciumData(Mixins.CalPlots):
         fig.subplots_adjust(hspace=0)
         plt.xlabel("Time (s)")
         fig.suptitle(f"Calcium Traces: {self.filehandler.session}", y=0.95)
-        # plt.legend(loc=(1.04, 1))
         axs[-1].get_xaxis().set_visible(True)
         axs[-1].spines["bottom"].set_visible(True)
         logging.info("Figure created.")
