@@ -64,7 +64,7 @@ def statistics(_data, _dir) -> pd.DataFrame | None:
 if __name__ == "__main__":
     _animal = "PGT13"
     _date = "052622"
-    _dir = "A:/"
+    _dir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
 
     filehandler = FileHandler(
         _animal, _date, _dir, tracename="traces2", eatingname="Scored1"
@@ -74,9 +74,9 @@ if __name__ == "__main__":
     myarr = np.array(data.eventdata.timestamps["Lick"])
 
     # graph = Plot(data.tracedata)
-    # analysis = ProcessData(data, _dir)
-    # for plot in analysis.loop_taste():
-    #     myplot = plot
+    analysis = ProcessData(data, _dir)
+    for plot in analysis.loop_taste():
+        myplot = plot
 
     # pca = analysis.PCA(data.tracedata.signals)
     # data.plot_session()
