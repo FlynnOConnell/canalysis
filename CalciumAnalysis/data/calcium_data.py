@@ -151,6 +151,9 @@ class CalciumData(Mixins.CalPlots):
             logging.info(f"{self.animal} and {self.date} added")
         return None
 
+    def get_signal(self, i):
+        return list(self.tracedata.signals.iloc[:, i])
+
     def plot_session(
         self, lickshade: Optional[int] = 1, save_dir: Optional[str] = ""
     ) -> None:
@@ -161,7 +164,7 @@ class CalciumData(Mixins.CalPlots):
         )
         for i in range(len(self.tracedata.cells)):
             # get calcium trace (y axis data)
-            signal = list(self.tracedata.signals.iloc[:, i])
+            signal = self.get_signal(i)
 
             # plot signal
             axs[i].plot(self.tracedata.time, signal, "k", linewidth=0.8)
@@ -236,7 +239,7 @@ class CalciumData(Mixins.CalPlots):
         ]
 
         for i in range(len(self.tracedata.cells)):
-            signal = list(self.tracedata.signals.iloc[:, i])
+            signal = self.get_signal(i)
 
             # plot signal
             ax[i].plot(self.tracedata.time, signal, "k", linewidth=0.8)
@@ -285,18 +288,9 @@ class CalciumData(Mixins.CalPlots):
         fig.subplots_adjust(hspace=0)
         plt.xlabel("Time (s)")
         fig.suptitle(f"Calcium Traces: {self.filehandler.session}", y=0.95)
-
         ax[-1].get_xaxis().set_visible(True)
         ax[-1].spines["bottom"].set_visible(True)
-
-        # set the x-axis to the zoomed area
         plt.setp(ax, xlim=zoombounding)
-        # plt.legend(loc='lower right',
-        #            prop={'size': 6},
-        #            bbox_to_anchor=(2.04, 1),
-        #            frameon=False)
-
-        logging.info("Figure created.")
         plt.show()
         if save_dir:
             fig.savefig(
