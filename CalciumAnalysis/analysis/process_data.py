@@ -127,7 +127,7 @@ class ProcessData:
                     time_lower = self.time[peak_window_ind[0]]
                     time_upper = self.time[peak_window_ind[1]]
                     response_window = np.array(
-                        self.signals[peak_window_ind[0] : peak_window_ind[1], cell]
+                        self.signals[peak_window_ind[0]: peak_window_ind[1], cell]
                     )
                     window_ts = [time_lower, time_upper]
                     mean_mag = np.mean(response_window)
@@ -203,7 +203,7 @@ class ProcessData:
                 signal = signals.iloc[data_ind, :]
                 yield stim, iteration, signal
 
-    def loop_taste(self) -> Generator[Iterable, None, None]:
+    def loop_taste(self,) -> Generator[Iterable, None, None]:
         for stim, iteration, signal in self.get_taste_df():
-            hm = Heatmap(title=f"{stim}, trial {iteration}").columnwise(signal.T)
+            hm = Heatmap(title=f"{stim}, trial {iteration}").single(signal.T)
             yield hm
