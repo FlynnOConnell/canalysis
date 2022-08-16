@@ -11,6 +11,7 @@ import logging
 from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
+from numpy import ndarray
 
 from data.data_utils.file_handler import FileHandler
 from utils import funcs
@@ -33,7 +34,7 @@ class EventData:
         self.timestamps: dict = self.__get_timestamps()
         self.drylicks = [x for x in self.timestamps["Lick"] if x not in self.__allstim]
         self.trial_times: dict = self.__get_trial_times()
-        self.nonreinforced: list = self.__get_nonreinforced()
+        self.nonreinforced: ndarray = self.__get_nonreinforced()
 
     def __len__(self):
         return len(self.numlicks)

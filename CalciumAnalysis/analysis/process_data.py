@@ -8,11 +8,14 @@ Module(analysis): Stats class for PCA and general statistics/output.
 from __future__ import annotations
 
 import logging
-from typing import Tuple, Optional, Iterable, Generator
+from typing import Optional, Iterable, Generator
 
 import numpy as np
 import pandas as pd
 from pathlib import Path
+
+from scipy.stats import stats
+
 from data.calcium_data import CalciumData
 from graphs.heatmaps import Heatmap
 from utils import funcs
@@ -26,8 +29,9 @@ class ProcessData:
         self.outpath = outpath
         if isinstance(outpath, str):
             self.outpath = Path(outpath)
-
+        self.data = data
         self.signals = data.tracedata.signals
+        self.zscores = data.tracedata.zscores
         self.time = data.tracedata.time
         self.cells = data.tracedata.cells
         self.avgs = data.nr_avgs
@@ -191,19 +195,28 @@ class ProcessData:
             return stats_df
 
     def get_taste_df(self) -> Generator[Iterable, None, None]:
-        signals = self.signals.copy()
-        for column in signals:
-            signals[column] = signals[column] / self.avgs[column]
+        signals = self.zscores.copy().drop('time', axis=1)
+        for cell in signals:
+            signals[cell] = (signals[cell] - self.avgs[cell])
+            # Replace negatives with 0 using numpys fancy indexing
+            signals[cell][signals[cell] < 0] = 0
 
         for stim, times in self.trial_times.items():
             for iteration, trial in enumerate(times):
-                # Index to analysis window
-                data_ind = np.where((self.time > trial) & (self.time < trial + 5))[0]
-                # Get calcium trace & time
-                signal = signals.iloc[data_ind, :]
+                data_ind = np.where((self.time > trial - 1) & (self.time < trial + 3))[0]
+                signal = signals.iloc[data_ind, 1:]
                 yield stim, iteration, signal
 
-    def loop_taste(self,) -> Generator[Iterable, None, None]:
+    def loop_taste(self, ) -> Generator[Iterable, None, None]:
         for stim, iteration, signal in self.get_taste_df():
-            hm = Heatmap(title=f"{stim}, trial {iteration}").single(signal.T)
+            if stim in ['NaCl', 'Peanut']:
+                hm = Heatmap(title=f"{stim}, trial {iteration}", cm='plasma', line_loc=10).single(signal.T)
+                yield hm
+
+    def loop_eating(self, ) -> Generator[Iterable, None, None]:
+        for signal, event in self.data.get_eating_signals():
+            hm = Heatmap(title=f'{event}', cm='plasma').single(signal.T)
             yield hm
+
+
+

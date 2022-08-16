@@ -87,3 +87,17 @@ class FileError(Exception):
 
     def __str__(self):
         return f"{self.message} - File type: {self.filetype}"
+
+
+class MatchError(Exception):
+    def __init__(self, *args):
+        if args:
+            self.message = args[0]
+        else:
+            self.message = None
+
+    def __str__(self):
+        if self.message:
+            return "{0} ".format(self.message)
+        else:
+            return "Time to match (match) larger than iterable to match to, likely wrong order of match/time."

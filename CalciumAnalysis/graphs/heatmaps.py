@@ -202,7 +202,7 @@ class Heatmap(object):
         """
         Plot single heatmap with seaborn library.
 
-        Parameters
+        Parameters-
         ----------
         df : pd.DataFrame
             Data used in heatmap.

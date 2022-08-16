@@ -70,14 +70,9 @@ if __name__ == "__main__":
         _animal, _date, _dir, tracename="traces2", eatingname="Scored1"
     )
     data = initialize_data(filehandler, adjust=34)
-
-    myarr = np.array(data.eventdata.timestamps["Lick"])
-
+    # lick = data.eventdata.timestamps['Lick'][-1]
     # graph = Plot(data.tracedata)
     analysis = ProcessData(data, _dir)
-    for plot in analysis.loop_taste():
+    for plot in analysis.loop_eating():
         myplot = plot
 
-    # pca = analysis.PCA(data.tracedata.signals)
-    # data.plot_session()
-    # data.plot_zoom(save_dir=save_dir)

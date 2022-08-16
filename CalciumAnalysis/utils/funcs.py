@@ -9,11 +9,13 @@ from __future__ import annotations
 import logging
 import math
 from pathlib import Path
-from typing import Tuple, Iterable, Optional, Sized, Any
+from typing import Tuple, Iterable, Optional, Sized, Any, List
 import itertools
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+from numpy import ndarray
+from pandas import Series
 
 from utils import excepts as e
 from utils.wrappers import typecheck
@@ -184,8 +186,8 @@ def get_peak_window(time: Iterable[any], peak: float) -> list:
 
 
 def get_matched_time(
-    time: Iterable[any], match: Iterable[any], return_index: Optional[bool] = False
-) -> list:
+    time: Iterable[any], match: Iterable[any], return_index: Optional[bool] = False, single: Optional[bool] = False,
+) -> int | list[Any]:
     """
     Finds the closest number in tracedata time to the input. Can be a single value, or list.
 
@@ -197,6 +199,12 @@ def get_matched_time(
 
     matched_index = []
     matched_time = []
+    # convert to an iterable if float or int are given
+    if isinstance(match, (float, int)):
+        match = [match]
+    if time.size < len(match):
+        raise e.MatchError()
+
     for t in match:
         temp = []
         for valor in time:
@@ -207,7 +215,9 @@ def get_matched_time(
         this_time = time[idx]
         matched_time.append(this_time)
 
-    if return_index:
+    if return_index and single:
+        return matched_index[-1]
+    elif return_index and not single:
         return matched_index
     else:
         return matched_time
