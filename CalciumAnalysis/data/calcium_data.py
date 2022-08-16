@@ -33,6 +33,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CalciumData(Mixins.CalPlots):
+    """
+    General holder class for all trace/event related data, with additional
+    storage for each session.
+    """
     filehandler: FileHandler
     color_dict: color_dict
     adjust: Optional[int] = None
@@ -56,7 +60,7 @@ class CalciumData(Mixins.CalPlots):
             self.eating_time = self.eating_signals.pop('time')
             self.eating_zscores = self.__set_eating_zscores()
 
-        self.nr_avgs = self._get_nonreinforced_signals()
+        self.nr_avgs = self._get_nonreinforced_means()
         self._authenticate()
 
         self._tastedata: TasteData = TasteData(
@@ -120,7 +124,13 @@ class CalciumData(Mixins.CalPlots):
             logging.info(f"{self.animal} and {self.date} added")
         return None
 
-    def _get_nonreinforced_signals(self) -> dict:
+    def _get_nonreinforced_means(self) -> dict:
+        """
+        Get a dictionary (Cell: mean) of means for non-reinforced lick events.
+        Returns
+        -------
+        Cell: mean dictionary.
+        """
         ev_time = funcs.get_matched_time(
             self.tracedata.time, self.eventdata.nonreinforced
         )
@@ -134,9 +144,22 @@ class CalciumData(Mixins.CalPlots):
         return avgs
 
     def get_signal_bycell(self, i):
+        """return a list of signal values via cell integer indexing (0 through N cells"""
         return list(self.tracedata.signals.iloc[:, i])
 
     def get_signal_bytime(self, start, stop, zscores: bool = True):
+        """
+
+        Parameters
+        ----------
+        start : beginning of slice
+        stop : end of slice
+        zscores [bool]: whether to return zscore signals
+
+        Returns
+        -------
+        pd.DataFrame of sliced signals given start:stop
+        """
         if isinstance(start, list):
             start = start[-1]
         if isinstance(stop, list):
@@ -147,6 +170,12 @@ class CalciumData(Mixins.CalPlots):
             return self.tracedata.tracedata.iloc[start:stop]
 
     def __split_data(self, ):
+        """
+        Splits a dataframe from the last lick event.
+        Returns
+        -------
+        Dataframe sliced at last lick event.
+        """
         last = funcs.get_matched_time(
             self.tracedata.time, self.eventdata.timestamps['Lick'][-1], return_index=True, single=True
         )
