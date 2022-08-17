@@ -13,6 +13,7 @@ from typing import ClassVar, Optional, Generator, Iterable
 
 import pandas as pd
 import numpy as np
+
 # matplotlib.use('Qt4Agg')
 from scipy import stats
 from .all_data import AllData
@@ -37,6 +38,7 @@ class CalciumData(Mixins.CalPlots):
     General holder class for all trace/event related data, with additional
     storage for each session.
     """
+
     filehandler: FileHandler
     color_dict: color_dict
     adjust: Optional[int] = None
@@ -50,6 +52,7 @@ class CalciumData(Mixins.CalPlots):
         self.date = self.filehandler.date
         self.animal = self.filehandler.animal
         self.data_dir = self.filehandler.directory
+        self.session = self.filehandler.session
 
         # Core
         self.tracedata: TraceData = self._set_tracedata()
@@ -60,7 +63,7 @@ class CalciumData(Mixins.CalPlots):
                 self.eating_signals = self.__split_data()
             else:
                 self.eating_signals = self.tracedata.tracedata
-            self.eating_time = self.eating_signals.pop('time')
+            self.eating_time = self.eating_signals.pop("time")
             self.eating_zscores = self.__set_eating_zscores()
 
         self.nr_avgs = self._get_nonreinforced_means()
@@ -105,7 +108,7 @@ class CalciumData(Mixins.CalPlots):
         if not isinstance(self.eventdata, EventData):
             raise e.DataFrameError("Event data must be a dataframe.")
         if not any(
-                x in self.tracedata.signals.columns for x in ["C0", "C00", "C000", "C0000"]
+            x in self.tracedata.signals.columns for x in ["C0", "C00", "C000", "C0000"]
         ):
             logging.debug(f"{self.tracedata.signals.head()}")
             raise AttributeError(
@@ -118,7 +121,7 @@ class CalciumData(Mixins.CalPlots):
         if self.keys_exist(my_dict, self.animal, self.date):
             logging.info(f"{self.animal}-{self.date} already exist.")
         elif self.keys_exist(my_dict, self.animal) and not self.keys_exist(
-                my_dict, self.date
+            my_dict, self.date
         ):
             my_dict[self.animal][self.date] = self
             logging.info(f"{self.animal} exists, {self.date} added.")
@@ -173,7 +176,7 @@ class CalciumData(Mixins.CalPlots):
         else:
             return self.tracedata.tracedata.iloc[start:stop]
 
-    def __split_data(self, ):
+    def __split_data(self,):
         """
         Splits a dataframe from the last lick event.
         Returns
@@ -181,7 +184,10 @@ class CalciumData(Mixins.CalPlots):
         Dataframe sliced at last lick event.
         """
         last = funcs.get_matched_time(
-            self.tracedata.time, self.eventdata.timestamps['Lick'][-1], return_index=True, single=True
+            self.tracedata.time,
+            self.eventdata.timestamps["Lick"][-1],
+            return_index=True,
+            single=True,
         )
         return self.tracedata.tracedata.iloc[last:, :]
 
@@ -193,10 +199,14 @@ class CalciumData(Mixins.CalPlots):
             eating_zscores_df[cell] = zscore
         return eating_zscores_df
 
-    def get_eating_signals(self, ) -> Generator[Iterable, None, None]:
+    def get_eating_signals(self,) -> Generator[Iterable, None, None]:
         data = self.eating_data.eatingdata.to_numpy()
         for x in data:
-            time_start = funcs.get_matched_time(self.eating_time, x[1], return_index=True, single=True)
-            time_end = funcs.get_matched_time(self.eating_time, x[2], return_index=True, single=True)
+            time_start = funcs.get_matched_time(
+                self.eating_time, x[1], return_index=True, single=True
+            )
+            time_end = funcs.get_matched_time(
+                self.eating_time, x[2], return_index=True, single=True
+            )
             signal = self.eating_zscores.iloc[time_start:time_end]
             yield signal, x[0], x[1], x[2]
