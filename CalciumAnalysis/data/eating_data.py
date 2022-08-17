@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 class EatingData:
     filehandler: FileHandler = FileHandler
     adjust: Optional[int] = None
+    split: Optional[bool] = False
 
     def __post_init__(self,):
         self.eatingdata = self.filehandler.get_eatingdata().sort_values("TimeStamp")

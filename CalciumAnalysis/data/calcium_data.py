@@ -56,7 +56,10 @@ class CalciumData(Mixins.CalPlots):
         self.eventdata: EventData = self._set_eventdata()
         if self.filehandler.eatingname is not None:
             self.eating_data = self._set_eatingdata()
-            self.eating_signals = self.__split_data()
+            if self.eating_data.split:
+                self.eating_signals = self.__split_data()
+            else:
+                self.eating_signals = self.tracedata.tracedata
             self.eating_time = self.eating_signals.pop('time')
             self.eating_zscores = self.__set_eating_zscores()
 
@@ -152,9 +155,10 @@ class CalciumData(Mixins.CalPlots):
 
         Parameters
         ----------
+        zscores :
         start : beginning of slice
         stop : end of slice
-        zscores [bool]: whether to return zscore signals
+        zscores : whether to return zscore signals
 
         Returns
         -------
@@ -186,15 +190,13 @@ class CalciumData(Mixins.CalPlots):
         eating_signals = self.eating_signals.copy()
         for cell in eating_signals.columns:
             zscore = np.array(stats.zscore(self.eating_signals[cell]))
-            new_z = np.where(zscore < 0, 0, zscore)
-            eating_zscores_df[cell] = new_z
+            eating_zscores_df[cell] = zscore
         return eating_zscores_df
 
-    def get_eating_signals(self) -> Generator[Iterable, None, None]:
-        data = self.eating_zscores.to_numpy()
+    def get_eating_signals(self, ) -> Generator[Iterable, None, None]:
+        data = self.eating_data.eatingdata.to_numpy()
         for x in data:
             time_start = funcs.get_matched_time(self.eating_time, x[1], return_index=True, single=True)
             time_end = funcs.get_matched_time(self.eating_time, x[2], return_index=True, single=True)
             signal = self.eating_zscores.iloc[time_start:time_end]
-            yield signal, x[0]
-
+            yield signal, x[0], x[1], x[2]
