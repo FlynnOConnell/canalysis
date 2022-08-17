@@ -7,13 +7,18 @@
 from __future__ import annotations
 
 from typing import Optional
-
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import rcParams
+from matplotlib.colors import LogNorm
 from scipy.ndimage.filters import gaussian_filter
+from utils import funcs
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 
 def set_pub():
@@ -24,7 +29,7 @@ def set_pub():
             "axes.labelweight": "bold",
             "axes.facecolor": "w",
             "axes.labelsize": 15,
-            "lines.linewidth": 1,
+            "lines.linewidth": 1
         }
     )
 
@@ -41,6 +46,7 @@ class Heatmap(object):
         cm: str = "magma",
         _id: str | None = "",
         title: str | None = "",
+        xlabel: str | None = "",
         sigma: int | None = None,
         square: bool = False,
         colorbar: bool = False,
@@ -53,6 +59,7 @@ class Heatmap(object):
         self.cm = plt.get_cmap(cm)
         self._id = _id
         self.title = title
+        self.xlabel = xlabel
         self.sigma = sigma
         self.square = square
         self.colorbar = colorbar
@@ -122,19 +129,30 @@ class Heatmap(object):
             } ...etc.
         """
         set_pub()
+
         for cell, df in data_dict.items():
             df = df.T
             if self.sigma is not None:
                 df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
             # Plot data
             fig, axs = plt.subplots()
+            vmin = min(df[cell])
+            vmax = max(df[cell])
             sns.heatmap(
-                df, square=self.square, cbar=self.colorbar, robust=self.robust, **axargs
+                df,
+                square=self.square,
+                cbar=self.colorbar,
+                robust=self.robust,
+                vmin=vmin,
+                vmax=vmax,
+                **axargs
             )
             axs.axis("off")
             if self.line_loc:
                 axs.axvline(
-                    x=self.line_loc, color=self.line_color, linewidth=self.line_width
+                    x=self.line_loc,
+                    color=self.line_color,
+                    linewidth=self.line_width
                 )
             if self.save_dir:
                 plt.savefig(
@@ -207,23 +225,34 @@ class Heatmap(object):
         df : pd.DataFrame
             Data used in heatmap.
         """
+
         set_pub()
         df = df.copy()
         if self.sigma:
             df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
         fig, axs = plt.subplots()
+        fig.tight_layout()
+
         sns.heatmap(
-            df, square=self.square, cbar=self.colorbar, cmap=self.cm, robust=self.robust
+            df,
+            square=False,
+            cbar=self.colorbar,
+            cmap=self.cm,
+            robust=self.robust,
         )
-        axs.axis("off")
-        axs.set_title(self.title)
+        plt.xticks([])
+        if self.xlabel:
+            axs.set_xlabel(f'{np.round(self.xlabel, 2)} seconds')
+        axs.set_title(self.title, fontweight='bold')
         if self.line_loc:
             axs.axvline(
                 x=self.line_loc, color=self.line_color, linewidth=self.line_width
             )
         if self.save_dir:
+            file = f"{self.save_dir}/{self._id}.png"
+            savefile = funcs.check_unique_path(file)
             plt.savefig(
-                f"{self.save_dir}/{self._id}.png",
+                f"{savefile}",
                 dpi=400,
                 bbox_inches="tight",
                 pad_inches=0.01,
