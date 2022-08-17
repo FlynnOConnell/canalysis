@@ -85,9 +85,7 @@ def check_unique_path(path: Path | str):
     counter = 0
     while path.exists():
         counter += 1
-        path = path.parent / str(
-           path.stem + "_" + str(counter) + path.suffix
-        )
+        path = path.parent / str(path.stem + "_" + str(counter) + path.suffix)
     return path.__str__()
 
 
@@ -199,7 +197,10 @@ def get_peak_window(time: Iterable[any], peak: float) -> list:
 
 
 def get_matched_time(
-    time: Iterable[any], match: Iterable[any], return_index: Optional[bool] = False, single: Optional[bool] = False,
+    time: Iterable[any],
+    match: Iterable[any],
+    return_index: Optional[bool] = False,
+    single: Optional[bool] = False,
 ) -> int | list[Any]:
     """
     Finds the closest number in tracedata time to the input. Can be a single value, or list.
