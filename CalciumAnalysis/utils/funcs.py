@@ -78,6 +78,19 @@ def flatten(lst: Iterable) -> list:
     return [item for sublist in lst for item in sublist]
 
 
+def check_unique_path(path: Path | str):
+    if isinstance(path, str):
+        path = Path(path)
+    assert hasattr(path, "stem")
+    counter = 0
+    while path.exists():
+        counter += 1
+        path = path.parent / str(
+           path.stem + "_" + str(counter) + path.suffix
+        )
+    return path.__str__()
+
+
 @typecheck(Iterable, int)
 def interval(
     lst: Iterable[any], gap: Optional[int] = 1, outer: bool = False
