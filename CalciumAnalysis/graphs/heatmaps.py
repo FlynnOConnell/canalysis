@@ -29,7 +29,7 @@ def set_pub():
             "axes.labelweight": "bold",
             "axes.facecolor": "w",
             "axes.labelsize": 15,
-            "lines.linewidth": 1
+            "lines.linewidth": 1,
         }
     )
 
@@ -145,14 +145,12 @@ class Heatmap(object):
                 robust=self.robust,
                 vmin=vmin,
                 vmax=vmax,
-                **axargs
+                **axargs,
             )
             axs.axis("off")
             if self.line_loc:
                 axs.axvline(
-                    x=self.line_loc,
-                    color=self.line_color,
-                    linewidth=self.line_width
+                    x=self.line_loc, color=self.line_color, linewidth=self.line_width
                 )
             if self.save_dir:
                 plt.savefig(
@@ -234,16 +232,12 @@ class Heatmap(object):
         fig.tight_layout()
 
         sns.heatmap(
-            df,
-            square=False,
-            cbar=self.colorbar,
-            cmap=self.cm,
-            robust=self.robust,
+            df, square=False, cbar=self.colorbar, cmap=self.cm, robust=self.robust,
         )
         plt.xticks([])
         if self.xlabel:
-            axs.set_xlabel(f'{np.round(self.xlabel, 2)} seconds')
-        axs.set_title(self.title, fontweight='bold')
+            axs.set_xlabel(f"{np.round(self.xlabel, 2)} seconds")
+        axs.set_title(self.title, fontweight="bold")
         if self.line_loc:
             axs.axvline(
                 x=self.line_loc, color=self.line_color, linewidth=self.line_width
@@ -252,10 +246,7 @@ class Heatmap(object):
             file = f"{self.save_dir}/{self._id}.png"
             savefile = funcs.check_unique_path(file)
             plt.savefig(
-                f"{savefile}",
-                dpi=400,
-                bbox_inches="tight",
-                pad_inches=0.01,
+                f"{savefile}", dpi=400, bbox_inches="tight", pad_inches=0.01,
             )
         plt.show()
         return fig
