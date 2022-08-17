@@ -70,11 +70,9 @@ if __name__ == "__main__":
         _animal, _date, _dir, tracename="traces3", eatingname="Scored1"
     )
     data = initialize_data(filehandler, adjust=34)
-    analysis = ProcessData(data, _dir)
-    eating, entry, grooming = analysis.get_event_df()
+    data.plot_session()
+    # analysis = ProcessData(data, _dir)
+    # eating, entry, grooming = analysis.get_event_df()
     # df, var = analysis.principal_components(data)
     # plots = [heatmaps for heatmaps in analysis.loop_taste()]
     # plots = [heatmaps for heatmaps in analysis.loop_eating(save_dir='C:/Users/flynn/Desktop/figs')]
-
-
-
