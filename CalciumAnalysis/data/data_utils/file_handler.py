@@ -76,7 +76,7 @@ class FileHandler:
         self.color_dict: namedtuple
         self._validate()
 
-        self.session: Path = Path(self.animal + self.date)
+        self.session: str = f"{animal}_{date}"
         self.animaldir: Path = Path(self._directory / self.animal)
         self.sessiondir: Path = Path(self.animaldir / self.date)
         assert self.sessiondir.is_dir()
@@ -98,6 +98,10 @@ class FileHandler:
     @property
     def directory(self) -> Path:
         return self._directory
+
+    @directory.setter
+    def directory(self, new_dir: str) -> None:
+        self._directory: str = new_dir
 
     @directory.setter
     def directory(self, new_dir: str) -> None:
