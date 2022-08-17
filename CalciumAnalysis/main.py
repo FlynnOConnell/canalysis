@@ -67,12 +67,14 @@ if __name__ == "__main__":
     _dir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
 
     filehandler = FileHandler(
-        _animal, _date, _dir, tracename="traces2", eatingname="Scored1"
+        _animal, _date, _dir, tracename="traces3", eatingname="Scored1"
     )
     data = initialize_data(filehandler, adjust=34)
-    # lick = data.eventdata.timestamps['Lick'][-1]
-    # graph = Plot(data.tracedata)
     analysis = ProcessData(data, _dir)
-    for plot in analysis.loop_eating():
-        myplot = plot
+    eating, entry, grooming = analysis.get_event_df()
+    # df, var = analysis.principal_components(data)
+    # plots = [heatmaps for heatmaps in analysis.loop_taste()]
+    # plots = [heatmaps for heatmaps in analysis.loop_eating(save_dir='C:/Users/flynn/Desktop/figs')]
+
+
 
