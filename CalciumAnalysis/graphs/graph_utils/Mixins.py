@@ -28,18 +28,13 @@ class CalPlots:
     color_dict: dict
 
     def plot_stim(self, save_dir: str = None) -> None:
-
         if save_dir:
             save_dir = save_dir
-        else:
-            save_dir = "/Users/flynnoconnell/Pictures/sessions2"
-
         nplot = len(self.signals.columns)
         for stim, times in self.trial_times.items():
             trialno = 0
             for trial in times:
                 trialno += 1
-
                 # get only the data within the analysis window
                 data_ind = np.where((self.time > trial - 2) & (self.time < trial + 5))[
                     0
@@ -89,7 +84,6 @@ class CalPlots:
                 ax[-1].get_xaxis().set_visible(True)
                 ax[-1].spines["bottom"].set_visible(True)
                 fig.set_figwidth(4)
-
                 if save_dir:
                     fig.savefig(
                         save_dir + f"/{stim}_{trial}.png",
@@ -97,11 +91,9 @@ class CalPlots:
                         dpi=600,
                         facecolor="white",
                     )
-
         return None
 
     def plot_session(self, lickshade: int = 1, save_dir: bool = False) -> None:
-
         # create a series of plots with a shared x-axis
         fig, axs = plt.subplots(
             len(self.tracedata.cells), 1, sharex=True, facecolor="white"
@@ -109,17 +101,14 @@ class CalPlots:
         for i in range(len(self.tracedata.cells)):
             # get calcium trace (y axis data)
             signal = list(self.tracedata.signals.iloc[:, i])
-
             # plot signal
             axs[i].plot(self.tracedata.time, signal, "k", linewidth=0.8)
-
             # Get rid of borders
             axs[i].get_xaxis().set_visible(False)
             axs[i].spines["top"].set_visible(False)
             axs[i].spines["bottom"].set_visible(False)
             axs[i].spines["right"].set_visible(False)
             axs[i].set_yticks([])  # no Y ticks
-
             # add the cell name as a label for this graph's y-axis
             axs[i].set_ylabel(
                 self.tracedata.signals.columns[i],
@@ -128,8 +117,7 @@ class CalPlots:
                 y=0.1,
                 fontweight="bold",
             )
-
-            # go through each lick and shade it in
+            # shade in licks
             for lick in self.eventdata.timestamps["Lick"]:
                 label = "_yarp"
                 if lick == self.eventdata.timestamps["Lick"][0]:
@@ -137,15 +125,11 @@ class CalPlots:
                 axs[i].axvspan(
                     lick, lick + lickshade, color="lightsteelblue", lw=0, label=label
                 )
-
-        # Make the plots act like they know each other
         fig.subplots_adjust(hspace=0)
         plt.xlabel("Time (s)")
         fig.suptitle(f"Calcium Traces: {self.session}", y=0.95)
-        # plt.legend(loc=(1.04, 1))
         axs[-1].get_xaxis().set_visible(True)
         axs[-1].spines["bottom"].set_visible(True)
-
         plt.show()
         if save_dir:
             fig.savefig(
@@ -154,11 +138,10 @@ class CalPlots:
                 dpi=600,
                 facecolor="white",
             )
-
         return None
 
     def plot_zoom(
-        self, zoomshade: float = 0.2, save_dir: Optional[bool] = True
+        self, zoomshade: float = 0.2, save_dir: Optional[bool] = True,
     ) -> None:
         # create a series of plots with a shared x-axis
         fig, ax = plt.subplots(len(self.cells), 1, sharex=True)
@@ -166,11 +149,8 @@ class CalPlots:
             int(input("Enter start time for zoomed in graph (seconds):")),
             int(input("Enter end time for zoomed in graph (seconds):")),
         ]
-
         for i in range(len(self.cells)):
             signal = list(self.signals.iloc[:, i])
-
-            # plot signal
             ax[i].plot(self.time, signal, "k", linewidth=0.8)
             ax[i].get_xaxis().set_visible(False)
             ax[i].spines["top"].set_visible(False)
@@ -180,8 +160,7 @@ class CalPlots:
             ax[i].set_ylabel(
                 self.signals.columns[i], rotation="horizontal", labelpad=15, y=0.1
             )
-
-            # go through each set of timestamps and shade them accordingly
+            # shade in timestamps
             for stim, times in self.timestamps.items():
                 for ts in times:
                     if ts == times[0]:
@@ -195,19 +174,14 @@ class CalPlots:
                         label=label,
                         lw=0,
                     )
-
-        # Make the plots act like they know each other
         fig.subplots_adjust(hspace=0)
         plt.xlabel("Time (s)")
         fig.suptitle(f"Calcium Traces: {self.session}", y=0.95)
-
         ax[-1].get_xaxis().set_visible(True)
         ax[-1].spines["bottom"].set_visible(True)
-
         # set the x-axis to the zoomed area
         plt.setp(ax, xlim=zoombounding)
         plt.legend(loc=(1.02, 3))
-
         if save_dir:
             fig.savefig(
                 f"/Users/flynnoconnell/Pictures/plots/{self.session}_zm.png",
@@ -222,11 +196,9 @@ class CalPlots:
             cells = self.cells
 
         for cell in cells:
-
             # Create int used to index a column in tracedata.
             cell_index = {x: 0 for x in cells}
             cell_index.update((key, value) for value, key in enumerate(cell_index))
-
             currcell = cell_index[cell]
             for stim, times in self.trial_times.items():
                 ntrial = len(times)
@@ -243,37 +215,27 @@ class CalPlots:
                     minmax.append(norm_max)
                 stim_min = min(minmax)
                 stim_max = max(minmax)
-
                 fig, xaxs = plt.subplots(ntrial, 1, sharex=False, squeeze=False)
-
                 if ntrial < 2:
                     xaxs.flatten()
-
                 for iteration, trial in enumerate(times):
                     i = int(iteration)
-
                     data_ind = np.where(
                         (self.time > trial - 2) & (self.time < trial + 4)
                     )[0]
                     this_time = self.time[data_ind]
-
-                    # Get calcium trace.
                     signal = list(self.tracedata.iloc[data_ind, currcell + 1])
                     signal[:] = [number - stim_min for number in signal]
-
                     l_bound = min(signal)
                     u_bound = max(signal)
                     center = 0
                     xaxs[i, 0].plot(this_time, signal, "k", linewidth=0.8)
                     xaxs[i, 0].tick_params(axis="both", which="minor", labelsize=6)
-
                     xaxs[i, 0].get_xaxis().set_visible(False)
-
                     xaxs[i, 0].spines["top"].set_visible(False)
                     xaxs[i, 0].spines["bottom"].set_visible(False)
                     xaxs[i, 0].spines["right"].set_visible(False)
                     xaxs[i, 0].spines["left"].set_bounds((l_bound, stim_max))
-
                     xaxs[i, 0].set_yticks((0, center, u_bound))
                     xaxs[i, 0].set_ylabel(
                         " Trial {}     ".format(i + 1),
@@ -281,11 +243,8 @@ class CalPlots:
                         labelpad=15,
                         y=0.3,
                     )
-
                     xaxs[i, 0].set_ylim(bottom=0, top=max(signal))
-
                     xaxs[i, 0].axhspan(0, 0, color="k", ls=":")
-
                     # Add shading for licks, rinses  tastant delivery
                     for stimmy in ["Lick", "Rinse", stim]:
                         done = 0
@@ -304,7 +263,6 @@ class CalPlots:
                                     label=label,
                                     lw=0,
                                 )
-
                 plt.xlabel("Time (s)")
                 fig.suptitle(
                     "Calcium Traces: {}\n{}: {}".format(cell, self.session, stim), y=1.0
@@ -313,157 +271,12 @@ class CalPlots:
                 fig.text(
                     0,
                     -0.03,
-                    ("Note: Each trace has" "been normalized over the graph window"),
+                    "Note: Each trace has" "been normalized over the graph window",
                     fontstyle="italic",
                     fontsize="small",
                 )
                 xaxs[-1, 0].spines["bottom"].set_bounds(False)
                 plt.legend(loc=(1.02, 3))
-
         if save_dir:
             plt.savefig(str(save_dir) + ".png", bbox_inches="tight", dpi=600)
-
-        return None
-
-    def plot_session(
-            self, lickshade: Optional[int] = 1, save_dir: Optional[str] = ""
-    ) -> None:
-
-        # create a series of plots with a shared x-axis
-        fig, axs = plt.subplots(
-            len(self.tracedata.cells), 1, sharex=True, facecolor="white"
-        )
-        for i in range(len(self.tracedata.cells)):
-            # get calcium trace (y axis data)
-            signal = self.get_signal(i)
-
-            # plot signal
-            axs[i].plot(self.tracedata.time, signal, "k", linewidth=0.8)
-
-            # Get rid of borders
-            axs[i].get_xaxis().set_visible(False)
-            axs[i].spines["top"].set_visible(False)
-            axs[i].spines["bottom"].set_visible(False)
-            axs[i].spines["right"].set_visible(False)
-            axs[i].set_yticks([])  # no Y ticks
-
-            # add the cell name as a label for this graph's y-axis
-            axs[i].set_ylabel(
-                self.tracedata.signals.columns[i],
-                rotation="horizontal",
-                labelpad=15,
-                y=0.1,
-                fontweight="bold",
-            )
-
-            # go through each lick and shade it in
-            for lick in self.eventdata.timestamps["Lick"]:
-                label = "_yarp"
-                if lick == self.eventdata.timestamps["Lick"][0]:
-                    label = "Licking"
-                axs[i].axvspan(
-                    lick, lick + lickshade, color="lightsteelblue", lw=0, label=label
-                )
-
-            for ind in self.eatingdata.index:
-                if self.eatingdata["Marker Name"][ind] == "Entry":
-                    color = "blue"
-                elif self.eatingdata["Marker Name"][ind] == "Eating":
-                    color = "red"
-                else:
-                    color = "green"
-                axs[i].axvspan(
-                    self.eatingdata["TimeStamp"][ind],
-                    self.eatingdata["TimeStamp2"][ind],
-                    alpha=0.5,
-                    color=color,
-                )
-
-        # Make the plots act like they know each other
-        fig.subplots_adjust(hspace=0)
-        plt.xlabel("Time (s)")
-        fig.suptitle(f"Calcium Traces: {self.filehandler.session}", y=0.95)
-        axs[-1].get_xaxis().set_visible(True)
-        axs[-1].spines["bottom"].set_visible(True)
-        logging.info("Figure created.")
-        plt.show()
-
-        if save_dir:
-            fig.savefig(
-                f"{save_dir}/session.png",
-                bbox_inches="tight",
-                dpi=1000,
-                facecolor="white",
-            )
-            logging.info("Session figure saved.")
-
-        return None
-
-    def plot_zoom(self, zoomshade: float = 0.2, save_dir: Optional[str] = "") -> None:
-
-        # create a series of plots with a shared x-axis
-        fig, ax = plt.subplots(len(self.tracedata.cells), 1, sharex=True)
-        zoombounding = [
-            int(input("Enter start time for zoomed in graph (seconds):")),
-            int(input("Enter end time for zoomed in graph (seconds):")),
-        ]
-
-        for i in range(len(self.tracedata.cells)):
-            signal = self.get_signal(i)
-
-            # plot signal
-            ax[i].plot(self.tracedata.time, signal, "k", linewidth=0.8)
-            ax[i].get_xaxis().set_visible(False)
-            ax[i].spines["top"].set_visible(False)
-            ax[i].spines["bottom"].set_visible(False)
-            ax[i].spines["right"].set_visible(False)
-            ax[i].set_yticks([])
-            ax[i].set_ylabel(
-                self.tracedata.signals.columns[i],
-                rotation="horizontal",
-                labelpad=15,
-                y=0.1,
-            )
-
-            # go through each set of timestamps and shade them accordingly
-            for stim, times in self.eventdata.timestamps.items():
-                for ts in times:
-                    if ts == times[0]:
-                        label = stim
-                    else:
-                        label = "_"  # Keeps label from showing.
-                    ax[i].axvspan(
-                        ts,
-                        ts + zoomshade,
-                        color=self.color_dict[stim],
-                        label=label,
-                        lw=0,
-                    )
-
-            for ind in self.eatingdata.index:
-                if self.eatingdata["Marker Name"][ind] == "Entry":
-                    color = "blue"
-                elif self.eatingdata["Marker Name"][ind] == "Eating":
-                    color = "red"
-                else:
-                    color = "green"
-                ax[i].axvspan(
-                    self.eatingdata["TimeStamp"][ind],
-                    self.eatingdata["TimeStamp2"][ind],
-                    alpha=0.5,
-                    color=color,
-                )
-
-        # Make the plots act like they know each other
-        fig.subplots_adjust(hspace=0)
-        plt.xlabel("Time (s)")
-        fig.suptitle(f"Calcium Traces: {self.filehandler.session}", y=0.95)
-        ax[-1].get_xaxis().set_visible(True)
-        ax[-1].spines["bottom"].set_visible(True)
-        plt.setp(ax, xlim=zoombounding)
-        plt.show()
-        if save_dir:
-            fig.savefig(
-                f"{save_dir}zoom.png", bbox_inches="tight", dpi=1000, facecolor="white"
-            )
         return None
