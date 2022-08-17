@@ -131,7 +131,7 @@ class ProcessData:
                     time_lower = self.time[peak_window_ind[0]]
                     time_upper = self.time[peak_window_ind[1]]
                     response_window = np.array(
-                        self.signals[peak_window_ind[0]: peak_window_ind[1], cell]
+                        self.signals[peak_window_ind[0] : peak_window_ind[1], cell]
                     )
                     window_ts = [time_lower, time_upper]
                     mean_mag = np.mean(response_window)
@@ -195,71 +195,61 @@ class ProcessData:
             return stats_df
 
     def get_taste_df(self) -> Generator[Iterable, None, None]:
-
-        signals = self.zscores.copy().drop('time', axis=1)
+        signals = self.zscores.copy().drop("time", axis=1)
         for cell in signals:
-            signals[cell] = (signals[cell] - self.avgs[cell])
+            signals[cell] = signals[cell] - self.avgs[cell]
             # Replace negatives with 0 using numpys fancy indexing
             signals[cell][signals[cell] < 0] = 0
 
         for stim, times in self.trial_times.items():
             for iteration, trial in enumerate(times):
-                data_ind = np.where((self.time > trial - 1) & (self.time < trial + 3))[0]
+                data_ind = np.where((self.time > trial - 1) & (self.time < trial + 3))[
+                    0
+                ]
                 signal = signals.iloc[data_ind, 1:]
                 yield stim, iteration, signal
 
-    def loop_taste(self,
-                   save_dir: Optional[str] = '',
-                   **kwargs
-                   ) -> Generator[Iterable, None, None]:
+    def loop_taste(
+        self, save_dir: Optional[str] = "", **kwargs
+    ) -> Generator[Iterable, None, None]:
         for stim, iteration, signal in self.get_taste_df():
-            if stim in ['Chocolate', 'Sucrose']:
+            if stim in ["Chocolate", "Sucrose"]:
                 hm = Heatmap(
-                    title=f"{stim},"
-                          f" trial {iteration}",
-                    cm='plasma',
+                    title=f"{stim}," f" trial {iteration}",
+                    cm="plasma",
                     line_loc=10,
                     save_dir=save_dir,
-                    _id=f'{stim}',
-                    **kwargs
+                    _id=f"{stim}",
+                    **kwargs,
                 ).single(signal.T)
                 yield hm
 
     def loop_eating(
-            self,
-            save_dir: Optional[str] = '',
-            **kwargs
+        self, save_dir: Optional[str] = "", **kwargs
     ) -> Generator[Iterable, None, None]:
         for signal, event, starttime, endtime in self.data.get_eating_signals():
             start = starttime
             end = endtime
             xlabel = end - start
             hm = Heatmap(
-                title=f'{event}',
+                title=f"{event}",
                 xlabel=xlabel,
-                cm='plasma',
+                cm="plasma",
                 save_dir=save_dir,
-                _id=f'{event}_{start}',
-                **kwargs
+                _id=f"{event}_{start}",
+                **kwargs,
             ).single(signal.T)
             yield hm
 
-    def get_event_df(
-            self,
-    ):
+    def get_event_df(self,):
         df_eating = pd.DataFrame(columns=self.data.tracedata.signals.columns)
         df_entry = pd.DataFrame(columns=self.data.tracedata.signals.columns)
         df_grooming = pd.DataFrame(columns=self.data.tracedata.signals.columns)
         for signal, event, _, _ in self.data.get_eating_signals():
-            if event == 'Grooming':
+            if event == "Grooming":
                 pd.concat([df_eating, signal], axis=1)
-            elif event == 'Entry':
+            elif event == "Entry":
                 pd.concat([df_entry, signal], axis=1)
             else:
                 pd.concat([df_entry, signal], axis=1)
         return df_eating, df_entry, df_grooming
-
-
-
-
-
