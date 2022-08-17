@@ -11,12 +11,19 @@ from typing import Tuple, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib import lines
 from sklearn.datasets import load_digits
 from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection import learning_curve
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
+
+
+def get_x_axis(df: pd.DataFrame):
+    data = df
+    assert isinstance(data.columns[0], str)
+    return np.arange(0, data.shape[0], 0.1)
 
 
 def get_handles(
