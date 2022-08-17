@@ -425,11 +425,11 @@ class Plot:
 
         def init():
             ax.plot(x, y, z, linewidth=0, antialiased=False)
-            return fig,
+            return (fig,)
 
         def animate(i):
             ax.view_init(elev=30.0, azim=3.6 * i)
-            return fig,
+            return (fig,)
 
         ani = animation.FuncAnimation(
             fig, animate, init_func=init, frames=400, interval=100, blit=True
