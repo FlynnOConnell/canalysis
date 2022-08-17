@@ -27,14 +27,14 @@ class EatingData:
         self.__clean()
         self.set_adjust()
 
-    def __hash__(self, ):
+    def __hash__(self,):
         return hash(repr(self))
 
     def set_adjust(self,) -> None:
         for column in self.eatingdata.columns[1:]:
             self.eatingdata[column] = self.eatingdata[column] + self.adjust
 
-    def __clean(self, ) -> None:
+    def __clean(self,) -> None:
         self.eatingdata.drop(
             ["Marker Type", "Marker Event Id", "Marker Event Id 2", "value1", "value2"],
             axis=1,
@@ -43,5 +43,3 @@ class EatingData:
         self.eatingdata = self.eatingdata.loc[
             self.eatingdata["Marker Name"].isin(["Entry", "Eating", "Grooming"])
         ]
-
-
