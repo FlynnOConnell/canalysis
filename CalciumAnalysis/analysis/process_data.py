@@ -42,7 +42,7 @@ class ProcessData:
         self.sponts = self.get_sponts()
 
     @staticmethod
-    def PCA(df: pd.DataFrame, numcomp: Optional[int] = 2):
+    def principal_components(df: pd.DataFrame, numcomp: Optional[int] = 2):
 
         data = StandardScaler().fit_transform(df)
         pca = PCA(n_components=numcomp)
@@ -195,6 +195,7 @@ class ProcessData:
             return stats_df
 
     def get_taste_df(self) -> Generator[Iterable, None, None]:
+
         signals = self.zscores.copy().drop('time', axis=1)
         for cell in signals:
             signals[cell] = (signals[cell] - self.avgs[cell])
@@ -207,16 +208,58 @@ class ProcessData:
                 signal = signals.iloc[data_ind, 1:]
                 yield stim, iteration, signal
 
-    def loop_taste(self, ) -> Generator[Iterable, None, None]:
+    def loop_taste(self,
+                   save_dir: Optional[str] = '',
+                   **kwargs
+                   ) -> Generator[Iterable, None, None]:
         for stim, iteration, signal in self.get_taste_df():
-            if stim in ['NaCl', 'Peanut']:
-                hm = Heatmap(title=f"{stim}, trial {iteration}", cm='plasma', line_loc=10).single(signal.T)
+            if stim in ['Chocolate', 'Sucrose']:
+                hm = Heatmap(
+                    title=f"{stim},"
+                          f" trial {iteration}",
+                    cm='plasma',
+                    line_loc=10,
+                    save_dir=save_dir,
+                    _id=f'{stim}',
+                    **kwargs
+                ).single(signal.T)
                 yield hm
 
-    def loop_eating(self, ) -> Generator[Iterable, None, None]:
-        for signal, event in self.data.get_eating_signals():
-            hm = Heatmap(title=f'{event}', cm='plasma').single(signal.T)
+    def loop_eating(
+            self,
+            save_dir: Optional[str] = '',
+            **kwargs
+    ) -> Generator[Iterable, None, None]:
+        for signal, event, starttime, endtime in self.data.get_eating_signals():
+            start = starttime
+            end = endtime
+            xlabel = end - start
+            hm = Heatmap(
+                title=f'{event}',
+                xlabel=xlabel,
+                cm='plasma',
+                save_dir=save_dir,
+                _id=f'{event}_{start}',
+                **kwargs
+            ).single(signal.T)
             yield hm
+
+    def get_event_df(
+            self,
+    ):
+        df_eating = pd.DataFrame(columns=self.data.tracedata.signals.columns)
+        df_entry = pd.DataFrame(columns=self.data.tracedata.signals.columns)
+        df_grooming = pd.DataFrame(columns=self.data.tracedata.signals.columns)
+        for signal, event, _, _ in self.data.get_eating_signals():
+            if event == 'Grooming':
+                pd.concat([df_eating, signal], axis=1)
+            elif event == 'Entry':
+                pd.concat([df_entry, signal], axis=1)
+            else:
+                pd.concat([df_entry, signal], axis=1)
+        return df_eating, df_entry, df_grooming
+
+
 
 
 
