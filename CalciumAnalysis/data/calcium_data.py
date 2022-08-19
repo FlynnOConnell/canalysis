@@ -59,12 +59,6 @@ class CalciumData(Mixins.CalPlots):
         self.eventdata: EventData = self._set_eventdata()
         if self.filehandler.eatingname is not None:
             self.eating_data = self._set_eatingdata()
-            if self.eating_data.split:
-                self.eating_signals = self.__split_data()
-            else:
-                self.eating_signals = self.tracedata.tracedata
-            self.eating_time = self.eating_signals.pop("time")
-            self.eating_zscores = self.__set_eating_zscores()
 
         self.nr_avgs = self._get_nonreinforced_means()
         self._authenticate()
@@ -130,6 +124,10 @@ class CalciumData(Mixins.CalPlots):
             logging.info(f"{self.animal} and {self.date} added")
         return None
 
+    @staticmethod
+    def reorder(df: pd.DataFrame, cols: list):
+        return df[cols]
+
     def _get_nonreinforced_means(self) -> dict:
         """
         Get a dictionary (Cell: mean) of means for non-reinforced lick events.
@@ -155,7 +153,7 @@ class CalciumData(Mixins.CalPlots):
 
     def get_signal_bytime(self, start, stop, zscores: bool = True):
         """
-
+        Fetch signals between two timepoints.
         Parameters
         ----------
         zscores :
@@ -176,37 +174,42 @@ class CalciumData(Mixins.CalPlots):
         else:
             return self.tracedata.tracedata.iloc[start:stop]
 
-    def __split_data(self,):
-        """
-        Splits a dataframe from the last lick event.
-        Returns
-        -------
-        Dataframe sliced at last lick event.
-        """
-        last = funcs.get_matched_time(
-            self.tracedata.time,
-            self.eventdata.timestamps["Lick"][-1],
-            return_index=True,
-            single=True,
-        )
-        return self.tracedata.tracedata.iloc[last:, :]
-
-    def __set_eating_zscores(self) -> pd.DataFrame:
-        eating_zscores_df = pd.DataFrame(columns=self.eating_signals.columns)
-        eating_signals = self.eating_signals.copy()
-        for cell in eating_signals.columns:
-            zscore = np.array(stats.zscore(self.eating_signals[cell]))
-            eating_zscores_df[cell] = zscore
-        return eating_zscores_df
-
     def get_eating_signals(self,) -> Generator[Iterable, None, None]:
         data = self.eating_data.eatingdata.to_numpy()
-        for x in data:
-            time_start = funcs.get_matched_time(
-                self.eating_time, x[1], return_index=True, single=True
-            )
-            time_end = funcs.get_matched_time(
-                self.eating_time, x[2], return_index=True, single=True
-            )
-            signal = self.eating_zscores.iloc[time_start:time_end]
-            yield signal, x[0], x[1], x[2]
+        size = len(data)
+        counter = 0
+        for index, x in (enumerate(data)):
+            if index > (len(data)-2):
+                break
+            if x[0] == 'Entry':
+                counter += 1
+                nxt = index + 1
+                nxt2 = index + 2
+                if data[nxt][0] == 'Eating' and data[nxt2][0] == 'Entry':
+                    entry_start = funcs.get_matched_time(
+                        self.tracedata.time, x[1], return_index=True, single=True
+                    )
+                    entry_end = funcs.get_matched_time(
+                        self.tracedata.time, x[2], return_index=True, single=True
+                    )
+                    eating_end = funcs.get_matched_time(
+                        self.tracedata.time, data[nxt][2], return_index=True, single=True
+                    )
+                    signal = (self.tracedata.zscores.iloc[
+                              entry_start:eating_end]).drop(columns=['time'])
+                    yield signal, counter, entry_start, entry_end, eating_end
+
+                elif data[nxt][0] == 'Eating' and data[nxt2][0] == 'Eating':
+                    entry_start = funcs.get_matched_time(
+                        self.tracedata.time, x[1], return_index=True, single=True
+                    )
+                    entry_end = funcs.get_matched_time(
+                        self.tracedata.time, x[2], return_index=True, single=True
+                    )
+                    eating_end = funcs.get_matched_time(
+                        self.tracedata.time, data[nxt2][2], return_index=True, single=True
+                    )
+                    signal = (self.tracedata.zscores.iloc[
+                              entry_start:eating_end]).drop(columns=['time'])
+                    yield signal, counter, entry_start, entry_end, eating_end
+
