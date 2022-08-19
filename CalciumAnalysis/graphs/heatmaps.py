@@ -236,11 +236,12 @@ class Heatmap(object):
         )
         plt.xticks([])
         if self.xlabel:
-            axs.set_xlabel(f"{np.round(self.xlabel, 2)} seconds")
+            axs.set_xlabel(self.xlabel)
         axs.set_title(self.title, fontweight="bold")
         if self.line_loc:
             axs.axvline(
-                x=self.line_loc, color=self.line_color, linewidth=self.line_width
+                x=self.line_loc, color=self.line_color, ymin=0,
+                ymax=1
             )
         if self.save_dir:
             file = f"{self.save_dir}/{self._id}.png"
