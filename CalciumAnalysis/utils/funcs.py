@@ -78,20 +78,22 @@ def flatten(lst: Iterable) -> list:
     return [item for sublist in lst for item in sublist]
 
 
-def check_unique_path(path: Path | str):
+def check_unique_path(
+        path: Path | str
+) -> str:
     if isinstance(path, str):
         path = Path(path)
     assert hasattr(path, "stem")
     counter = 0
     while path.exists():
         counter += 1
-        path = path.parent / str(path.stem + "_" + str(counter) + path.suffix)
+        path = Path(f'{path.parent}/{path.stem}_{str(counter)}{path.suffix}')
     return path.__str__()
 
 
 @typecheck(Iterable, int)
 def interval(
-    lst: Iterable[any], gap: Optional[int] = 1, outer: bool = False
+        lst: Iterable[any], gap: Optional[int] = 1, outer: bool = False
 ) -> list[tuple[Any, Any]]:
     """
     Create intervals where there elements are separated by either:
@@ -123,7 +125,7 @@ def interval(
 
 @typecheck(pd.DataFrame, pd.Series, int)
 def remove_outliers(
-    df, colors, std: Optional[int] = 2
+        df, colors, std: Optional[int] = 2
 ) -> Tuple[pd.DataFrame, pd.Series]:
     df.reset_index(drop=True, inplace=True)
     colors.reset_index(drop=True, inplace=True)
@@ -177,7 +179,8 @@ def has_duplicates(to_check: Sized | Iterable[set]):
 @typecheck(Iterable[any], Iterable[any])
 def get_peak_window(time: Iterable[any], peak: float) -> list:
     """
-    Returns the index of tracedata centered 1s around the peak flourescent value for that trial.
+    Returns the index of tracedata centered 1s around the peak flourescent value for
+    that trial.
     Args:
         time (list | pd.Series): List of all time values.
         peak (float) : peak time
@@ -197,17 +200,22 @@ def get_peak_window(time: Iterable[any], peak: float) -> list:
 
 
 def get_matched_time(
-    time: Iterable[any],
-    match: Iterable[any],
-    return_index: Optional[bool] = False,
-    single: Optional[bool] = False,
+        time: Iterable[any],
+        match: Iterable[any],
+        return_index: Optional[bool] = False,
+        single: Optional[bool] = False,
 ) -> int | list[Any]:
     """
-    Finds the closest number in tracedata time to the input. Can be a single value, or list.
-
+    Finds the closest number in tracedata time to the input. Can be a single value,
+    or list.
+    Parameters
+    ----------
+    :param single :bool
     :param time: Series
     :param match: list
     :param return_index: bool
+
+
     """
     time: pd.Series
 
