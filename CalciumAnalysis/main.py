@@ -31,14 +31,14 @@ save_dir = "C:/Users/dilorenzo/Desktop/CalciumPlots/"
 # %% Some examples on usage of different modules.
 
 color_dict = {
-    "ArtSal": "dodgerblue",
-    "Peanut": "darkorange",
-    "Lick": "darkgray",
+    "ArtSal"   : "dodgerblue",
+    "Peanut"   : "darkorange",
+    "Lick"     : "darkgray",
     "Chocolate": "saddlebrown",
-    "NaCl": "green",
-    "Quinine": "red",
-    "Acid": "yellow",
-    "Sucrose": "purple",
+    "NaCl"     : "green",
+    "Quinine"  : "red",
+    "Acid"     : "yellow",
+    "Sucrose"  : "purple",
 }
 
 
@@ -57,22 +57,35 @@ def sparse_event_data(ev_data):
 
 def statistics(_data, _dir) -> pd.DataFrame | None:
     stats = ProcessData(_data, outpath=_dir)
-    stats = stats.get_stats()
     return stats
 
 
 if __name__ == "__main__":
     _animal = "PGT13"
     _date = "052622"
-    _dir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
+    _dir = r"C:\Users\dilorenzo\Documents\repos\CalciumAnalysis\datasets"
 
     filehandler = FileHandler(
         _animal, _date, _dir, tracename="traces3", eatingname="Scored1"
     )
     data = initialize_data(filehandler, adjust=34)
-    data.plot_session()
-    # analysis = ProcessData(data, _dir)
-    # eating, entry, grooming = analysis.get_event_df()
+
+    analysis = ProcessData(data, _dir)
+
+    dflist = ['C24', 'C23', 'C20', 'C05', 'C06', 'C07', 'C00', 'C26', 'C22', 'C09',
+              'C10', 'C17', 'C11', 'C21', 'C04', 'C01', 'C02', 'C03', 'C14', 'C15',
+              'C16', 'C27', 'C25', 'C18', 'C19', 'C12', 'C13', 'C08']
+    # df = analysis.get_event_df()
     # df, var = analysis.principal_components(data)
-    # plots = [heatmaps for heatmaps in analysis.loop_taste()]
-    # plots = [heatmaps for heatmaps in analysis.loop_eating(save_dir='C:/Users/flynn/Desktop/figs')]
+    plots_ = [heatmaps for heatmaps in analysis.loop_taste(
+        cols=dflist,
+        save_dir=r'C:\Users\dilorenzo\Desktop\CalciumPlots\heatmaps'
+    )]
+
+    plots = [heatmaps for heatmaps in analysis.loop_eating(
+        cols=dflist,
+        save_dir=r'C:\Users\dilorenzo\Desktop\CalciumPlots\heatmaps'
+    )]
+    # save_dir='C:/Users/flynn/Desktop/figs')]
+
+
