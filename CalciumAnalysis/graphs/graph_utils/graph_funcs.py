@@ -59,8 +59,8 @@ def get_handles_from_dict(
 
 
 def get_handles_from_iterables(
-    iterable_color: Iterable[Sized],
-    iterable_event: Iterable[Sized],
+    evcolor_dict: dict,
+    iterable_color: Iterable | Sized,
     marker: Optional[str] = None,
     linestyle: Optional[int] = "none",
     **kwargs
@@ -68,16 +68,18 @@ def get_handles_from_iterables(
     """
     Get matplotlib handles for input dictionary.
     Args:
+        evcolor_dict (dict): event[color] dict to map
         iterable_color (Iterable): Iterable of colors to zip.
-        iterable_event (Iterable): Iterable of events to zip.
         linestyle (str): Connecting lines, default = none.
         marker (str): Shape of scatter point, default is circle.
     Returns:
         proxy (list): matplotlib.lines.line2D appended list.
         label (list): legend labels for each proxy.
+
     """
     proxy, label = [], []
     for t in np.unique(iterable_color):
+        # add color to list
         proxy.append(
             lines.Line2D(
                 [0],
@@ -88,7 +90,8 @@ def get_handles_from_iterables(
                 **kwargs
             )
         )
-        label.append(t)
+        val = [i for i in evcolor_dict if evcolor_dict[i] == t]
+        label.append(val)
     return proxy, label
 
 
