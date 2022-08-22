@@ -19,9 +19,10 @@ from data.taste_data import TasteData
 from analysis.process_data import ProcessData
 from graphs.plot import ScatterPlots
 from analysis.analysis_utils.analysis_funcs import map_colors
+from analysis.analysis_utils import ca_pca
 import pandas as pd
 import faulthandler
-
+from analysis.analysis_utils.analysis_funcs import map_colors
 faulthandler.enable()
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -37,6 +38,9 @@ color_dict = {
     "Quinine": "red",
     "Acid": "yellow",
     "Sucrose": "purple",
+    "Eating": "blue",
+    "Grooming": "slategray",
+    "Entry": "lime"
 }
 
 dflist = ['C24', 'C23', 'C20', 'C05', 'C06', 'C07', 'C00', 'C26', 'C22', 'C09',
@@ -83,7 +87,7 @@ def heatmap_loops(anal):
 if __name__ == "__main__":
     _animal = "PGT13"
     _date = "052622"
-    _dir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
+    _dir = r"C:\Users\dilorenzo\Documents\repos\CalciumAnalysis\datasets"
     colordict = {'grooming': 'green',
                  'entry': 'blue',
                  'eating': 'red'}
@@ -91,9 +95,20 @@ if __name__ == "__main__":
         _animal, _date, _dir, tracename="traces3", eatingname="Scored1"
     )
     data = initialize_data(filehandler, adjust=34)
-    tastedata_class = data.tastedata
+    tastedata = data.tastedata
+    eatingdata = data.eatingdata
+    # analysis = ProcessData(data)
+    # eating_data = analysis.get_event_df()
+    # eating_data['colors'] = map_colors(eating_data.pop('events'))
+    # for event, taste_df in tastedata.taste_events.items():
+    #     eating_df = eating_data.copy().reset_index(drop=True)
+    #     data = pd.concat([eating_df, taste_df], axis=1)
+    #     colors = data.pop('colors')
+    #     pca_class = ca_pca.CaPrincipalComponentsAnalysis(data, colors)
+    #     plot = ScatterPlots(pca_class.data, pca_class.colors, colordict)
 
-    analysis_class = ProcessData(data)
+
+
     # pca = analysis_class.get_pca()
     # pca_plots = pca.get_plots(colordict)
     # data = pca.pca_df
@@ -103,3 +118,12 @@ if __name__ == "__main__":
     #     temp_cols = data_colors.copy()
     #     data_ = pd.concat([data, b])
     #     temp_cols.extend(data_colors)
+
+
+
+   # def get_pca(self):
+   #      data = self.get_event_df()
+   #      data_events = data.pop('events')
+   #      data_colors = map_colors(data_events)
+   #      pca = ca_pca.CaPrincipalComponentsAnalysis(data=data, colors=data_colors,)
+   #      return pca
