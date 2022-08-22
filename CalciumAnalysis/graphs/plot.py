@@ -10,20 +10,26 @@ from __future__ import annotations
 
 import logging
 import webbrowser
-from typing import Optional, Iterable, Any
-
+from typing import Optional, Iterable, Any, Sized
+import seaborn as sns
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation as animation
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from IPython.display import HTML
-from matplotlib import rcParams
-
+from matplotlib import rcParams, figure
 import graphs.graph_utils.graph_funcs as gr_func
+import matplotlib as mpl
+from pathlib import Path
+
+mpl.use("TkAgg")
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
 
 
-def set_pub():
+def update_rcparams():
     # Function to set some easy params and avoid some annoying bugs
     rcParams.update(
         {
@@ -32,38 +38,37 @@ def set_pub():
             "axes.facecolor": "w",
             "axes.labelsize": 15,
             "lines.linewidth": 1,
+            'animation.ffmpeg_path': r'/c/ffmpeg/bin/ffmpeg'
         }
     )
 
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
-
-
-class Plot:
+class CalPlot:
+    """
+    Base plotting class for calcium data. Contains data values and common args.
+    """
     def __init__(
-        self,
-        data: pd.DataFrame | Any = None,
-        colors: Optional[Iterable] = None,
-        cmap: str = "magma",
-        dpi: Optional[int] = 600,
-        save_dir: str = None,
-        **kwargs,
+            self,
+            data: pd.DataFrame,
+            colors: Sized,
+            color_dict: Optional[dict] = None,
+            cmap: str = "magma",
+            dpi: Optional[int] = 600,
+            save_dir: str = None,
+            **kwargs,
     ):
         """
-        Class with graphing utilities. 
-        
+        Class with graphing utilities.
+
         Parameters
         ----------
         data : pd.DataFrame, optional
             Plotting data, representing points on the graph. The default is None.
         colors : Optional[Iterable], optional
-            Matched colors if data values are colored. 
+            Matched colors if data values are colored.
             colors.shape must be the same as data.shape[0]. The default is None.
         cmap : str, optional
             Color for colormap. The default is 'magma'.
-        dpi : Optional[int], optional
-            Pixel resolution. The default is 600.
         save_dir : str, FileHandler, optional
             Directory for saving data. The default is None.
         **kwargs : dict
@@ -74,58 +79,91 @@ class Plot:
         None.
 
         """
-        self.data = data
-        self.colors = colors
-        self.dpi = dpi
-        self.save_dir = save_dir
-        self.facecolor = "white"
-        self.color_dict = None
-        self.cmap = plt.get_cmap(cmap)
+        self.data: pd.DataFrame = data
+        self.colors: Sized = colors
+        self.color_dict: dict = color_dict
+        self.cmap: str = cmap
+        self.dpi: int = dpi
+        self.save_dir: str = save_dir
+        self.kwargs: dict = kwargs
+        update_rcparams()
 
-        self.kwargs = kwargs
-        self.checks = {}
+    @property
+    def color_dict(self, ):
+        return self._color_dict
 
-    def scatter(
-        self,
-        df: pd.DataFrame = None,
-        ax=None,
-        colors: Iterable | Any = None,
-        title: Optional[str] = None,
-        legend: Optional[bool] = True,
-        size: int = 5,
-        marker: str = "o",
-        alpha: Optional[int] = 1,
-        conf_interv: Optional[bool] = False,
-        savefig: Optional[bool] = False,
-        msg: Optional[str] = "nomsg",
-        bbox_inches: str = "tight",
-        facecolor: str = "white",
-        **kwargs,
-    ) -> None:
+    @color_dict.setter
+    def color_dict(self, new_dict):
+        assert isinstance(new_dict, dict)
+        self._color_dict = new_dict
+
+    @property
+    def cmap(self, ):
+        return self._cmap
+
+    @cmap.setter
+    def cmap(self, new_cmap):
+        assert isinstance(new_cmap, str)
+        self._cmap = new_cmap
+
+    @property
+    def dpi(self, ):
+        return self._dpi
+
+    @dpi.setter
+    def dpi(self, new_dpi):
+        assert isinstance(new_dpi, int)
+        self._dpi = new_dpi
+
+    @property
+    def save_dir(self, ):
+        return self._save_dir
+
+    @save_dir.setter
+    def save_dir(self, new_save_dir):
+        if isinstance(new_save_dir, Path):
+            new_save_dir = new_save_dir.__str__()
+            logging.info('Save_dir converted from Type[pathlib.Path] to Type[str]')
+        self._save_dir = new_save_dir
+
+
+class ScatterPlots(CalPlot):
+
+    def get_axis_labels(self, ax):
+        ax.set_xlabel(self.data.columns[0], weight="bold")
+        ax.set_ylabel(self.data.columns[1], weight="bold")
+        if self.data.shape[1] > 2:
+            ax.set_zlabel(self.data.columns[1], weight="bold")
+        return ax
+
+    def get_axis_points(self,):
+        if self.data.shape[1] > 2:
+            return [self.data.iloc[:, 0], self.data.iloc[:, 1], self.data.iloc[:, 2]]
+        else:
+            return [self.data.iloc[:, 0], self.data.iloc[:, 1]]
+
+    def scatterplot(
+            self,
+            title: Optional[str] = None,
+            legend: Optional[bool] = True,
+            marker: str = "o",
+            savefig: Optional[bool] = False,
+            msg: Optional[str] = "nomsg",
+            bbox_inches: str = "tight",
+            facecolor: str = "w",
+            **kwargs,
+    ) -> plt.figure:
         """
             Plot 2D/3D scatter plot with matplotlib.
 
         Parameters
         ----------
-        df : pd.DataFrame, optional
-            Input data for scatter plot. The default is None.
-        ax : TYPE, optional
-            DESCRIPTION. The default is None.
-        colors : Iterable | Any, optional
-            Colors for graph. The default is None.
         title : Optional[str], optional
             Text to display as title. The default is None.
         legend : Optional[bool], optional
             Whether to include a legend. The default is True.
-        size : int, optional
-            Size of graph markers. Default = 5. The default is 5.
         marker : str, optional
             Shape of marker. The default is 'o'.
-        alpha : Optional[int], optional
-            Alpha of markers. The default is 1.
-        conf_interv : Optional[bool], optional
-            Whether to plot ellipse confidence intervals.
-            The default is False.
         savefig : Optional[bool], optional
             Alternative location to save. The default is None.
         msg : Optional[str], optional
@@ -140,78 +178,53 @@ class Plot:
         Returns
         -------
         None
-
         """
-        set_pub()
-
-        if "colors" in df.columns:
-            colors = df.pop("colors")
-
-        fig = plt.figure()
-        fig.set_dpi(self.dpi)
-
-        x = df.iloc[:, 0]
-        y = df.iloc[:, 1]
-        ax = ax or fig.gca()
-
-        ax.set_xlabel(df.columns[0], weight="bold")
-        ax.set_ylabel(df.columns[1], weight="bold")
-        ax.patch.set_facecolor = "white"
+        numcols = '3d' if self.data.shape[1] > 2 else 'rectilinear'
+        fig = plt.figure(
+            figsize=(3, 3),
+            frameon=False,
+            facecolor=facecolor,
+            edgecolor=facecolor
+        )
+        ax = plt.axes(projection=numcols)
+        ax = self.get_axis_labels(ax)
+        ax.set_facecolor = "w"
+        ax.patch.set_facecolor('w')
         ax.scatter(
-            x,
-            y,
-            c=colors,
-            s=size,
+            *self.get_axis_points(),
+            c=self.colors,
             marker=marker,
-            alpha=alpha,
             facecolor=facecolor,
             **kwargs,
         )
-
-        df.reset_index(drop=True, inplace=True)
-        colors.reset_index(drop=True, inplace=True)
-
-        if conf_interv:
-            for color in np.unique(colors):
-                _df = df.loc[(df["colors"] == color)]
-                gr_func.confidence_ellipse(
-                    _df.iloc[:, 0],
-                    _df.iloc[:, 1],
-                    ax,
-                    facecolor=color,
-                    edgecolor="k",
-                    linestyle="--",
-                    linewidth=2,
-                    alpha=0.08,
-                )
         if title:
             ax.set_title(f"{title}", fontweight="bold")
         if legend:
-            proxy, label = gr_func.get_handles(
-                self.color_dict, marker="o", markersize=size, alpha=1
-            )
+            proxy, label = gr_func.get_handles_from_dict(self.color_dict)
             ax.legend(
                 handles=proxy,
                 labels=label,
-                loc="lower right",
-                prop={"size": 6},
+                prop={"size": 5},
                 bbox_to_anchor=(1.05, 1),
-                ncol=2,
+                ncol=1,
                 numpoints=1,
+                facecolor=ax.get_facecolor(),
+                edgecolor='w'
             )
-
+        plt.tight_layout()
         plt.show()
         if savefig:
             fig.savefig(
                 self.save_dir + f"/{title}_{msg}.png",
                 bbox_inches=bbox_inches,
                 dpi=self.dpi,
-                facecolor=self.facecolor,
+                facecolor=fig.get_facecolor(),
+                edgecolor=None
             )
-        return None
+        return fig
 
     @staticmethod
-    def skree(variance: np.ndarray, title: str = "") -> None:
+    def skree(variance: Sized, title: str = "") -> plt.figure:
         """
         Line chart skree plot.
 
@@ -228,10 +241,12 @@ class Plot:
             DESCRIPTION.
         """
         lab = np.arange(len(variance)) + 1
-        plt.plot(lab, variance, "o-", linewidth=2, color="blue")
-        plt.title(f"{title}" + "Scree Plot")
-        plt.xlabel("Principal Component")
-        plt.ylabel("Variance Explained (%)")
+        fig, ax = plt.subplot(111)
+        ax.plot(lab, variance, "o-", linewidth=2, color="blue")
+        ax.set_xticks(np.arange(0, lab[-1], 1.0))
+        ax.set_title(f"{title}" + "Scree Plot")
+        ax.set_xlabel("Principal Component")
+        ax.set_ylabel("Variance Explained (%)")
         leg = plt.legend(
             ["Eigenvalues from SVD"],
             loc="best",
@@ -242,177 +257,41 @@ class Plot:
         )
         leg.get_frame().set_alpha(1)
         plt.show()
+        return fig
 
-        return None
-
-    def scatter_3d(
-        self,
-        df: pd.DataFrame = None,
-        color_dict: dict = None,
-        color: pd.Series = None,
-        title: Optional[str] = None,
-        size: int = 5,
-        marker: str = "o",
-        alpha: int = 1,
-        conf_interv: bool = True,
-        savefig: Optional[bool] = False,
-        msg: Optional[str] = None,
-        caption: Optional[str] = None,
-        dpi: int = 500,
-        bbox_inches: str = "tight",
-        facecolor: str = "white",
-    ) -> None:
-        """
-        Plot 3D scatter plot with matplotlib.
-
-        Parameters
-        ----------
-        df : pd.DataFrame, optional
-            Input data for scatter plot. The default is None.
-        color_dict : dict, optional
-            Colors for graph. The default is None.
-        color : pd.Series, optional
-            Colors for each scatter point. The default is None.
-        title : Optional[str], optional
-            Text to display as title. The default is None.
-        size : int, optional
-            Size of graph markers. The default is 5.
-        marker : str, optional
-            Shape of marker. The default is 'o'.
-        alpha : int, optional
-            Alpha of markers. The default is 1.
-        conf_interv : Optional[bool], optional
-            Whether to plot ellipse confidence intervals.
-            The default is False.
-        savefig : Optional[bool], optional
-            Alternative location to save. The default is None.
-        msg : Optional[str], optional
-            Message to include if save_dir is given. The default is 'nomsg'.
-        bbox_inches : str, optional
-            Whitespace surrounding graphs. The default is 'tight'.
-        facecolor : str, optional
-            Color of background. The default is 'white'.
-
-        Returns
-        -------
-        None
-            DESCRIPTION.
-        """
-
-        assert isinstance(df, pd.DataFrame)
-
-        if "colors" in df.columns:
-            self.colors = df.pop("colors")
-
-        color = self.colors
-        fig = plt.figure()
-        fig.set_dpi(300)
-
-        x = df.iloc[:, 0]
-        y = df.iloc[:, 1]
-        z = df.iloc[:, 2]
-
-        ax = fig.add_subplot(projection="3d")
-        ax.set_xlabel(df.columns[0], weight="bold")
-        ax.set_ylabel(df.columns[1], weight="bold")
-        ax.set_zlabel(df.columns[2], weight="bold")
-
-        ax.patch.set_facecolor = "white"
-
-        ax.scatter(
-            x, y, z, c=color, s=size, marker=marker, alpha=alpha, facecolor="white"
-        )
-
-        df.reset_index(drop=True, inplace=True)
-        color.reset_index(drop=True, inplace=True)
-
-        if conf_interv:
-            for color in np.unique(color):
-                _df = df.loc[(df["colors"] == color)]
-
-                gr_func.confidence_ellipse(
-                    _df.iloc[:, 0],
-                    _df.iloc[:, 1],
-                    ax,
-                    facecolor=color,
-                    edgecolor="k",
-                    linestyle="--",
-                    linewidth=2,
-                    alpha=0.08,
-                )
-
-        ax.set_title(f"{title}", fontweight="bold")
-
-        proxy, label = gr_func.get_handles(
-            color_dict, marker="o", markersize=5, alpha=1
-        )
-        ax.grid(linewidth=0.1)
-        ax.legend(
-            handles=proxy,
-            labels=label,
-            loc="lower right",
-            prop={"size": 6},
-            bbox_to_anchor=(1.05, 1),
-            ncol=2,
-            numpoints=1,
-        )
-
-        if caption:
-            fig.text(0, -0.03, caption, fontstyle="italic", fontsize="small")
-
-        plt.show()
-        if savefig:
-            fig.savefig(
-                self.save_dir + f"/{msg}_{title}.png",
-                bbox_inches=bbox_inches,
-                dpi=500,
-                facecolor=self.facecolor,
-            )
-            logging.info(
-                f"Fig saved to {self.save_dir}: {bbox_inches}, {dpi}, {facecolor}"
-            )
-
-        return None
-
-    def plot_3d_ani(
-        self,
-        session: str,
-        df: pd.DataFrame,
-        color_dict: dict,
-        size: int = 5,
-        marker: str = "o",
-        alpha: int = 1,
-    ) -> None:
+    def scatter_animated(
+            self,
+            url: str = r"C:\Users\flynn\Desktop\figs\temp.mp4",
+            size: int = 5,
+            marker: str = "o",
+            alpha: int = 1,
+    ) -> HTML:
         """
             Animated 3D Scatter plot.
             Plot gets saved to a temporary html file (location provided by save_dir).
-    
             Args:
-                session (str): Animal and date of recording.
-                df (DataFrame): Scaled, normalized matrix with loading scores.
-                color_dict (dict): Colors for graph.
+                url (str): Save location.
                 size (int): Size of graph markers. Default = 5.
                 marker (str): Shape of marker. Default is circle.
                 alpha (int): Alpha of markers.
 
             Returns:
                 None
-    
         """
-        x = df.iloc[:, 0]
-        y = df.iloc[:, 1]
-        z = df.iloc[:, 2]
-
         fig = plt.figure()
         ax = fig.gca(projection="3d")
 
-        ax.set_xlabel("PC1")
-        ax.set_ylabel("PC2")
-        ax.set_zlabel("PC3")
-        ax.set_title("{}".format(session) + " " + "PCA")
-        ax.scatter(x, y, z, c=self.colors, s=size, marker=marker, alpha=alpha)
+        numcols = '3d' if self.data.shape[1] > 2 else 'rectilinear'
+        fig = plt.figure(dpi=self.dpi, frameon=True, facecolor='white', projection=numcols)
+        ax = plt.axes(projection=numcols)
+        ax = self.get_axis_labels(ax)
+        ax.set_title("3D - PCA")
+        ax.scatter(
+            *self.get_axis_points(),
+            c=self.colors,
+            s=size, marker=marker, alpha=alpha)
 
-        proxy, label = gr_func.get_handles(color_dict)
+        proxy, label = gr_func.get_handles_from_dict(self.color_dict)
         ax.legend(
             handles=proxy,
             labels=label,
@@ -424,7 +303,7 @@ class Plot:
         )
 
         def init():
-            ax.plot(x, y, z, linewidth=0, antialiased=False)
+            ax.plot(*self.get_axis_points(), linewidth=0, antialiased=False)
             return (fig,)
 
         def animate(i):
@@ -436,25 +315,21 @@ class Plot:
         )
 
         data = HTML(ani.to_html5_video())
-        with open("/Users/flynnoconnell/Pictures", "wb") as f:
+        with open(f'{url}', "wb") as f:
             f.write(data.data.encode("UTF-8"))
-
-        url = self.save_dir
         webbrowser.open(url, new=2)
-
-        return None
+        return data
 
     @staticmethod
     def confusion_matrix(
-        y_pred,
-        y_true,
-        labels: list,
-        xaxislabel: Optional[str] = None,
-        yaxislabel: Optional[str] = None,
-        caption: Optional[str] = "",
+            y_pred,
+            y_true,
+            labels: list,
+            xaxislabel: Optional[str] = None,
+            yaxislabel: Optional[str] = None,
+            caption: Optional[str] = "",
     ) -> np.array:
         """
-        
 
         Parameters
         ----------
@@ -477,13 +352,7 @@ class Plot:
             DESCRIPTION.
 
         """
-
-        import seaborn as sns
-
-        sns.set()
         from sklearn.metrics import confusion_matrix
-
-        set_pub()
         mat = confusion_matrix(y_pred, y_true)
         sns.heatmap(
             mat.T,

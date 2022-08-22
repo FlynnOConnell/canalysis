@@ -7,7 +7,7 @@ Module (graph): General functions for graphing.
 """
 from __future__ import annotations
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Iterable, Sized
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,9 +26,9 @@ def get_x_axis(df: pd.DataFrame):
     return np.arange(0, data.shape[0], 0.1)
 
 
-def get_handles(
+def get_handles_from_dict(
     color_dict: dict,
-    marker: Optional[str] = None,
+    marker: Optional[str] = 'o',
     linestyle: Optional[int] = "none",
     **kwargs
 ) -> Tuple[list, list]:
@@ -57,6 +57,54 @@ def get_handles(
         label.append(t)
     return proxy, label
 
+
+def get_handles_from_iterables(
+    iterable_color: Iterable[Sized],
+    iterable_event: Iterable[Sized],
+    marker: Optional[str] = None,
+    linestyle: Optional[int] = "none",
+    **kwargs
+) -> Tuple[list, list]:
+    """
+    Get matplotlib handles for input dictionary.
+    Args:
+        iterable_color (Iterable): Iterable of colors to zip.
+        iterable_event (Iterable): Iterable of events to zip.
+        linestyle (str): Connecting lines, default = none.
+        marker (str): Shape of scatter point, default is circle.
+    Returns:
+        proxy (list): matplotlib.lines.line2D appended list.
+        label (list): legend labels for each proxy.
+    """
+    proxy, label = [], []
+    for t in np.unique(iterable_color):
+        proxy.append(
+            lines.Line2D(
+                [0],
+                [0],
+                marker=marker,
+                markerfacecolor=t,
+                linestyle=linestyle,
+                **kwargs
+            )
+        )
+        label.append(t)
+    return proxy, label
+
+
+# if conf_interv:
+#     for color in np.unique(self.colors):
+#         _df = df.loc[(df["colors"] == color)]
+#         gr_func.confidence_ellipse(
+#             _df.iloc[:, 0],
+#             _df.iloc[:, 1],
+#             ax,
+#             facecolor=color,
+#             edgecolor="k",
+#             linestyle="--",
+#             linewidth=2,
+#             alpha=0.08,
+#        )
 
 def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs):
     """

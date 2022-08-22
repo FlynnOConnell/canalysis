@@ -101,3 +101,17 @@ class MatchError(Exception):
             return "{0} ".format(self.message)
         else:
             return "Time to match (match) larger than iterable to match to, likely wrong order of match/time."
+
+
+class PCAError(Exception):
+    def __init__(self, *args):
+        if args:
+            self.message = args[0]
+        else:
+            self.message = None
+
+    def __str__(self):
+        if self.message:
+            return "{0} ".format(self.message)
+        else:
+            return "DataFrame not properly set, missing column for 'colors' or 'events' .. "

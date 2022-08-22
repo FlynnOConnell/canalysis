@@ -14,8 +14,6 @@ from typing import ClassVar, Optional, Generator, Iterable
 import pandas as pd
 import numpy as np
 
-# matplotlib.use('Qt4Agg')
-from scipy import stats
 from .all_data import AllData
 from .trace_data import TraceData
 from .taste_data import TasteData
@@ -25,7 +23,6 @@ from .data_utils.file_handler import FileHandler
 from graphs.graph_utils import Mixins
 from utils import excepts as e
 from utils import funcs
-
 logger = logging.getLogger(__name__)
 
 
@@ -49,16 +46,18 @@ class CalciumData(Mixins.CalPlots):
     alldata: ClassVar[AllData] = AllData.Instance()
 
     def __post_init__(self):
+
+        # Instance info
         self.date = self.filehandler.date
         self.animal = self.filehandler.animal
         self.data_dir = self.filehandler.directory
         self.session = self.filehandler.session
 
-        # Core
+        # Core data
         self.tracedata: TraceData = self._set_tracedata()
         self.eventdata: EventData = self._set_eventdata()
         if self.filehandler.eatingname is not None:
-            self.eating_data = self._set_eatingdata()
+            self.eating_data: EatingData = self._set_eatingdata()
 
         self.nr_avgs = self._get_nonreinforced_means()
         self._authenticate()
@@ -102,7 +101,7 @@ class CalciumData(Mixins.CalPlots):
         if not isinstance(self.eventdata, EventData):
             raise e.DataFrameError("Event data must be a dataframe.")
         if not any(
-            x in self.tracedata.signals.columns for x in ["C0", "C00", "C000", "C0000"]
+                x in self.tracedata.signals.columns for x in ["C0", "C00", "C000", "C0000"]
         ):
             logging.debug(f"{self.tracedata.signals.head()}")
             raise AttributeError(
@@ -115,7 +114,7 @@ class CalciumData(Mixins.CalPlots):
         if self.keys_exist(my_dict, self.animal, self.date):
             logging.info(f"{self.animal}-{self.date} already exist.")
         elif self.keys_exist(my_dict, self.animal) and not self.keys_exist(
-            my_dict, self.date
+                my_dict, self.date
         ):
             my_dict[self.animal][self.date] = self
             logging.info(f"{self.animal} exists, {self.date} added.")
@@ -124,11 +123,19 @@ class CalciumData(Mixins.CalPlots):
             logging.info(f"{self.animal} and {self.date} added")
         return None
 
-    @staticmethod
-    def reorder(df: pd.DataFrame, cols: list):
-        return df[cols]
+    def reorder(
+            self,
+            cols: list
+    ) -> None:
+        self.tracedata.signals = self.tracedata.signals[cols]
+        cols.append('time')
+        self.tracedata.tracedata = self.tracedata.tracedata[cols]
+        self.tracedata.zscores = self.tracedata.zscores[cols]
+        return None
 
-    def _get_nonreinforced_means(self) -> dict:
+    def _get_nonreinforced_means(
+            self,
+    ) -> dict:
         """
         Get a dictionary (Cell: mean) of means for non-reinforced lick events.
         Returns
@@ -147,11 +154,19 @@ class CalciumData(Mixins.CalPlots):
             avgs[column] = mean
         return avgs
 
-    def get_signal_bycell(self, i):
+    def get_signal_bycell(
+            self,
+            i
+    ) -> list[pd.Series]:
         """return a list of signal values via cell integer indexing (0 through N cells"""
         return list(self.tracedata.signals.iloc[:, i])
 
-    def get_signal_bytime(self, start, stop, zscores: bool = True):
+    def get_signal_bytime(
+            self,
+            start,
+            stop,
+            zscores: bool = True
+    ) -> pd.DataFrame:
         """
         Fetch signals between two timepoints.
         Parameters
@@ -174,12 +189,13 @@ class CalciumData(Mixins.CalPlots):
         else:
             return self.tracedata.tracedata.iloc[start:stop]
 
-    def get_eating_signals(self,) -> Generator[Iterable, None, None]:
+    def get_entry_eating_signals(
+            self,
+    ) -> Generator[Iterable, None, None]:
         data = self.eating_data.eatingdata.to_numpy()
-        size = len(data)
         counter = 0
         for index, x in (enumerate(data)):
-            if index > (len(data)-2):
+            if index > (len(data) - 2):
                 break
             if x[0] == 'Entry':
                 counter += 1
@@ -197,7 +213,7 @@ class CalciumData(Mixins.CalPlots):
                     )
                     signal = (self.tracedata.zscores.iloc[
                               entry_start:eating_end]).drop(columns=['time'])
-                    yield signal, counter, entry_start, entry_end, eating_end
+                    yield signal, x[0], counter, entry_start, entry_end, eating_end
 
                 elif data[nxt][0] == 'Eating' and data[nxt2][0] == 'Eating':
                     entry_start = funcs.get_matched_time(
@@ -211,5 +227,17 @@ class CalciumData(Mixins.CalPlots):
                     )
                     signal = (self.tracedata.zscores.iloc[
                               entry_start:eating_end]).drop(columns=['time'])
-                    yield signal, counter, entry_start, entry_end, eating_end
+                    yield signal, x[0], counter, entry_start, entry_end, eating_end
 
+    def get_eating_signals(
+            self,
+    ) -> Generator[Iterable, None, None]:
+        data = self.eating_data.eatingdata.to_numpy()
+        for x in data:
+            signal = (self.tracedata.zscores.iloc[
+                      funcs.get_matched_time(
+                          self.tracedata.time, x[1], return_index=True, single=True
+                      ):funcs.get_matched_time(
+                          self.tracedata.time, x[2], return_index=True, single=True
+                      )]).drop(columns=['time'])
+            yield signal, x[0]

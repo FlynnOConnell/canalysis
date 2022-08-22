@@ -7,41 +7,32 @@ Module(analysis): Stats class for PCA and general statistics/output.
 """
 from __future__ import annotations
 
-import logging
-from typing import Optional, Iterable, Generator
+from typing import Optional, Iterable, Generator, Any, ClassVar
 
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
-from scipy.stats import stats
-
-from data.calcium_data import CalciumData
 from graphs.heatmaps import Heatmap
 from utils import funcs
-from .analysis_utils import analysis_funcs
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
+from .analysis_utils import ca_pca
+from .analysis_utils.analysis_funcs import map_colors
 
 
 class ProcessData:
-    def __init__(self, data, outpath=None):
-        assert isinstance(data, CalciumData)
-        self.outpath = outpath
-        if isinstance(outpath, str):
-            self.outpath = Path(outpath)
-        self.data = data
-        self.signals = data.tracedata.signals
-        self.zscores = data.tracedata.zscores
-        self.time = data.tracedata.time
-        self.cells = data.tracedata.cells
-        self.avgs = data.nr_avgs
-        self.session = data.filehandler.session
-        self.trial_times = data.eventdata.trial_times
-        self.timestamps = data.eventdata.timestamps
+    def __init__(self, data,):
+        self.data: ClassVar = data
+        self.signals: pd.DataFrame = data.tracedata.signals
+        self.zscores: pd.DataFrame = data.tracedata.zscores
+        self.time: pd.Series | Iterable[Any] = data.tracedata.time
+        self.cells: Iterable[Any] = data.tracedata.cells
+        self.avgs: dict = data.nr_avgs
+        self.session: str = data.filehandler.session
+        self.trial_times: dict = data.eventdata.trial_times
+        self.timestamps: dict = data.eventdata.timestamps
         self.antibouts = self.get_antibouts()
         self.sponts = self.get_sponts()
-
+        self.remapped = None
+        self.ca_pca: ClassVar | None = None
 
     def get_antibouts(self) -> pd.DataFrame | pd.Series:
         antibouts = pd.DataFrame()
@@ -57,8 +48,9 @@ class ProcessData:
             sponts = pd.concat([sponts, df], axis=0)
         return sponts
 
-
-    def get_taste_df(self) -> Generator[Iterable, None, None]:
+    def get_taste_df(
+            self
+    ) -> Generator[Iterable, None, None]:
         signals = self.zscores.copy().drop("time", axis=1)
         for cell in signals:
             signals[cell] = signals[cell] - self.avgs[cell]
@@ -72,7 +64,6 @@ class ProcessData:
                 ]
                 signal = signals.iloc[data_ind, :]
                 yield stim, iteration, signal
-
 
     def loop_taste(
             self,
@@ -93,12 +84,12 @@ class ProcessData:
             yield hm
 
     def loop_eating(
-        self,
-        save_dir: Optional[str] = "",
-        cols: list = None,
-        **kwargs
+            self,
+            save_dir: Optional[str] = "",
+            cols: list = None,
+            **kwargs
     ) -> Generator[Iterable, None, None]:
-        for signal, counter, starttime, middle, endtime in self.data.get_eating_signals():
+        for signal, _, counter, starttime, middle, endtime in self.data.get_eating_signals():
             for cell in signal:
                 signal[cell][signal[cell] < 0] = 0
             xlabel = (endtime - starttime) * 0.1
@@ -110,27 +101,32 @@ class ProcessData:
                 cm="plasma",
                 save_dir=save_dir,
                 _id=f"{counter}",
-                line_loc=middle-starttime,
+                line_loc=middle - starttime,
                 **kwargs,
             ).single(signal.T)
             yield hm
 
-    def get_event_df(self,):
+    def get_event_df(
+            self,
+    ) -> pd.DataFrame:
         df_eating = pd.DataFrame()
         df_entry = pd.DataFrame()
         df_grooming = pd.DataFrame()
-        for signal, event, _, _ in self.data.get_eating_signals():
+        for signal, event in self.data.get_eating_signals():
             if event == "Grooming":
                 df_grooming = pd.concat([df_grooming, signal], axis=0)
-                df_grooming['event'] = 'grooming'
+                df_grooming['events'] = 'grooming'
             if event == "Entry":
                 df_entry = pd.concat([df_entry, signal], axis=0)
-                df_entry['event'] = 'entry'
+                df_entry['events'] = 'entry'
             if event == 'Eating':
-                pd.concat([df_eating, signal], axis=0)
-                df_eating['event'] = 'eating'
+                df_eating = pd.concat([df_eating, signal], axis=0)
+                df_eating['events'] = 'eating'
         return pd.concat([df_eating, df_grooming, df_entry], axis=0)
 
-    def get_pca(self,):
-        df_pca = analysis_funcs.principal_components(self.data.tracedata.signals)
-        
+    def get_pca(self):
+        data = self.get_event_df()
+        data_events = data.pop('events')
+        data_colors = map_colors(data_events)
+        pca = ca_pca.CaPrincipalComponentsAnalysis(data=data, events=data_events, colors=data_colors,)
+        return pca

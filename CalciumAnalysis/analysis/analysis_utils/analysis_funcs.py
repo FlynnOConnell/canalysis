@@ -8,55 +8,26 @@ Module(analysis_utils): Functions to assist in data analysis
 from __future__ import annotations
 
 import logging
-from typing import Optional, Any
-
+from typing import Optional, Any, Iterable
 import numpy as np
-from numpy import ndarray
 import pandas as pd
-
-from pandas import DataFrame
 from scipy.stats import stats
-from data.calcium_data import CalciumData
-from graphs.heatmaps import Heatmap
 from utils import funcs
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 
 
-def principal_components(
-    df: pd.DataFrame, numcomp: Optional[int] = 2
-) -> tuple[DataFrame, Any]:
+def map_colors(
+        iterable: Iterable[Any],
+        colors_dict: dict = None
+) -> list:
     """
-    Function to perform PCA on supplied dataframe. DataFrame is scaled using
-    sklearn.preprocessing.StandardScaler. Data assumed to be columnwise.
-
+    Given dataframe and dictionary, maps value of dictionary to event of dataframe column.
     Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame to perform PCA.
-    numcomp : int, default = 2
-        Number of components.
-
-    Returns
-    -------
-    df_ns : pd.DataFrame
-        DataFrame of the components with each column being a component.
-    variance_explained : Any
-        Label of varience explained by each component.
     """
-    data = StandardScaler().fit_transform(df)
-    pca = PCA(n_components=numcomp)
-    data_fit = pca.fit_transform(data)
-    variance_explained = np.round(pca.explained_variance_ratio_ * 100, decimals=1)
-    labels = [
-        "PC" + str(x) + f" - {variance_explained[x - 1]}%"
-        for x in range(1, len(variance_explained) + 1)
-    ]
-    df_ns = pd.DataFrame(data_fit, columns=labels)
-
-    return df_ns, variance_explained
-
-
+    if not colors_dict:
+        colors_dict = {'grooming': 'green',
+                       'entry': 'blue',
+                       'eating': 'red'}
+    return [colors_dict[x] for x in iterable]
 
 
 # def get_stats(self) -> pd.DataFrame | None:
@@ -181,4 +152,3 @@ def principal_components(
 #         return None
 #     else:
 #         return stats_df
-

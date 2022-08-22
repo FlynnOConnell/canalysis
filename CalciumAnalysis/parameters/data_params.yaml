@@ -38,3 +38,12 @@ DECODER:
     MSG : [1, 4]
     Citric : [1, 2, 3]
 
+# For Plots.
+PLOTS:
+  # FFMPEG is used for interactive / 3d plots. For guide on downloading:
+  # https://stackoverflow.com/questions/13316397/matplotlib-animation-no-moviewriters-available
+  # https://suryadayn.medium.com/error-requested-moviewriter-ffmpeg-not-available-easy-fix-9d1890a487d3
+  # download from: https://ffmpeg.org/download.html
+  FFMPEG : 'C:\ProgramData\Anaconda3\envs\cax\Library\bin\ffmpeg'
+  SaveDir : 'C:\Users\dilorenzo\Desktop\CalciumPlots\'
+

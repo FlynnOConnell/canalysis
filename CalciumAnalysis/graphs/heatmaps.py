@@ -110,7 +110,11 @@ class Heatmap(object):
             my_heatmap.single(data)
         """
 
-    def nested(self, data_dict: dict, **axargs):
+    def nested(
+            self,
+            data_dict: dict,
+            **axargs
+    ):
         """
         Plot multiple heatmaps from a nested dictionary. One heatmap for each dict.key, with the heatmap title
         corresponding to that key. Within each key is a pandas DataFrame containing the heatmap data.
@@ -161,7 +165,11 @@ class Heatmap(object):
                 )
             return fig
 
-    def columnwise(self, df: pd.DataFrame, axs: object = None):
+    def columnwise(
+            self,
+            df: pd.DataFrame,
+            axs: object = None
+    ):
         """
         Plot heatmap with colorbar normalized for each individual column. Because of
         this, pre-stimulus activity may show high values.

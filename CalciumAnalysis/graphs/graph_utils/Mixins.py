@@ -280,3 +280,4 @@ class CalPlots:
         if save_dir:
             plt.savefig(str(save_dir) + ".png", bbox_inches="tight", dpi=600)
         return None
+

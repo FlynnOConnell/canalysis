@@ -64,8 +64,16 @@ def keys_exist(element, *keys):
     return True
 
 
+def reorder_cols(df: pd.DataFrame, cols: list):
+    return df[cols]
+
+
 @typecheck(dict, int)
 def iter_events(event_dct, gap: int = 5):
+    """
+    Given an interval 'gap',
+    iterate through a dictionary and generate an interval (start, stop) return value.
+    """
     for event, ts in event_dct.items():
         intervals = interval(ts, gap)
         interv: Iterable
