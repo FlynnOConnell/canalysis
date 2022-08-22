@@ -200,7 +200,7 @@ class ScatterPlots(CalPlot):
         if title:
             ax.set_title(f"{title}", fontweight="bold")
         if legend:
-            proxy, label = gr_func.get_handles_from_dict(self.color_dict)
+            proxy, label = gr_func.get_handles_from_iterables(self.color_dict, self.colors)
             ax.legend(
                 handles=proxy,
                 labels=label,
