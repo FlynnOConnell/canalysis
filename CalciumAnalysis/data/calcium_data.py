@@ -12,17 +12,17 @@ from dataclasses import dataclass, field
 from typing import ClassVar, Optional, Generator, Iterable
 
 import pandas as pd
-import numpy as np
 
-from .all_data import AllData
-from .trace_data import TraceData
-from .taste_data import TasteData
-from .event_data import EventData
-from .eating_data import EatingData
-from .data_utils.file_handler import FileHandler
+from data.all_data import AllData
+from data.trace_data import TraceData
+from data.taste_data import TasteData
+from data.event_data import EventData
+from data.eating_data import EatingData
+from data.data_utils.file_handler import FileHandler
 from graphs.graph_utils import Mixins
 from utils import excepts as e
 from utils import funcs
+
 logger = logging.getLogger(__name__)
 
 
@@ -57,7 +57,10 @@ class CalciumData(Mixins.CalPlots):
         self.tracedata: TraceData = self._set_tracedata()
         self.eventdata: EventData = self._set_eventdata()
         if self.filehandler.eatingname is not None:
-            self.eating_data: EatingData = self._set_eatingdata()
+            self.eatingdata: EatingData = EatingData(
+                self.filehandler,
+                self.tracedata,
+            )
 
         self.nr_avgs = self._get_nonreinforced_means()
         self._authenticate()
@@ -93,7 +96,11 @@ class CalciumData(Mixins.CalPlots):
         return EventData(self.filehandler, self.color_dict)
 
     def _set_eatingdata(self) -> EatingData:
-        return EatingData(self.filehandler, self.adjust)
+        return EatingData(
+            self.tracedata,
+            self.filehandler,
+            self.adjust,
+        )
 
     def _authenticate(self):
         if not isinstance(self.tracedata, TraceData):
@@ -101,7 +108,8 @@ class CalciumData(Mixins.CalPlots):
         if not isinstance(self.eventdata, EventData):
             raise e.DataFrameError("Event data must be a dataframe.")
         if not any(
-                x in self.tracedata.signals.columns for x in ["C0", "C00", "C000", "C0000"]
+                x in self.tracedata.signals.columns for x in
+                ["C0", "C00", "C000", "C0000"]
         ):
             logging.debug(f"{self.tracedata.signals.head()}")
             raise AttributeError(
@@ -188,56 +196,3 @@ class CalciumData(Mixins.CalPlots):
             return self.tracedata.zscores.iloc[start:stop]
         else:
             return self.tracedata.tracedata.iloc[start:stop]
-
-    def get_entry_eating_signals(
-            self,
-    ) -> Generator[Iterable, None, None]:
-        data = self.eating_data.eatingdata.to_numpy()
-        counter = 0
-        for index, x in (enumerate(data)):
-            if index > (len(data) - 2):
-                break
-            if x[0] == 'Entry':
-                counter += 1
-                nxt = index + 1
-                nxt2 = index + 2
-                if data[nxt][0] == 'Eating' and data[nxt2][0] == 'Entry':
-                    entry_start = funcs.get_matched_time(
-                        self.tracedata.time, x[1], return_index=True, single=True
-                    )
-                    entry_end = funcs.get_matched_time(
-                        self.tracedata.time, x[2], return_index=True, single=True
-                    )
-                    eating_end = funcs.get_matched_time(
-                        self.tracedata.time, data[nxt][2], return_index=True, single=True
-                    )
-                    signal = (self.tracedata.zscores.iloc[
-                              entry_start:eating_end]).drop(columns=['time'])
-                    yield signal, x[0], counter, entry_start, entry_end, eating_end
-
-                elif data[nxt][0] == 'Eating' and data[nxt2][0] == 'Eating':
-                    entry_start = funcs.get_matched_time(
-                        self.tracedata.time, x[1], return_index=True, single=True
-                    )
-                    entry_end = funcs.get_matched_time(
-                        self.tracedata.time, x[2], return_index=True, single=True
-                    )
-                    eating_end = funcs.get_matched_time(
-                        self.tracedata.time, data[nxt2][2], return_index=True, single=True
-                    )
-                    signal = (self.tracedata.zscores.iloc[
-                              entry_start:eating_end]).drop(columns=['time'])
-                    yield signal, x[0], counter, entry_start, entry_end, eating_end
-
-    def get_eating_signals(
-            self,
-    ) -> Generator[Iterable, None, None]:
-        data = self.eating_data.eatingdata.to_numpy()
-        for x in data:
-            signal = (self.tracedata.zscores.iloc[
-                      funcs.get_matched_time(
-                          self.tracedata.time, x[1], return_index=True, single=True
-                      ):funcs.get_matched_time(
-                          self.tracedata.time, x[2], return_index=True, single=True
-                      )]).drop(columns=['time'])
-            yield signal, x[0]
