@@ -31,7 +31,6 @@ class ProcessData:
         self.timestamps: dict = data.eventdata.timestamps
         self.antibouts = self.get_antibouts()
         self.sponts = self.get_sponts()
-        self.remapped = None
         self.ca_pca: ClassVar | None = None
 
     def get_antibouts(self) -> pd.DataFrame | pd.Series:
@@ -65,6 +64,7 @@ class ProcessData:
                 signal = signals.iloc[data_ind, :]
                 yield stim, iteration, signal
 
+    # TO TASTEDATA
     def loop_taste(
             self,
             save_dir: Optional[str] = "",
@@ -106,9 +106,14 @@ class ProcessData:
             ).single(signal.T)
             yield hm
 
+    # TO EATINGDATA
     def get_event_df(
             self,
     ) -> pd.DataFrame:
+        """
+        Return a dataframe of eating, grooming and entry events.
+        Containes 'events' column.
+        """
         df_eating = pd.DataFrame()
         df_entry = pd.DataFrame()
         df_grooming = pd.DataFrame()
@@ -124,9 +129,4 @@ class ProcessData:
                 df_eating['events'] = 'eating'
         return pd.concat([df_eating, df_grooming, df_entry], axis=0)
 
-    def get_pca(self):
-        data = self.get_event_df()
-        data_events = data.pop('events')
-        data_colors = map_colors(data_events)
-        pca = ca_pca.CaPrincipalComponentsAnalysis(data=data, events=data_events, colors=data_colors,)
-        return pca
+
