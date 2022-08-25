@@ -66,7 +66,7 @@ class EatingData:
                       funcs.get_matched_time(
                           self.tracedata.time, x[1], return_index=True, single=True
                       ):funcs.get_matched_time(
-                          self.tracedata.time.time, x[2], return_index=True, single=True
+                          self.tracedata.time, x[2], return_index=True, single=True
                       )]).drop(columns=['time'])
             yield signal, x[0]
 

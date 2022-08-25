@@ -1,19 +1,17 @@
 
 # Load a single session
 SESSION:
-  animal: 'PGT08'
-  date: '071621'                # for single day analysis
+  animal: 'PGT13'
+  date: '052622'                # for single day analysis
   dates: ['070121, 071621']     # iterate for multi-day analysis
 
-DIRS:
-  ms : 'A:\'
-  HOME: 'C:\Users\flynn\repos\CalciumAnalysis\datasets'
-  osx: '/users/flynnoconnell/work/data'
+DIRECTORY:
+  data : 'A:\'
   save: './Desktop'
 
 # Names used in pattern matching to distinguish files
 FILENAMES:
-  traces: 'traces'
+  traces: 'traces3'
   events: 'processed'
   gpio: 'gpio.csv'
 
@@ -27,6 +25,11 @@ COLORS:
     Quinine : red
     Rinse : lightsteelblue
     Lick : darkgray
+    Peanut: darkorange
+    Chocolate: saddlebrown
+    Eating: blue
+    Grooming: slategray
+    Entry: lime
 
 # For GPIO ports 1-4. Value indicates GPIO number.
 DECODER:

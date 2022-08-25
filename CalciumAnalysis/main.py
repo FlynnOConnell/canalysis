@@ -7,24 +7,16 @@ Module: Main code execution.
         Note: Neural network requires separate main.py in neuralnetwork subpackage.
 """
 from __future__ import annotations
-
 import logging
-
-import numpy as np
-
+import pandas as pd
+import faulthandler
+import data
 from data.calcium_data import CalciumData
-
 from data.data_utils.file_handler import FileHandler
 from data.taste_data import TasteData
 from analysis.process_data import ProcessData
-from graphs.plot import ScatterPlots
-from analysis.analysis_utils.analysis_funcs import map_colors
-from analysis.analysis_utils import ca_pca
-import pandas as pd
-import faulthandler
-from analysis.analysis_utils.analysis_funcs import map_colors
-faulthandler.enable()
 
+faulthandler.enable()
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
@@ -95,8 +87,10 @@ if __name__ == "__main__":
         _animal, _date, _dir, tracename="traces3", eatingname="Scored1"
     )
     data = initialize_data(filehandler, adjust=34)
-    tastedata = data.tastedata
-    eatingdata = data.eatingdata
+
+
+    # tastedata = data.tastedata
+    # eatingdata = data.eatingdata
     # analysis = ProcessData(data)
     # eating_data = analysis.get_event_df()
     # eating_data['colors'] = map_colors(eating_data.pop('events'))
