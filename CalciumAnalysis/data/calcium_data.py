@@ -9,7 +9,7 @@ Module: Classes for data processing.
 from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
-from typing import ClassVar, Optional
+from typing import ClassVar, Optional, Generator, Iterable
 
 import pandas as pd
 
@@ -22,6 +22,8 @@ from data.data_utils.file_handler import FileHandler
 from graphs.graph_utils import Mixins
 from utils import excepts as e
 from utils import funcs
+
+logger = logging.getLogger(__name__)
 
 
 # %%
@@ -50,16 +52,15 @@ class CalciumData(Mixins.CalPlots):
         self.animal = self.filehandler.animal
         self.data_dir = self.filehandler.directory
         self.session = self.filehandler.session
-        self.logger = logging.getLogger(__name__)
+
         # Core data
         self.tracedata: TraceData = self._set_tracedata()
         self.eventdata: EventData = self._set_eventdata()
-        # if self.filehandler.eatingname is not None:
-        #     self.eatingdata: EatingData = EatingData(
-        #         self.filehandler,
-        #         self.tracedata,
-        #     )
-
+        if self.filehandler.eatingname is not None:
+            self.eatingdata: EatingData = EatingData(
+                self.filehandler,
+                self.tracedata,
+            )
         self.nr_avgs = self._get_nonreinforced_means()
         self._authenticate()
 
@@ -87,16 +88,10 @@ class CalciumData(Mixins.CalPlots):
     def tastedata(self, **new_values):
         self._tastedata = TasteData(**new_values)
 
-    def _set_tracedata(self) -> TraceData:
-        return TraceData(self.filehandler)
-
-    def _set_eventdata(self) -> EventData:
-        return EventData(self.filehandler, self.color_dict)
-
     def _set_eatingdata(self) -> EatingData:
         return EatingData(
-            self.tracedata,
             self.filehandler,
+            self.tracedata,
             self.adjust,
         )
 
@@ -109,7 +104,7 @@ class CalciumData(Mixins.CalPlots):
                 x in self.tracedata.signals.columns for x in
                 ["C0", "C00", "C000", "C0000"]
         ):
-            self.logging.debug(f"{self.tracedata.signals.head()}")
+            logging.debug(f"{self.tracedata.signals.head()}")
             raise AttributeError(
                 f"No cells found in DataFrame: " f"{self.tracedata.signals.head()}"
             )
@@ -118,15 +113,15 @@ class CalciumData(Mixins.CalPlots):
     def _add_instance(self):
         my_dict = type(self).alldata
         if self.keys_exist(my_dict, self.animal, self.date):
-            self.logging.info(f"{self.animal}-{self.date} already exist.")
+            logging.info(f"{self.animal}-{self.date} already exist.")
         elif self.keys_exist(my_dict, self.animal) and not self.keys_exist(
                 my_dict, self.date
         ):
             my_dict[self.animal][self.date] = self
-            self.logging.info(f"{self.animal} exists, {self.date} added.")
+            logging.info(f"{self.animal} exists, {self.date} added.")
         elif not self.keys_exist(my_dict, self.animal):
             my_dict[self.animal] = {self.date: self}
-            self.logging.info(f"{self.animal} and {self.date} added")
+            logging.info(f"{self.animal} and {self.date} added")
         return None
 
     def reorder(
@@ -152,7 +147,7 @@ class CalciumData(Mixins.CalPlots):
             self.tracedata.time, self.eventdata.nonreinforced
         )
         nr_signal = self.tracedata.zscores.loc[
-            self.tracedata.zscores["time"].isin(ev_time)
+            self.tracedata.zscores["time"].isin(self.eventdata.nonreinforced)
         ].drop("time", axis=1)
         avgs = {}
         for column in nr_signal.columns:

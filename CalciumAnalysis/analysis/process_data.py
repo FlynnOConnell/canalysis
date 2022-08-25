@@ -107,26 +107,6 @@ class ProcessData:
             yield hm
 
     # TO EATINGDATA
-    def get_event_df(
-            self,
-    ) -> pd.DataFrame:
-        """
-        Return a dataframe of eating, grooming and entry events.
-        Containes 'events' column.
-        """
-        df_eating = pd.DataFrame()
-        df_entry = pd.DataFrame()
-        df_grooming = pd.DataFrame()
-        for signal, event in self.data.get_eating_signals():
-            if event == "Grooming":
-                df_grooming = pd.concat([df_grooming, signal], axis=0)
-                df_grooming['events'] = 'grooming'
-            if event == "Entry":
-                df_entry = pd.concat([df_entry, signal], axis=0)
-                df_entry['events'] = 'entry'
-            if event == 'Eating':
-                df_eating = pd.concat([df_eating, signal], axis=0)
-                df_eating['events'] = 'eating'
-        return pd.concat([df_eating, df_grooming, df_entry], axis=0)
+
 
 

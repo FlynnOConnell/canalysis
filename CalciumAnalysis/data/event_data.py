@@ -6,7 +6,7 @@ Module (data.data_utils): Process event/gpio data exported from _video_gpio.isxd
 """
 from __future__ import annotations
 
-from typing import Sized, Iterable
+from typing import Sized, Iterable, Any
 import logging
 from dataclasses import dataclass, field
 import numpy as np
@@ -21,6 +21,7 @@ from utils import funcs
 class EventData:
     filehandler: FileHandler
     color_dict: dict
+    tracedata_time: Iterable[Any]
     timestamps: field = field(init=False, default_factory=dict)
     trial_times: field = field(init=False, default_factory=dict)
     # Initialize empty placeholders to fill later
@@ -29,20 +30,22 @@ class EventData:
     __allstim: list = field(default_factory=list)
     alltastestim: list = field(default_factory=list)
     nonreinforced: Iterable = field(default_factory=list)
+    matched: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self, ):
         self.timestamps: dict = self.__get_timestamps()
         self.drylicks = [x for x in self.timestamps["Lick"] if x not in self.__allstim]
         self.trial_times: dict = self.__get_trial_times()
         self.nonreinforced: ndarray = self.__get_nonreinforced()
 
-    def __len__(self):
+    def __len__(self, ):
         return len(self.numlicks)
 
-    def __get_timestamps(self):
+    def __get_timestamps(self, ):
         timestamps: dict = {}
         data: pd.DataFrame = self.filehandler.get_eventdata()
         events = data.rename(columns={"Time(s)": "time"})
+        events['time'] = funcs.get_matched_time(self.tracedata_time, events['time'])
         for stimulus in events.columns[1:]:
             timestamps[stimulus] = list(
                 events["time"].iloc[np.where(events[stimulus] == 1)[0]]
@@ -55,7 +58,7 @@ class EventData:
         self.alltastestim.sort()
         return timestamps
 
-    def __get_nonreinforced(self):
+    def __get_nonreinforced(self, ):
         times = []
         lickstamps = np.array(self.timestamps["Lick"])
         intervals = funcs.interval(self.alltastestim, 2)

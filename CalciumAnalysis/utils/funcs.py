@@ -8,14 +8,14 @@ from __future__ import annotations
 
 import logging
 import math
+from multiprocessing import Process
 from pathlib import Path
 from typing import Tuple, Iterable, Optional, Sized, Any, List
 import itertools
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-from numpy import ndarray
-from pandas import Series
+
 
 from utils import excepts as e
 from utils.wrappers import typecheck
@@ -147,18 +147,14 @@ def remove_outliers(
 @typecheck(Iterable[any])
 def dup_check(signal: Iterable[any], peak_signal: float | int) -> None:
     """
-    Check if multiple peak signals are present in taste-response moving window. 
-
+    Check if multiple peak signals are present in taste-response moving window.
     Args:
         signal (list | np.ndarray): Signal to validate.
         peak_signal (float | int): Largest value in moving window of taste responses.
-
     Raises:
         exception: DuplicateError.
-
     Returns:
         None.
-
     """
     checker = []
     for value in signal:
@@ -171,16 +167,11 @@ def dup_check(signal: Iterable[any], peak_signal: float | int) -> None:
 
 
 def has_duplicates(to_check: Sized | Iterable[set]):
-    """
-      Check iterable for duplicates.
-
+    """ Check iterable for duplicates.
       Args:
           to_check (Sized | Iterable[set]): Input iterable to check.
-
       Returns:
-          Bool: Truth value if duplicates are present.
-
-      """
+          Bool: Truth value if duplicates are present. """
     return len(to_check) != len(set(to_check))
 
 
@@ -195,20 +186,17 @@ def get_peak_window(time: Iterable[any], peak: float) -> list:
     Returns:
          window_ind (list): list of index values to match time.
     """
-    time: list
-
+    time: Iterable[any]
     aux, window_ind = [], []
     for valor in time:
         aux.append(abs(peak - valor))
-
     window_ind.append(aux.index(min(aux)) - 20)
     window_ind.append(aux.index(min(aux)) + 20)
-
     return window_ind
 
 
 def get_matched_time(
-        time: Iterable[any],
+        time: Any,
         match: Iterable[any],
         return_index: Optional[bool] = False,
         single: Optional[bool] = False,
@@ -216,23 +204,23 @@ def get_matched_time(
     """
     Finds the closest number in tracedata time to the input. Can be a single value,
     or list.
-    Parameters
-    ----------
-    :param single :bool
-    :param time: Series
-    :param match: list
-    :param return_index: bool
-
-
+    Args:
+        time : Any
+            Correct values to be matched to.
+        match : Iterable[any]
+            Values to be matched.
+        return_index : bool
+            If true, return the indicies rather than values
+        single : bool
+    Returns:
+         window_ind (list): list of index values to match time.
     """
-    time: pd.Series
-
     matched_index = []
     matched_time = []
     # convert to an iterable if float or int are given
     if isinstance(match, (float, int)):
         match = [match]
-    if time.size < len(match):
+    if len(time) < len(match):
         raise e.MatchError()
 
     for t in match:
@@ -253,6 +241,5 @@ def get_matched_time(
         return matched_time
 
 
-# Main wrapper for testing
 if __name__ == "__main__":
     pass

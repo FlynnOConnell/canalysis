@@ -14,6 +14,7 @@ import pandas as pd
 from typing import Optional, Generator, Iterable, ClassVar
 from .data_utils.file_handler import FileHandler
 from data.trace_data import TraceData
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,31 +26,42 @@ class EatingData:
     eatingdata: pd.DataFrame = field(init=False)
     eatingsignals: pd.DataFrame = field(init=False)
 
-    def __post_init__(self,):
+    def __post_init__(self, ):
         self.eatingdata = self.filehandler.get_eatingdata().sort_values("TimeStamp")
         # Core attributes
-        self.set_adjust()
+        self.__set_adjust()
         self.__clean()
-        self.eatingsignals: pd.DataFrame = self._set_eating_signals()
+        self.__match()
+        self.eatingsignals: pd.DataFrame = self.__set_eating_signals()
 
-    def __hash__(self,):
+    def __hash__(self, ):
         return hash(repr(self))
 
-    def set_adjust(self,) -> None:
+    def get_time_index(self, num: int | float):
+        """Return INDEX where tracedata time matches argument num."""
+        return self.tracedata.time[self.tracedata.time == num].index[0]
+
+    def __set_adjust(self, ) -> None:
         for column in self.eatingdata.columns[1:]:
             self.eatingdata[column] = self.eatingdata[column] + self.adjust
 
-    def __clean(self,) -> None:
+    def __clean(self, ) -> None:
         self.eatingdata.drop(
             ["Marker Type", "Marker Event Id", "Marker Event Id 2", "value1", "value2"],
             axis=1,
             inplace=True,
         )
-        self.eatingsignals = self.eatingdata.loc[
+        self.eatingdata = self.eatingdata.loc[
             self.eatingdata["Marker Name"].isin(["Entry", "Eating", "Grooming"])
         ]
 
-    def _set_eating_signals(self):
+    def __match(self, ):
+        self.eatingdata['TimeStamp'] = funcs.get_matched_time(
+            self.tracedata.time, self.eatingdata['TimeStamp'])
+        self.eatingdata['TimeStamp2'] = funcs.get_matched_time(
+            self.tracedata.time, self.eatingdata['TimeStamp2'])
+
+    def __set_eating_signals(self):
         aggregate_eating_signals = pd.DataFrame()
         for signal, event in self.generate_signals():
             aggregate_eating_signals = pd.concat(
@@ -61,18 +73,17 @@ class EatingData:
     def generate_signals(
             self,
     ) -> Generator[(pd.DataFrame, str), None, None]:
+        """Generator for each eating signal."""
         for x in self.eatingdata.to_numpy():
             signal = (self.tracedata.zscores.iloc[
-                      funcs.get_matched_time(
-                          self.tracedata.time, x[1], return_index=True, single=True
-                      ):funcs.get_matched_time(
-                          self.tracedata.time, x[2], return_index=True, single=True
-                      )]).drop(columns=['time'])
+                      self.get_time_index(x[1]):self.get_time_index(x[2])
+                      ]).drop(columns=['time'])
             yield signal, x[0]
 
     def generate_entry_eating_signals(
             self,
     ) -> Generator[Iterable, None, None]:
+        """ Generator for eating events, with entry and eating in one interval."""
         data = self.eatingdata.to_numpy()
         counter = 0
         for index, x in (enumerate(data)):
@@ -83,30 +94,36 @@ class EatingData:
                 nxt = index + 1
                 nxt2 = index + 2
                 if data[nxt][0] == 'Eating' and data[nxt2][0] == 'Entry':
-                    entry_start = funcs.get_matched_time(
-                        self.tracedata.time, x[1], return_index=True, single=True
-                    )
-                    entry_end = funcs.get_matched_time(
-                        self.tracedata.time, x[2], return_index=True, single=True
-                    )
-                    eating_end = funcs.get_matched_time(
-                        self.tracedata.time, data[nxt][2], return_index=True, single=True
-                    )
                     signal = (self.tracedata.zscores.iloc[
-                              entry_start:eating_end]).drop(columns=['time'])
-                    yield signal, x[0], counter, entry_start, entry_end, eating_end
+                              self.get_time_index(x[1]):self.get_time_index(x[2])
+                              ]).drop(columns=['time'])
+                    # signal, event, counter, entry start, entry end, eating end
+                    yield signal, x[0], counter, x[1], x[2], data[nxt][2]
 
                 elif data[nxt][0] == 'Eating' and data[nxt2][0] == 'Eating':
-                    entry_start = funcs.get_matched_time(
-                        self.tracedata.time, x[1], return_index=True, single=True
-                    )
-                    entry_end = funcs.get_matched_time(
-                        self.tracedata.time, x[2], return_index=True, single=True
-                    )
-                    eating_end = funcs.get_matched_time(
-                        self.tracedata.time, data[nxt2][2], return_index=True, single=True
-                    )
                     signal = (self.tracedata.zscores.iloc[
-                              entry_start:eating_end]).drop(columns=['time'])
-                    yield signal, x[0], counter, entry_start, entry_end, eating_end
+                              self.get_time_index(x[1]):self.get_time_index(data[nxt][2])
+                              ]).drop(columns=['time'])
+                    yield signal, x[0], counter, x[1], x[2], data[nxt][2]
 
+    def get_eating_df(
+            self,
+    ) -> pd.DataFrame:
+        """
+        Return a dataframe of eating, grooming and entry events.
+        Containes 'events' column.
+        """
+        df_eating = pd.DataFrame()
+        df_entry = pd.DataFrame()
+        df_grooming = pd.DataFrame()
+        for signal, event in self.generate_signals():
+            if event == "Grooming":
+                df_grooming = pd.concat([df_grooming, signal], axis=0)
+                df_grooming['events'] = 'grooming'
+            if event == "Entry":
+                df_entry = pd.concat([df_entry, signal], axis=0)
+                df_entry['events'] = 'entry'
+            if event == 'Eating':
+                df_eating = pd.concat([df_eating, signal], axis=0)
+                df_eating['events'] = 'eating'
+        return pd.concat([df_eating, df_grooming, df_entry], axis=0)
