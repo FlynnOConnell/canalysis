@@ -6,3 +6,4 @@
 Subpackage for statistical data processing.
 """
 name = "stats_utils"
+print("Importing", __name__)
