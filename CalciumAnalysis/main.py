@@ -15,7 +15,8 @@ from taste_data import TasteData
 from analysis.process_data import ProcessData
 import pandas as pd
 import faulthandler
-
+import time
+import numpy as np
 faulthandler.enable()
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -79,6 +80,7 @@ def heatmap_loops(anal):
 
 if __name__ == "__main__":
 
+    start = time.time()
     _animal = "PGT13"
     _date = "052622"
     _dir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
@@ -91,3 +93,5 @@ if __name__ == "__main__":
     data = initialize_data(filehandler, adjust=34)
     tastedata = data.tastedata
     eatingdata = data.eatingdata
+    end = time.time()
+    print(f"Execution time: {np.round(end-start, 1)} seconds")
