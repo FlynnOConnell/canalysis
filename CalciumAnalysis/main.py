@@ -9,12 +9,9 @@ Module: Main code execution.
 from __future__ import annotations
 
 import logging
-from multi_process import MPWrap
-import time
-from data.calcium_data import CalciumData
-
-from data.data_utils.file_handler import FileHandler
-from data.taste_data import TasteData
+from calcium_data import CalciumData
+from data_utils.file_handler import FileHandler
+from taste_data import TasteData
 from analysis.process_data import ProcessData
 import pandas as pd
 import faulthandler
@@ -56,7 +53,7 @@ def sparse_taste_data(ev_data):
 
 
 def statistics(_data, _dir) -> pd.DataFrame | None:
-    return ProcessData(_data, outpath=_dir)
+    return ProcessData(_data)
 
 
 def pca(_pca):
@@ -66,7 +63,7 @@ def pca(_pca):
 
 def plot(anal):
     df = anal.get_event_df()
-    _pca = anal.get_pca()
+    _pca = anal.get_pca(df)
     return _pca.get_plots(colordict)
 
 
@@ -80,58 +77,17 @@ def heatmap_loops(anal):
     )]
 
 
-
-
-def main():
-    x = MPWrap()
-    x.apply(square,
-            args=[1, 2, 3, 4, 5, 6, 7, 8, 9]
-            )
-    while x.status() is None:
-        time.sleep(.5)
-        if x.status() == 0:
-            break
-    print(x.get())
-
-
 if __name__ == "__main__":
-    main()
-    # _animal = "PGT13"
-    # _date = "052622"
-    # _dir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
-    # colordict = {'grooming': 'green',
-    #              'entry': 'blue',
-    #              'eating': 'red'}
-    # filehandler = FileHandler(
-    #     _animal, _date, _dir, tracename="traces3", eatingname="Scored1"
-    # )
-    # data = initialize_data(filehandler, adjust=34)
-    # tastedata = data.tastedata
-    # eatingdata = data.eatingdata
-    #
-    # analysis = ProcessData(data)
-    # eating_data = analysis.get_event_df()
-    # eating_data['colors'] = map_colors(eating_data.pop('events'))
-    # for event, taste_df in tastedata.taste_events.items():
-    #     eating_df = eating_data.copy().reset_index(drop=True)
-    #     data = pd.concat([eating_df, taste_df], axis=1)
-    #     colors = data.pop('colors')
-    #     pca_class = ca_pca.CaPrincipalComponentsAnalysis(data, colors)
-    #     plot = ScatterPlots(pca_class.data, pca_class.colors, colordict)
 
-    # pca = analysis_class.get_pca()
-    # pca_plots = pca.get_plots(colordict)
-    # data = pca.pca_df
-    # data_colors = pca.colors
-
-    # for a, b in tastedata_class.generate_stim_data():
-    #     temp_cols = data_colors.copy()
-    #     data_ = pd.concat([data, b])
-    #     temp_cols.extend(data_colors)
-
-# def get_pca(self):
-#      data = self.get_event_df()
-#      data_events = data.pop('events')
-#      data_colors = map_colors(data_events)
-#      pca = ca_pca.CaPrincipalComponentsAnalysis(data=data, colors=data_colors,)
-#      return pca
+    _animal = "PGT13"
+    _date = "052622"
+    _dir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
+    colordict = {'grooming': 'green',
+                 'entry': 'blue',
+                 'eating': 'red'}
+    filehandler = FileHandler(
+        _animal, _date, _dir, tracename="traces3", eatingname="Scored1"
+    )
+    data = initialize_data(filehandler, adjust=34)
+    tastedata = data.tastedata
+    eatingdata = data.eatingdata

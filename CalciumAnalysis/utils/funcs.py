@@ -6,17 +6,17 @@ Module(util): General getter/setter/checker functions.
 """
 from __future__ import annotations
 
+import itertools
 import logging
 import math
-from multiprocessing import Process
 from pathlib import Path
-from typing import Tuple, Iterable, Optional, Sized, Any, List
-import itertools
+from typing import Tuple, Iterable, Optional, Sized, Any
+
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
 
-
+from utils.wrappers import log_time
 from utils import excepts as e
 from utils.wrappers import typecheck
 
@@ -195,50 +195,23 @@ def get_peak_window(time: Iterable[any], peak: float) -> list:
     return window_ind
 
 
-def get_matched_time(
-        time: Any,
-        match: Iterable[any],
-        return_index: Optional[bool] = False,
-        single: Optional[bool] = False,
-) -> int | list[Any]:
+def get_matched_time(time: np.ndarray, match: np.ndarray) -> np.ndarray:
     """
-    Finds the closest number in tracedata time to the input. Can be a single value,
-    or list.
+    Finds the closest number in time to the input. Can be a single value,
+    or list. Find all the absolute differences between match and time, find
+    the minima of these abs. values and the argument value of the minima. Return
+    all matches.
     Args:
-        time : Any
+        time : np.ndarray
             Correct values to be matched to.
         match : Iterable[any]
             Values to be matched.
-        return_index : bool
-            If true, return the indicies rather than values
-        single : bool
-    Returns:
-         window_ind (list): list of index values to match time.
+    Returns
+         np.ndarray of matched times.
     """
-    matched_index = []
-    matched_time = []
-    # convert to an iterable if float or int are given
-    if isinstance(match, (float, int)):
-        match = [match]
-    if len(time) < len(match):
-        raise e.MatchError()
-
-    for t in match:
-        temp = []
-        for valor in time:
-            temp.append(abs(t - valor))
-        matched_index.append(temp.index(min(temp)))
-
-    for idx in matched_index:
-        this_time = time[idx]
-        matched_time.append(this_time)
-
-    if return_index and single:
-        return matched_index[-1]
-    elif return_index and not single:
-        return matched_index
-    else:
-        return matched_time
+    match = np.asarray(match).reshape(-1, 1)
+    mins = np.argmin(np.abs(match - time), axis=1)
+    return np.array([time[mins[i]] for i in range(len(match))])
 
 
 if __name__ == "__main__":

@@ -29,6 +29,9 @@ class TasteData:
         self.concat_event_signals(self.__timestamps)
         assert isinstance(self.__signals, pd.DataFrame)
 
+    def __repr__(self):
+        return type(self).__name__
+
     def generate_stim_data(self) -> Generator[pd.DataFrame, None, None]:
         yield [(stim, df, df['colors']) for stim, df in self.taste_events.items()]
 

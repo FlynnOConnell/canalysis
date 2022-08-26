@@ -13,12 +13,12 @@ from typing import ClassVar, Optional, Generator, Iterable
 
 import pandas as pd
 
-from data.all_data import AllData
-from data.trace_data import TraceData
-from data.taste_data import TasteData
-from data.event_data import EventData
-from data.eating_data import EatingData
-from data.data_utils.file_handler import FileHandler
+from all_data import AllData
+from trace_data import TraceData
+from taste_data import TasteData
+from event_data import EventData
+from eating_data import EatingData
+from data_utils.file_handler import FileHandler
 from graphs.graph_utils import Mixins
 from utils import excepts as e
 from utils import funcs
@@ -54,8 +54,8 @@ class CalciumData(Mixins.CalPlots):
         self.session = self.filehandler.session
 
         # Core data
-        self.tracedata: TraceData = self._set_tracedata()
-        self.eventdata: EventData = self._set_eventdata()
+        self.tracedata: TraceData = TraceData(self.filehandler)
+        self.eventdata: EventData = EventData(self.filehandler, self.color_dict, self.tracedata.time)
         if self.filehandler.eatingname is not None:
             self.eatingdata: EatingData = EatingData(
                 self.filehandler,
@@ -75,6 +75,9 @@ class CalciumData(Mixins.CalPlots):
     @classmethod
     def __len__(cls):
         return len(cls.alldata.keys())
+
+    def __repr__(self):
+        return type(self).__name__
 
     @staticmethod
     def keys_exist(element, *keys):
@@ -143,9 +146,6 @@ class CalciumData(Mixins.CalPlots):
         -------
         Cell: mean dictionary.
         """
-        ev_time = funcs.get_matched_time(
-            self.tracedata.time, self.eventdata.nonreinforced
-        )
         nr_signal = self.tracedata.zscores.loc[
             self.tracedata.zscores["time"].isin(self.eventdata.nonreinforced)
         ].drop("time", axis=1)
@@ -162,30 +162,3 @@ class CalciumData(Mixins.CalPlots):
         """return a list of signal values via cell integer indexing (0 through N cells"""
         return list(self.tracedata.signals.iloc[:, i])
 
-    def get_signal_bytime(
-            self,
-            start,
-            stop,
-            zscores: bool = True
-    ) -> pd.DataFrame:
-        """
-        Fetch signals between two timepoints.
-        Parameters
-        ----------
-        zscores :
-        start : beginning of slice
-        stop : end of slice
-        zscores : whether to return zscore signals
-
-        Returns
-        -------
-        pd.DataFrame of sliced signals given start:stop
-        """
-        if isinstance(start, list):
-            start = start[-1]
-        if isinstance(stop, list):
-            stop = stop[-1]
-        if zscores:
-            return self.tracedata.zscores.iloc[start:stop]
-        else:
-            return self.tracedata.tracedata.iloc[start:stop]

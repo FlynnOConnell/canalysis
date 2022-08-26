@@ -27,10 +27,13 @@ class TraceData:
         self._clean()
         # Core attributes
         self.signals = self._set_trace_signals()
-        self.cells = np.array(self.tracedata.columns[1:])
-        self.time = self.tracedata.time
+        self.cells = np.asarray(self.tracedata.columns[1:])
+        self.time = np.asarray(self.tracedata.time)
         self.binsize = self.time[2] - self.time[1]
         self.zscores = self._get_zscores()
+
+    def __repr__(self):
+        return type(self).__name__
 
     def __hash__(self):
         return hash(repr(self))

@@ -21,7 +21,7 @@ from utils import funcs
 class EventData:
     filehandler: FileHandler
     color_dict: dict
-    tracedata_time: Iterable[Any]
+    tracedata_time: np.ndarray
     timestamps: field = field(init=False, default_factory=dict)
     trial_times: field = field(init=False, default_factory=dict)
     # Initialize empty placeholders to fill later
@@ -37,6 +37,9 @@ class EventData:
         self.drylicks = [x for x in self.timestamps["Lick"] if x not in self.__allstim]
         self.trial_times: dict = self.__get_trial_times()
         self.nonreinforced: ndarray = self.__get_nonreinforced()
+
+    def __repr__(self):
+        return type(self).__name__
 
     def __len__(self, ):
         return len(self.numlicks)

@@ -11,8 +11,9 @@ from utils import funcs
 import logging
 from dataclasses import dataclass, field
 import pandas as pd
+import numpy as np
 from typing import Optional, Generator, Iterable, ClassVar
-from .data_utils.file_handler import FileHandler
+from data_utils.file_handler import FileHandler
 from data.trace_data import TraceData
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,9 @@ class EatingData:
         self.__clean()
         self.__match()
         self.eatingsignals: pd.DataFrame = self.__set_eating_signals()
+
+    def __repr__(self):
+        return type(self).__name__
 
     def __hash__(self, ):
         return hash(repr(self))
@@ -64,11 +68,13 @@ class EatingData:
     def __set_eating_signals(self):
         aggregate_eating_signals = pd.DataFrame()
         for signal, event in self.generate_signals():
+            signal['event'] = event
             aggregate_eating_signals = pd.concat(
                 [aggregate_eating_signals, signal],
-                axis=1
+                axis=0
             )
-        return aggregate_eating_signals
+
+        return aggregate_eating_signals.sort_index()
 
     def generate_signals(
             self,
@@ -76,7 +82,8 @@ class EatingData:
         """Generator for each eating signal."""
         for x in self.eatingdata.to_numpy():
             signal = (self.tracedata.zscores.iloc[
-                      self.get_time_index(x[1]):self.get_time_index(x[2])
+                     np.where(self.tracedata.time == (x[1]))[0][0]:
+                     np.where(self.tracedata.time == (x[2]))[0][0]
                       ]).drop(columns=['time'])
             yield signal, x[0]
 
@@ -95,14 +102,16 @@ class EatingData:
                 nxt2 = index + 2
                 if data[nxt][0] == 'Eating' and data[nxt2][0] == 'Entry':
                     signal = (self.tracedata.zscores.iloc[
-                              self.get_time_index(x[1]):self.get_time_index(x[2])
+                              np.where(self.tracedata.time == (x[1]))[0][0]:
+                              np.where(self.tracedata.time == (x[2]))[0][0]
                               ]).drop(columns=['time'])
                     # signal, event, counter, entry start, entry end, eating end
                     yield signal, x[0], counter, x[1], x[2], data[nxt][2]
 
                 elif data[nxt][0] == 'Eating' and data[nxt2][0] == 'Eating':
                     signal = (self.tracedata.zscores.iloc[
-                              self.get_time_index(x[1]):self.get_time_index(data[nxt][2])
+                              np.where(self.tracedata.time == (x[1]))[0][0]:
+                              np.where(self.tracedata.time == data[nxt][2])[0][0]
                               ]).drop(columns=['time'])
                     yield signal, x[0], counter, x[1], x[2], data[nxt][2]
 
