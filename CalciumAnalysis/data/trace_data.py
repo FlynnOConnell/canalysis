@@ -7,10 +7,12 @@ Module (data.data_utils): Process traces exported from inscopix trace file.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Generator
 
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+from numpy import ndarray
 
 from data.data_utils.file_handler import FileHandler
 
@@ -34,6 +36,10 @@ class TraceData:
 
     def __repr__(self):
         return type(self).__name__
+
+    @property
+    def shape(self):
+        return self.signals.shape
 
     def __hash__(self):
         return hash(repr(self))

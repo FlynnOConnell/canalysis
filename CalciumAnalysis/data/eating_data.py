@@ -73,7 +73,6 @@ class EatingData:
                 [aggregate_eating_signals, signal],
                 axis=0
             )
-
         return aggregate_eating_signals.sort_index()
 
     def generate_signals(

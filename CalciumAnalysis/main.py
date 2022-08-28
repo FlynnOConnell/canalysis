@@ -17,6 +17,7 @@ import pandas as pd
 import faulthandler
 import time
 import numpy as np
+
 faulthandler.enable()
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -37,9 +38,9 @@ color_dict = {
     "Entry": "lime"
 }
 
-dflist = ['C24', 'C23', 'C20', 'C05', 'C06', 'C07', 'C00', 'C26', 'C22', 'C09',
-          'C10', 'C17', 'C11', 'C21', 'C04', 'C01', 'C02', 'C03', 'C14', 'C15',
-          'C16', 'C27', 'C25', 'C18', 'C19', 'C12', 'C13', 'C08']
+# dflist = ['C24', 'C23', 'C20', 'C05', 'C06', 'C07', 'C00', 'C26', 'C22', 'C09',
+#           'C10', 'C17', 'C11', 'C21', 'C04', 'C01', 'C02', 'C03', 'C14', 'C15',
+#           'C16', 'C27', 'C25', 'C18', 'C19', 'C12', 'C13', 'C08']
 
 
 def initialize_data(_filehandler: FileHandler, adjust: int = None):
