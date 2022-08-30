@@ -12,9 +12,10 @@ import logging
 from dataclasses import dataclass, field
 import pandas as pd
 import numpy as np
-from typing import Optional, Generator, Iterable, ClassVar
+from typing import Optional, Generator, Iterable
 from data_utils.file_handler import FileHandler
 from data.trace_data import TraceData
+from utils.wrappers import log_time
 
 logger = logging.getLogger(__name__)
 
@@ -41,22 +42,24 @@ class EatingData:
     def __hash__(self, ):
         return hash(repr(self))
 
-    def get_time_index(self, num: int | float):
+    def get_time_index(self, time: int | float, ):
         """Return INDEX where tracedata time matches argument num."""
-        return self.tracedata.time[self.tracedata.time == num].index[0]
+        return np.where(self.tracedata.time == time)[0][0]
+
+    def get_signal_zscore(self, start: int | float, stop: int | float, ):
+        """Return  where tracedata time matches argument num."""
+        return self.tracedata.zscores.iloc[
+               self.get_time_index(start):
+               self.get_time_index(stop)
+               ].drop(columns=['time'])
 
     def __set_adjust(self, ) -> None:
         for column in self.eatingdata.columns[1:]:
             self.eatingdata[column] = self.eatingdata[column] + self.adjust
 
     def __clean(self, ) -> None:
-        self.eatingdata.drop(
-            ["Marker Type", "Marker Event Id", "Marker Event Id 2", "value1", "value2"],
-            axis=1,
-            inplace=True,
-        )
         self.eatingdata = self.eatingdata.loc[
-            self.eatingdata["Marker Name"].isin(["Entry", "Eating", "Grooming"])
+            self.eatingdata["Marker Name"].isin(["Entry", "Eating", "Grooming", "Approach", "Interval"])
         ]
 
     def __match(self, ):
@@ -79,12 +82,7 @@ class EatingData:
             self,
     ) -> Generator[(pd.DataFrame, str), None, None]:
         """Generator for each eating signal."""
-        for x in self.eatingdata.to_numpy():
-            signal = (self.tracedata.zscores.iloc[
-                     np.where(self.tracedata.time == (x[1]))[0][0]:
-                     np.where(self.tracedata.time == (x[2]))[0][0]
-                      ]).drop(columns=['time'])
-            yield signal, x[0]
+        return ((self.get_signal_zscore(x[1], x[2]), x[0]) for x in self.eatingdata.to_numpy())
 
     def generate_entry_eating_signals(
             self,
@@ -93,45 +91,59 @@ class EatingData:
         data = self.eatingdata.to_numpy()
         counter = 0
         for index, x in (enumerate(data)):
+            counter += 1
+            nxt = index + 1
+            nxt2 = index + 2
             if index > (len(data) - 2):
                 break
-            if x[0] == 'Entry':
-                counter += 1
-                nxt = index + 1
-                nxt2 = index + 2
-                if data[nxt][0] == 'Eating' and data[nxt2][0] == 'Entry':
-                    signal = (self.tracedata.zscores.iloc[
-                              np.where(self.tracedata.time == (x[1]))[0][0]:
-                              np.where(self.tracedata.time == (x[2]))[0][0]
-                              ]).drop(columns=['time'])
-                    # signal, event, counter, entry start, entry end, eating end
-                    yield signal, x[0], counter, x[1], x[2], data[nxt][2]
-
-                elif data[nxt][0] == 'Eating' and data[nxt2][0] == 'Eating':
-                    signal = (self.tracedata.zscores.iloc[
-                              np.where(self.tracedata.time == (x[1]))[0][0]:
-                              np.where(self.tracedata.time == data[nxt][2])[0][0]
-                              ]).drop(columns=['time'])
-                    yield signal, x[0], counter, x[1], x[2], data[nxt][2]
+            if x[0] == 'Approach' and data[nxt][0] == 'Entry' and data[nxt2][0] == 'Eating':
+                # yield: signal, counter, approach start, entry start, eating start, eating end
+                yield self.get_signal_zscore(x[1], data[nxt2][2]), counter, x[1], data[nxt][1], data[nxt2][1], \
+                      data[nxt2][2]
 
     def get_eating_df(
             self,
+            events: list
     ) -> pd.DataFrame:
         """
         Return a dataframe of eating, grooming and entry events.
         Containes 'events' column.
         """
-        df_eating = pd.DataFrame()
-        df_entry = pd.DataFrame()
+        df_interval = pd.DataFrame()
         df_grooming = pd.DataFrame()
         for signal, event in self.generate_signals():
-            if event == "Grooming":
+            if event == [events]:
                 df_grooming = pd.concat([df_grooming, signal], axis=0)
                 df_grooming['events'] = 'grooming'
-            if event == "Entry":
-                df_entry = pd.concat([df_entry, signal], axis=0)
-                df_entry['events'] = 'entry'
-            if event == 'Eating':
-                df_eating = pd.concat([df_eating, signal], axis=0)
-                df_eating['events'] = 'eating'
-        return pd.concat([df_eating, df_grooming, df_entry], axis=0)
+            if event == "Interval":
+                df_interval = pd.concat([df_interval, signal], axis=0)
+                df_interval['events'] = 'interval'
+        return pd.concat([df_interval, df_grooming], axis=0)
+
+    def baseline(self):
+        data = self.eatingdata.to_numpy()
+        baseline = data[np.where(data[:, 0] == 'Interval')[0][0]]
+        signal = self.get_signal_zscore(baseline[1], baseline[2])
+        return signal
+
+    def loop_eating(
+            self,
+            save_dir: Optional[str] = "",
+            cols: list = None,
+            **kwargs
+    ) -> Generator[Iterable, None, None]:
+        from graphs.heatmaps import EatingHeatmap
+        for signal, counter, approachstart, entrystart, eatingstart, eatingend in self.generate_entry_eating_signals():
+            for cell in signal:
+                signal[cell][signal[cell] < 0] = 0
+            if cols:
+                signal = signal[cols]
+            heatmap = EatingHeatmap(
+                signal.T,
+                title="Approach, Entry and Eating Interval",
+                save_dir=save_dir,
+            )
+            heatmap.interval_heatmap(eatingstart, entrystart, eatingend)
+            heatmap.show_heatmap()
+            yield heatmap
+

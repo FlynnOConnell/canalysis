@@ -209,18 +209,20 @@ class FileHandler:
         eatingfiles: list[Path] = self.get_eating_files()
         if eatingfiles is None:
             raise FileNotFoundError(
-                f'No files in {self.sessiondir} matching "{self._eatingname}"'
-            )
+                f'No files in {self.sessiondir} matching "{self._eatingname}"')
         if len(eatingfiles) > 1:
             logging.info(
                 f'Multiple eating-files found in {self.sessiondir} matching "'
-                f'{self._eatingname}":'
-            )
+                f'{self._eatingname}":')
             for eating_file in eatingfiles:
                 logging.info(f"{eating_file}")
             logging.info(f"Taking file: {eatingfiles[0]}")
         logging.info("Eating data set.")
-        return pd.read_csv(str(eatingfiles[0]), low_memory=False)
+        return pd.read_csv(
+            str(eatingfiles[0]),
+            low_memory=False,
+            header=0,
+            usecols=['Marker Name', 'TimeStamp', 'TimeStamp2'])
 
     def unique_path(self, filename) -> Path:
         counter = 0

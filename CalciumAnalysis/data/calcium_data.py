@@ -26,9 +26,6 @@ from utils import funcs
 logger = logging.getLogger(__name__)
 
 
-# %%
-
-
 @dataclass
 class CalciumData(Mixins.CalPlots):
     """
@@ -82,6 +79,10 @@ class CalciumData(Mixins.CalPlots):
     @staticmethod
     def keys_exist(element, *keys):
         return funcs.keys_exist(element, *keys)
+
+    @property
+    def size(self):
+        return len(self.tracedata.cells)
 
     @property
     def tastedata(self):

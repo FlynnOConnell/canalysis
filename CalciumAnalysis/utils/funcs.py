@@ -5,7 +5,7 @@
 Module(util): General getter/setter/checker functions.
 """
 from __future__ import annotations
-
+import os
 import itertools
 import logging
 import math
@@ -86,17 +86,16 @@ def flatten(lst: Iterable) -> list:
     return [item for sublist in lst for item in sublist]
 
 
-def check_unique_path(
-        path: Path | str
-) -> str:
-    if isinstance(path, str):
-        path = Path(path)
-    assert hasattr(path, "stem")
-    counter = 0
-    while path.exists():
+def check_unique_path(path) -> str:
+
+    if hasattr(path, 'stem'):
+        path = path.__str__()
+    filename, extension = os.path.splitext(path)
+    counter = 1
+    while os.path.exists(path):
+        path = filename + "" + str(counter) + "" + extension
         counter += 1
-        path = Path(f'{path.parent}/{path.stem}_{str(counter)}{path.suffix}')
-    return path.__str__()
+    return path
 
 
 @typecheck(Iterable, int)

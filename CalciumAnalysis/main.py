@@ -9,6 +9,9 @@ Module: Main code execution.
 from __future__ import annotations
 
 import logging
+
+import graphs.plot
+from analysis.analysis_utils import ca_pca
 from calcium_data import CalciumData
 from data_utils.file_handler import FileHandler
 from taste_data import TasteData
@@ -17,13 +20,15 @@ import pandas as pd
 import faulthandler
 import time
 import numpy as np
-
+import utils.funcs
+from utils.wrappers import log_time
+from graphs import plot
 faulthandler.enable()
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
-
-save_dir = "C:/Users/dilorenzo/Desktop/CalciumPlots/"
+save_dir = r'C:\Users\flynn\Desktop\figs'
+# save_dir = "C:/Users/dilorenzo/Desktop/CalciumPlots/"
 # %% Some examples on usage of different modules.
 
 color_dict = {
@@ -38,11 +43,15 @@ color_dict = {
     "Entry": "lime"
 }
 
-# dflist = ['C24', 'C23', 'C20', 'C05', 'C06', 'C07', 'C00', 'C26', 'C22', 'C09',
-#           'C10', 'C17', 'C11', 'C21', 'C04', 'C01', 'C02', 'C03', 'C14', 'C15',
-#           'C16', 'C27', 'C25', 'C18', 'C19', 'C12', 'C13', 'C08']
+
+def reorder(tracedata):
+    dflist = ['C24', 'C23', 'C20', 'C05', 'C06', 'C07', 'C00', 'C26', 'C22', 'C09',
+              'C10', 'C17', 'C11', 'C21', 'C04', 'C01', 'C02', 'C03', 'C14', 'C15',
+              'C16', 'C27', 'C25', 'C18', 'C19', 'C12', 'C13', 'C08']
+    tracedata.reorder(dflist)
 
 
+@utils.wrappers.log_time
 def initialize_data(_filehandler: FileHandler, adjust: int = None):
     return CalciumData(_filehandler, color_dict, adjust=adjust)
 
@@ -69,19 +78,24 @@ def plot(anal):
     return _pca.get_plots(colordict)
 
 
-def heatmap_loops(anal):
+def heatmap_loops(anal, cols):
+
     yield [heatmaps for heatmaps in anal.loop_taste(
-        cols=dflist,
-        save_dir=r'C:\Users\dilorenzo\Desktop\CalciumPlots\heatmaps'
-    )], [heatmaps for heatmaps in anal.loop_eating(
-        cols=dflist,
+        cols=cols,
         save_dir=r'C:\Users\dilorenzo\Desktop\CalciumPlots\heatmaps'
     )]
 
+    # for hm in eatingdata.loop_eating(cols=dflist, save_dir=save_dir):
+    #     my_hm = hm
+
+
+def test(func):
+    x = func
+    lst = [j for j in x]
+    return lst
+
 
 if __name__ == "__main__":
-
-    start = time.time()
     _animal = "PGT13"
     _date = "052622"
     _dir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
@@ -89,10 +103,12 @@ if __name__ == "__main__":
                  'entry': 'blue',
                  'eating': 'red'}
     filehandler = FileHandler(
-        _animal, _date, _dir, tracename="traces3", eatingname="Scored1"
+        _animal, _date, _dir, tracename="traces3", eatingname="Scored2"
     )
     data = initialize_data(filehandler, adjust=34)
-    tastedata = data.tastedata
-    eatingdata = data.eatingdata
-    end = time.time()
-    print(f"Execution time: {np.round(end-start, 1)} seconds")
+    mypca = ca_pca.CaPrincipalComponentsAnalysis()
+    graphs.plot.ScatterPlots(data.eatingdata.baseline())
+
+
+
+

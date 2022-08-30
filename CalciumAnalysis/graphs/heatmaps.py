@@ -6,14 +6,14 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, ClassVar
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import rcParams
-from matplotlib.colors import LogNorm
+
 from scipy.ndimage.filters import gaussian_filter
 from utils import funcs
 
@@ -36,46 +36,51 @@ def set_pub():
 
 # %%
 
-
-class Heatmap(object):
-    # Initialize the attributes to apply to our heatmaps
-    # nearly all optional and can be ignored.
+class BaseHeatmap:
     def __init__(
-        self,
-        save_dir: str | None = "",
-        cm: str = "magma",
-        _id: str | None = "",
-        title: str | None = "",
-        xlabel: str | None = "",
-        sigma: int | None = None,
-        square: bool = False,
-        colorbar: bool = False,
-        robust: bool = False,
-        line_loc: Optional[int] = 0,
-        line_width: Optional[int] = 3,
-        line_color: str = "white",
+            self,
+            data,
+            save_dir: str = '',
+            save_id: str = '',
+            cmap: str = "RdBu",
+            sigma: int | None = None,
+            colorbar: bool = False,
     ):
         self.save_dir = save_dir
-        self.cm = plt.get_cmap(cm)
-        self._id = _id
-        self.title = title
-        self.xlabel = xlabel
+        self.save_id = save_id
+        self.cmap = plt.get_cmap(cmap)
         self.sigma = sigma
-        self.square = square
         self.colorbar = colorbar
-        self.robust = robust
-        # Attributes for placing a line on the graph
-        self.line_loc = line_loc
-        self.line_width = line_width
-        self.line_color = line_color
+
+    @staticmethod
+    def show_heatmap():
+        plt.show()
+
+    def save(self):
+        file = f"{self.save_dir}/{self.save_id}.png"
+        savefile = funcs.check_unique_path(file)
+        plt.savefig(f"{savefile}", dpi=400, bbox_inches="tight", pad_inches=0.01, )
+
+
+class EatingHeatmap(BaseHeatmap):
+    def __init__(
+            self,
+            data,
+            save_dir: str | None = "",
+            title: str | None = "",
+    ):
+        super().__init__(save_dir)
+        self.data = data
+        self.fig, self.ax = plt.subplots()
+        self.title = title
+
         """
         Create heatmaps.
-    
+
         .. note::
             -Using seaborn(sns).heatmap(), each row of the heatmap needs to correspond to each row of dictionary.
             -If incoming data_dict is already in this format, you can just delete the df = df.T.
             -Using matplotlib.pyplot(plt).imshow(), each column of the heatmap corresponds to columns of the data.
-            
         Parameters
         ----------
         savedir: str = ''
@@ -104,162 +109,46 @@ class Heatmap(object):
             Width of vertical line if line_loc is set.
         line_color: str = 'white'
             Color of vertical line, if line_loc is set.
-            
-        .. ::usage: 
-            my_heatmap = HeatMap('/users/pictures', 'inferno', 'this_cell', 'heatmap')
-            my_heatmap.single(data)
         """
 
-    def nested(
-            self,
-            data_dict: dict,
-            **axargs
-    ):
-        """
-        Plot multiple heatmaps from a nested dictionary. One heatmap for each dict.key, with the heatmap title
-        corresponding to that key. Within each key is a pandas DataFrame containing the heatmap data.
+    @property
+    def ax(self,):
+        return self._ax
 
-        .. note::
-            Using seaborn (sns), each row of the heatmap needs to correspond to each row of dictionary.
-            If incoming data_dict is already in this format, you can just delete the df = df.T.
+    @ax.setter
+    def ax(self, value):
+        self._ax = value
 
-        Parameters
-        ----------
-        data_dict : dict
-            Data used in heatmap. The structure of this object should be:
-            data_dict = {
-            graph1 : pd.DataFrame(data),
-            graph2 : pd.DataFrame(data)
-            } ...etc.
-        """
-        set_pub()
-
-        for cell, df in data_dict.items():
-            df = df.T
-            if self.sigma is not None:
-                df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
-            # Plot data
-            fig, axs = plt.subplots()
-            vmin = min(df[cell])
-            vmax = max(df[cell])
-            sns.heatmap(
-                df,
-                square=self.square,
-                cbar=self.colorbar,
-                robust=self.robust,
-                vmin=vmin,
-                vmax=vmax,
-                **axargs,
-            )
-            axs.axis("off")
-            if self.line_loc:
-                axs.axvline(
-                    x=self.line_loc, color=self.line_color, linewidth=self.line_width
-                )
-            if self.save_dir:
-                plt.savefig(
-                    f"{self.save_dir}/{self._id}.png",
-                    dpi=400,
-                    bbox_inches="tight",
-                    pad_inches=0.01,
-                )
-            return fig
-
-    def columnwise(
-            self,
-            df: pd.DataFrame,
-            axs: object = None
-    ):
-        """
-        Plot heatmap with colorbar normalized for each individual column. Because of
-        this, pre-stimulus activity may show high values.
-
-        .. note:: Using seaborn (sns), each row of the heatmap needs to correspond to
-        each row of dictionary. If incoming data_dict is already in this format,
-        you can just delete the df = df.T.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Data used in heatmap.
-        axs : matplotlib.Axes object
-            Custom Axes object to include.
-
-        Returns
-        -------
-        images : list
-            An iterable of heatmaps containing 1 column stitched together.
-        """
-        set_pub()
-        df = df.T
-        if self.sigma is not None:
-            df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
-        array = df.values
-        if not self.cm:
-            self.cm = sns.color_palette(self.cm, n_colors=df.shape[1], as_cmap=True)
-        axs = axs or plt.gca()
-        axs.axis("off")
-        #  Mask/hide the rest of the columns that aren't being included
-        premask = np.tile(np.arange(array.shape[1]), array.shape[0]).reshape(
-            array.shape
-        )
-        if self.title:
-            axs.set_title(self.title)
-        images: list = []
-        for i in range(array.shape[1]):
-            col = np.ma.array(array, mask=premask != i)
-            im = axs.imshow(col, cmap=self.cm, aspect="auto")
-            if self.save_dir:
-                plt.savefig(
-                    f"{self.save_dir}/){self._id}.png",
-                    dpi=400,
-                    bbox_inches="tight",
-                    pad_inches=0.01,
-                )
-            images.append(im)
-            plt.show()
-        return images
-
-    def single(
-        self, df: pd.DataFrame,
-    ):
+    def interval_heatmap(self, eatingstart, entrystart, eatingend, **kwargs):
         """
         Plot single heatmap with seaborn library.
-
-        Parameters-
-        ----------
-        df : pd.DataFrame
-            Data used in heatmap.
         """
-
         set_pub()
-        df = df.copy()
         if self.sigma:
-            df = pd.DataFrame(gaussian_filter(df, sigma=self.sigma))
-        fig, axs = plt.subplots()
-        fig.tight_layout()
+            self.data = pd.DataFrame(gaussian_filter(self.data, sigma=self.sigma))
+        self.ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
+        self.ax.set_title('Z scores', fontweight="bold")
+        self.set_heatmap_lines(eatingstart, entrystart, eatingend)
+        sns.heatmap(self.data, cbar=self.colorbar, cmap=self.cmap, **kwargs)
 
-        sns.heatmap(
-            df, square=False, cbar=self.colorbar, cmap=self.cm, robust=self.robust,
-        )
-        plt.xticks([])
-        if self.xlabel:
-            axs.set_xlabel(self.xlabel)
-        axs.set_title(self.title, fontweight="bold")
-        if self.line_loc:
-            axs.axvline(
-                x=self.line_loc, color=self.line_color, ymin=0,
-                ymax=1
-            )
-        if self.save_dir:
-            file = f"{self.save_dir}/{self._id}.png"
-            savefile = funcs.check_unique_path(file)
-            plt.savefig(
-                f"{savefile}", dpi=400, bbox_inches="tight", pad_inches=0.01,
-            )
-        plt.show()
-        return fig
-
-
-if __name__ == "__main__":
-    heatmaps = Heatmap()
+    def set_heatmap_lines(self, eatingstart, entrystart, eatingend):
+        my_ticks = self.ax.get_xticks()
+        line_loc1 = (eatingstart - entrystart) * 10,
+        line_loc2 = (eatingend - eatingstart) * 10,
+        self.ax.set_xticks([my_ticks[0],
+                            my_ticks[-1]],
+                           ['{:.2f}'.format(0),
+                            '{:.2f}'.format(my_ticks[-1] / 10)],
+                           visible=True,
+                           rotation="horizontal")
+        self.ax.axvline(
+            line_loc1,
+            color='k',
+            linewidth=3.5,
+            alpha=0.9)
+        self.ax.axvline(
+            line_loc2,
+            color='k',
+            linewidth=3.5,
+            alpha=0.9)
+        return None

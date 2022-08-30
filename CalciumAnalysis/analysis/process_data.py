@@ -12,7 +12,7 @@ from typing import Optional, Iterable, Generator, Any, ClassVar
 import numpy as np
 import pandas as pd
 
-from graphs.heatmaps import Heatmap
+from graphs.heatmaps import EatingHeatmap
 from utils import funcs
 from .analysis_utils import ca_pca
 from .analysis_utils.analysis_funcs import map_colors
@@ -64,49 +64,22 @@ class ProcessData:
                 signal = signals.iloc[data_ind, :]
                 yield stim, iteration, signal
 
-    # TO TASTEDATA
-    def loop_taste(
-            self,
-            save_dir: Optional[str] = "",
-            cols: list = None,
-            **kwargs
-    ) -> Generator[Iterable, None, None]:
-        for stim, iteration, signal in self.get_taste_df():
-            signal = signal[cols]
-            hm = Heatmap(
-                title=f"{stim}," f" trial {iteration + 1}",
-                cm="plasma",
-                line_loc=10,
-                save_dir=save_dir,
-                _id=f"{stim}",
-                **kwargs,
-            ).single(signal.T)
-            yield hm
-
-    def loop_eating(
-            self,
-            save_dir: Optional[str] = "",
-            cols: list = None,
-            **kwargs
-    ) -> Generator[Iterable, None, None]:
-        for signal, _, counter, starttime, middle, endtime in self.data.get_eating_signals():
-            for cell in signal:
-                signal[cell][signal[cell] < 0] = 0
-            xlabel = (endtime - starttime) * 0.1
-            if cols:
-                signal = signal[cols]
-            hm = Heatmap(
-                title=f"Trial: {counter}",
-                xlabel=f'{np.round(xlabel, 2)} seconds',
-                cm="plasma",
-                save_dir=save_dir,
-                _id=f"{counter}",
-                line_loc=middle - starttime,
-                **kwargs,
-            ).single(signal.T)
-            yield hm
-
-    # TO EATINGDATA
-
+    # def loop_taste(
+    #         self,
+    #         save_dir: Optional[str] = "",
+    #         cols: list = None,
+    #         **kwargs
+    # ) -> Generator[Iterable, None, None]:
+    #     for stim, iteration, signal in self.get_taste_df():
+    #         signal = signal[cols]
+    #         hm = EatingHeatmap(
+    #             title=f"{stim}," f" trial {iteration + 1}",
+    #             cm="plasma",
+    #             line_loc=10,
+    #             save_dir=save_dir,
+    #             _id=f"{stim}",
+    #             **kwargs,
+    #         ).single(signal.T)
+    #         yield hm
 
 

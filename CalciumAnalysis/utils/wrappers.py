@@ -7,20 +7,18 @@ Module (utils): Wrappers to decorate for functionality.
 """
 
 import functools
-from time import time
+import time
 
 
 def log_time(func):
     """Logs the time it took for func to execute"""
-
     def wrapper(*args, **kwargs):
-        start = time()
+        start = time.time_ns() / (10 ** 9)
         val = func(*args, **kwargs)
-        end = time()
+        end = time.time_ns() / (10 ** 9)
         duration = end - start
-        print(f"{func.__name__} took {duration} seconds to run")
+        print(f"{func.__name__} execution time: {duration}s")
         return val
-
     return wrapper
 
 

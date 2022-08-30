@@ -24,9 +24,11 @@ import graphs.graph_utils.graph_funcs as gr_func
 import matplotlib as mpl
 from pathlib import Path
 
-mpl.use("TkAgg")
+# mpl.use("TkAgg")
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
+
+_UNSPECIFIED = object()
 
 
 def update_rcparams():
@@ -77,7 +79,6 @@ class CalPlot:
         Returns
         -------
         None.
-
         """
         self.data: pd.DataFrame = data
         self.colors: Sized = colors
@@ -85,6 +86,7 @@ class CalPlot:
         self.cmap: str = cmap
         self.dpi: int = dpi
         self.save_dir: str = save_dir
+        self.styles: dict | None = None
         self.kwargs: dict = kwargs
         update_rcparams()
 
@@ -126,9 +128,12 @@ class CalPlot:
             logging.info('Save_dir converted from Type[pathlib.Path] to Type[str]')
         self._save_dir = new_save_dir
 
+    def setstyle(self, **styles):
+        for key, value in styles.items():
+            setattr(self.styles, key, value)
+
 
 class ScatterPlots(CalPlot):
-
     def get_axis_labels(self, ax):
         ax.set_xlabel(self.data.columns[0], weight="bold")
         ax.set_ylabel(self.data.columns[1], weight="bold")
