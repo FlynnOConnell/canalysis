@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-#eating_data.py
+# eating_data.py
 
 Module: Classes for food-related data processing.
 """
@@ -14,8 +14,7 @@ import pandas as pd
 import numpy as np
 from typing import Optional, Generator, Iterable
 from data_utils.file_handler import FileHandler
-from data.trace_data import TraceData
-from utils.wrappers import log_time
+from containers.trace_data import TraceData
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +23,10 @@ logger = logging.getLogger(__name__)
 class EatingData:
     filehandler: FileHandler
     tracedata: TraceData
+    color_dict: dict
     adjust: Optional[int] = 34
     eatingdata: pd.DataFrame = field(init=False)
-    eatingsignals: pd.DataFrame = field(init=False)
+    signals: pd.DataFrame = field(init=False)
 
     def __post_init__(self, ):
         self.eatingdata = self.filehandler.get_eatingdata().sort_values("TimeStamp")
@@ -34,7 +34,9 @@ class EatingData:
         self.__set_adjust()
         self.__clean()
         self.__match()
-        self.eatingsignals: pd.DataFrame = self.__set_eating_signals()
+        self.signals: pd.DataFrame = self.__set_eating_signals()
+        self.events: pd.Series = self.signals.pop('event')
+        self.colors: pd.Series = self.signals.pop('color')
 
     def __repr__(self):
         return type(self).__name__
@@ -72,16 +74,16 @@ class EatingData:
         aggregate_eating_signals = pd.DataFrame()
         for signal, event in self.generate_signals():
             signal['event'] = event
+            signal['color'] = self.color_dict[event]
             aggregate_eating_signals = pd.concat(
                 [aggregate_eating_signals, signal],
-                axis=0
-            )
+                axis=0)
         return aggregate_eating_signals.sort_index()
 
     def generate_signals(
             self,
     ) -> Generator[(pd.DataFrame, str), None, None]:
-        """Generator for each eating signal."""
+        """Generator for each eating event signal (Interval(baseline), Eating, Grooming, Entry."""
         return ((self.get_signal_zscore(x[1], x[2]), x[0]) for x in self.eatingdata.to_numpy())
 
     def generate_entry_eating_signals(
@@ -130,7 +132,6 @@ class EatingData:
             self,
             save_dir: Optional[str] = "",
             cols: list = None,
-            **kwargs
     ) -> Generator[Iterable, None, None]:
         from graphs.heatmaps import EatingHeatmap
         for signal, counter, approachstart, entrystart, eatingstart, eatingend in self.generate_entry_eating_signals():
@@ -146,4 +147,3 @@ class EatingData:
             heatmap.interval_heatmap(eatingstart, entrystart, eatingend)
             heatmap.show_heatmap()
             yield heatmap
-

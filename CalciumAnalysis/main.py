@@ -10,19 +10,17 @@ from __future__ import annotations
 
 import logging
 
-import graphs.plot
 from analysis.analysis_utils import ca_pca
 from calcium_data import CalciumData
 from data_utils.file_handler import FileHandler
-from taste_data import TasteData
+from containers.taste_data import TasteData
 from analysis.process_data import ProcessData
 import pandas as pd
 import faulthandler
-import time
-import numpy as np
 import utils.funcs
 from utils.wrappers import log_time
-from graphs import plot
+from graphs.plot import pca_scatter
+
 faulthandler.enable()
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -38,9 +36,11 @@ color_dict = {
     "Quinine": "red",
     "Acid": "yellow",
     "Sucrose": "purple",
+    "Approach": "magenta",
     "Eating": "blue",
     "Grooming": "slategray",
-    "Entry": "lime"
+    "Entry": "lime",
+    "Interval": "grey"
 }
 
 
@@ -56,43 +56,17 @@ def initialize_data(_filehandler: FileHandler, adjust: int = None):
     return CalciumData(_filehandler, color_dict, adjust=adjust)
 
 
-def sparse_taste_data(ev_data):
-    """Get specific subset of data based on particular events"""
-    return TasteData(
-        ev_data.tracedata, ev_data.time, ev_data.timestamps, ev_data.color_dict
-    )
-
-
 def statistics(_data, _dir) -> pd.DataFrame | None:
     return ProcessData(_data)
 
 
-def pca(_pca):
-    pca_plots = _pca.get_plots(colordict)
-    pca_plots.scatterplot()
-
-
-def plot(anal):
-    df = anal.get_event_df()
-    _pca = anal.get_pca(df)
-    return _pca.get_plots(colordict)
-
-
-def heatmap_loops(anal, cols):
-
+def heatmap_loops(_data, anal, cols):
     yield [heatmaps for heatmaps in anal.loop_taste(
         cols=cols,
         save_dir=r'C:\Users\dilorenzo\Desktop\CalciumPlots\heatmaps'
     )]
-
-    # for hm in eatingdata.loop_eating(cols=dflist, save_dir=save_dir):
-    #     my_hm = hm
-
-
-def test(func):
-    x = func
-    lst = [j for j in x]
-    return lst
+    for hm in _data.eatingdata.loop_eating(cols=cols, save_dir=save_dir):
+        my_hm = hm
 
 
 if __name__ == "__main__":
@@ -106,8 +80,12 @@ if __name__ == "__main__":
         _animal, _date, _dir, tracename="traces3", eatingname="Scored2"
     )
     data = initialize_data(filehandler, adjust=34)
-    mypca = ca_pca.CaPrincipalComponentsAnalysis()
-    graphs.plot.ScatterPlots(data.eatingdata.baseline())
+    mypca = ca_pca.get_pca(data.eatingdata.signals).pca_df
+    scatter = pca_scatter(mypca, data.eatingdata.colors, color_dict=color_dict, edgecolors=None, s=6, spin=True)
+    scatter[0].save()
+
+
+
 
 
 

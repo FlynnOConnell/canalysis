@@ -11,31 +11,29 @@ from typing import Tuple, Optional, Iterable, Sized
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib import lines
-from sklearn.datasets import load_digits
-from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection import learning_curve
-from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
 
 
 def get_handles_from_dict(
-    color_dict: dict,
-    marker: Optional[str] = 'o',
-    linestyle: Optional[int] = "none",
-    **kwargs
+        color_dict: dict,
+        colors: Iterable,
+        marker: Optional[str] = 'o',
+        linestyle: Optional[int] = "none",
+        **kwargs
 ) -> Tuple[list, list]:
     """
     Get matplotlib handles for input dictionary.
     Args:
         color_dict (dict): Dictionary of event:color k/v pairs.
+        colors (iterable): list of colors
         linestyle (str): Connecting lines, default = none.
         marker (str): Shape of scatter point, default is circle.
     Returns:
         proxy (list): matplotlib.lines.line2D appended list.
         label (list): legend labels for each proxy.
     """
+
     proxy, label = [], []
     for t, c in color_dict.items():
         proxy.append(
@@ -52,12 +50,12 @@ def get_handles_from_dict(
     return proxy, label
 
 
-def get_handles_from_iterables(
-    evcolor_dict: dict,
-    iterable_color: Iterable | Sized,
-    marker: Optional[str] = None,
-    linestyle: Optional[int] = "none",
-    **kwargs
+def parse_colors(
+        evcolor_dict: dict,
+        iterable_color: Iterable | Sized,
+        marker: Optional[str] = None,
+        linestyle: Optional[int] = "none",
+        **kwargs
 ) -> Tuple[list, list]:
     """
     Get matplotlib handles for input dictionary.
@@ -149,24 +147,24 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs):
     mean_y = np.mean(y)
     transf = (
         transforms.Affine2D()
-        .rotate_deg(45)
-        .scale(scale_x, scale_y)
-        .translate(mean_x, mean_y)
+            .rotate_deg(45)
+            .scale(scale_x, scale_y)
+            .translate(mean_x, mean_y)
     )
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
 
 
 def plot_learning_curve(
-    estimator,
-    title,
-    X,
-    y,
-    axes=None,
-    ylim=None,
-    cv=None,
-    n_jobs=None,
-    train_sizes=np.linspace(0.1, 1.0, 5),
+        estimator,
+        title,
+        X,
+        y,
+        axes=None,
+        ylim=None,
+        cv=None,
+        n_jobs=None,
+        train_sizes=np.linspace(0.1, 1.0, 5),
 ):
     """
     Generate 3 plots: the test and training learning curve, the training
@@ -299,5 +297,3 @@ def plot_learning_curve(
     axes[2].set_title("Performance of the model")
 
     return plt
-
-

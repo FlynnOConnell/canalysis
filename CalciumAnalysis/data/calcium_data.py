@@ -9,15 +9,15 @@ Module: Classes for data processing.
 from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
-from typing import ClassVar, Optional, Generator, Iterable
+from typing import ClassVar, Optional
 
 import pandas as pd
 
-from all_data import AllData
-from trace_data import TraceData
-from taste_data import TasteData
-from event_data import EventData
-from eating_data import EatingData
+from containers.all_data import AllData
+from containers.trace_data import TraceData
+from containers.taste_data import TasteData
+from containers.event_data import EventData
+from containers.eating_data import EatingData
 from data_utils.file_handler import FileHandler
 from graphs.graph_utils import Mixins
 from utils import excepts as e
@@ -57,6 +57,7 @@ class CalciumData(Mixins.CalPlots):
             self.eatingdata: EatingData = EatingData(
                 self.filehandler,
                 self.tracedata,
+                self.color_dict
             )
         self.nr_avgs = self._get_nonreinforced_means()
         self._authenticate()
