@@ -20,6 +20,7 @@ import faulthandler
 import utils.funcs
 from utils.wrappers import log_time
 from graphs.plot import pca_scatter
+import inspect
 
 faulthandler.enable()
 
@@ -62,8 +63,8 @@ def statistics(_data, _dir) -> pd.DataFrame | None:
 
 def heatmap_loops(_data, anal, cols):
     yield [heatmaps for heatmaps in anal.loop_taste(
-        cols=cols,
-        save_dir=r'C:\Users\dilorenzo\Desktop\CalciumPlots\heatmaps'
+            cols=cols,
+            save_dir=r'C:\Users\dilorenzo\Desktop\CalciumPlots\heatmaps'
     )]
     for hm in _data.eatingdata.loop_eating(cols=cols, save_dir=save_dir):
         my_hm = hm
@@ -75,27 +76,22 @@ if __name__ == "__main__":
     _dir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
 
     filehandler = FileHandler(
-        _animal, _date, _dir, tracename="traces3", eatingname="Scored2"
+            _animal, _date, _dir, tracename="traces3", eatingname="Scored2"
     )
     data = initialize_data(filehandler, adjust=34)
 
     df, color = data.tastedata.get_signals_from_events(
-        ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Citric', 'Quinine']
+            ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Citric', 'Quinine']
     )
 
     df2, color2 = data.eatingdata.get_signals_from_events(
-        ['Grooming', 'Eating', 'Approach', 'Entry', 'Doing Nothing']
+            ['Grooming', 'Eating', 'Approach', 'Entry', 'Doing Nothing']
     )
 
-    x, xcolors = data.combine(['Eating', 'Approach', 'Entry', 'Doing Nothing'], ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Citric', 'Quinine'])
-
+    x, xcolors = data.combine(['Eating', 'Approach', 'Entry', 'Doing Nothing'],
+                              ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Citric', 'Quinine'])
     mypca = ca_pca.get_pca(x).pca_df
     scatter = pca_scatter(mypca, xcolors, color_dict=color_dict, edgecolors=None, s=20)
+    import matplotlib.pyplot as plt
 
-
-
-
-
-
-
-
+    x = inspect.signature(plt.figure)
