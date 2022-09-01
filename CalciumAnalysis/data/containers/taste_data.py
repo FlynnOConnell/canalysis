@@ -4,9 +4,7 @@
 #taste_data
 """
 import logging
-from collections import namedtuple
 from typing import Generator, Any, Iterable
-import numpy as np
 import pandas as pd
 from dataclasses import dataclass
 from utils import funcs
@@ -20,28 +18,19 @@ class TasteData:
     __signals: pd.DataFrame
     __time: pd.Series
     __timestamps: dict
-    color_dict: namedtuple
+    color_dict: dict
     baseline: int = 0
     post: int = 4
 
     def __post_init__(self):
-        self.taste_events = {}
-        self.concat_event_signals(self.__timestamps)
         assert isinstance(self.__signals, pd.DataFrame)
+        self.tastedata = self.concat_event_signals(self.__timestamps).drop(columns=['time'])
+        self.events: pd.Series = self.tastedata['event']
+        self.colors: pd.Series = self.tastedata['color']
+        self.signals = self.tastedata.drop(columns=['event', 'color'])
 
     def __repr__(self):
         return type(self).__name__
-
-    def generate_stim_data(self) -> Generator[pd.DataFrame, None, None]:
-        yield [(stim, df, df['colors']) for stim, df in self.taste_events.items()]
-
-    def _split(self, eventdata):
-        """Create dictionary with each event and associated traces"""
-        for color in np.unique(eventdata['colors']):
-            event = [
-                tastant for tastant, col in self.color_dict.items() if col in [color]
-            ][0]
-            self.taste_events[event] = eventdata.loc[eventdata["colors"] == color]
 
     def concat_event_signals(self, timestamps):
         """
@@ -65,27 +54,16 @@ class TasteData:
                 event_df = self.__signals.loc[
                     (self.__time > (interv[0] - self.baseline)) &
                     (self.__time < (interv[1] + self.post))].copy()
-                event_df["colors"] = self.color_dict[event]
+                event_df['color'] = self.color_dict[event]
+                event_df["event"] = event
                 aggregate_signals_df = pd.concat([
                     aggregate_signals_df, event_df],
                     axis=0)
         logging.info("Taste data set.")
-        return self._split(aggregate_signals_df)
+        return aggregate_signals_df
 
-    def get_events(self, lst):
-        """
-        Create large dataframe given a list of events.
-        Parameters
-        ----------
-        lst : list
-            List of events used to create large DataFrame.\
-        Returns
-        -------
-        big_df : pd.DataFrame
-            Concatenated dataframe with each event.
-        """
-        new_df = pd.DataFrame()
-        for event, df in self.taste_events.items():
-            if event in lst:
-                new_df = pd.concat([new_df, df], axis=0)
-        return new_df
+    def get_signals_from_events(self, events: list) -> tuple[pd.DataFrame, pd.Series]:
+        signal = self.tastedata[self.tastedata['event'].isin(events)].drop(columns=['event'])
+        color = signal.pop('color')
+        return signal, color
+
