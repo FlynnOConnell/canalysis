@@ -157,3 +157,4 @@ docs/_build/
 # PyBuilder
 target/
 /CalciumAnalysis/sandbox.py
+/datasets/PGT13/052622/Scored2.csv
