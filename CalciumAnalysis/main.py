@@ -36,11 +36,11 @@ color_dict = {
     "Quinine": "red",
     "Acid": "yellow",
     "Sucrose": "purple",
-    "Approach": "magenta",
+    "Approach": "slategray",
     "Eating": "blue",
-    "Grooming": "slategray",
+    "Grooming": "cyan",
     "Entry": "lime",
-    "Interval": "grey"
+    "Doing Nothing": "k"
 }
 
 
@@ -73,16 +73,25 @@ if __name__ == "__main__":
     _animal = "PGT13"
     _date = "052622"
     _dir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
-    colordict = {'grooming': 'green',
-                 'entry': 'blue',
-                 'eating': 'red'}
+
     filehandler = FileHandler(
         _animal, _date, _dir, tracename="traces3", eatingname="Scored2"
     )
     data = initialize_data(filehandler, adjust=34)
-    mypca = ca_pca.get_pca(data.eatingdata.signals).pca_df
-    scatter = pca_scatter(mypca, data.eatingdata.colors, color_dict=color_dict, edgecolors=None, s=6, spin=True)
-    scatter[0].save()
+
+    df, color = data.tastedata.get_signals_from_events(
+        ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Citric', 'Quinine']
+    )
+
+    df2, color2 = data.eatingdata.get_signals_from_events(
+        ['Grooming', 'Eating', 'Approach', 'Entry', 'Doing Nothing']
+    )
+
+    x, xcolors = data.combine(['Eating', 'Approach', 'Entry', 'Doing Nothing'], ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Citric', 'Quinine'])
+
+    mypca = ca_pca.get_pca(x).pca_df
+    scatter = pca_scatter(mypca, xcolors, color_dict=color_dict, edgecolors=None, s=20)
+
 
 
 
