@@ -1,39 +1,51 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-#graph_funcs.py
+#helpers.py
 
 Module (graph): General functions for graphing.
 """
 from __future__ import annotations
+from typing import Tuple, Optional
 
-from typing import Tuple, Optional, Iterable, Sized
-
+import matplotlib as mpl
+from matplotlib import rcParams, figure, lines
 import matplotlib.pyplot as plt
+
 import numpy as np
-from matplotlib import lines
 from sklearn.model_selection import learning_curve
+
+
+def update_rcparams():
+    # Function to set some easy params and avoid some annoying bugs
+    rcParams.update(
+        {
+            "font.weight": "bold",
+            "axes.labelweight": "bold",
+            "axes.facecolor": "w",
+            "axes.labelsize": 15,
+            "lines.linewidth": 1,
+            'animation.ffmpeg_path': r'/c/ffmpeg/bin/ffmpeg',
+            'scatter.edgecolors': None
+        })
 
 
 def get_handles_from_dict(
         color_dict: dict,
-        colors: Iterable,
+        markersize,
         marker: Optional[str] = 'o',
-        linestyle: Optional[int] = "none",
         **kwargs
 ) -> Tuple[list, list]:
     """
     Get matplotlib handles for input dictionary.
     Args:
+        markersize ():
         color_dict (dict): Dictionary of event:color k/v pairs.
-        colors (iterable): list of colors
-        linestyle (str): Connecting lines, default = none.
         marker (str): Shape of scatter point, default is circle.
     Returns:
         proxy (list): matplotlib.lines.line2D appended list.
         label (list): legend labels for each proxy.
     """
-
     proxy, label = [], []
     for t, c in color_dict.items():
         proxy.append(
@@ -41,67 +53,17 @@ def get_handles_from_dict(
                 [0],
                 [0],
                 marker=marker,
+                markersize=markersize,
                 markerfacecolor=c,
-                linestyle=linestyle,
+                markeredgecolor="None",
+                linestyle="None",
                 **kwargs
-            )
-        )
+            ))
         label.append(t)
     return proxy, label
 
 
-def parse_colors(
-        evcolor_dict: dict,
-        iterable_color: Iterable | Sized,
-        marker: Optional[str] = None,
-        linestyle: Optional[int] = "none",
-        **kwargs
-) -> Tuple[list, list]:
-    """
-    Get matplotlib handles for input dictionary.
-    Args:
-        evcolor_dict (dict): event[color] dict to map
-        iterable_color (Iterable): Iterable of colors to zip.
-        linestyle (str): Connecting lines, default = none.
-        marker (str): Shape of scatter point, default is circle.
-    Returns:
-        proxy (list): matplotlib.lines.line2D appended list.
-        label (list): legend labels for each proxy.
-
-    """
-    proxy, label = [], []
-    for t in np.unique(iterable_color):
-        # add color to list
-        proxy.append(
-            lines.Line2D(
-                [0],
-                [0],
-                marker=marker,
-                markerfacecolor=t,
-                linestyle=linestyle,
-                **kwargs
-            )
-        )
-        val = [i for i in evcolor_dict if evcolor_dict[i] == t]
-        label.append(val)
-    return proxy, label
-
-
-# if conf_interv:
-#     for color in np.unique(self.colors):
-#         _df = df.loc[(df["colors"] == color)]
-#         gr_func.confidence_ellipse(
-#             _df.iloc[:, 0],
-#             _df.iloc[:, 1],
-#             ax,
-#             facecolor=color,
-#             edgecolor="k",
-#             linestyle="--",
-#             linewidth=2,
-#             alpha=0.08,
-#        )
-
-def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs):
+def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs) -> mpl.figure.Axes:
     """
     Create a covariance confidence ellipse of `x` and `y`
             
