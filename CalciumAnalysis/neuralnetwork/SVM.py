@@ -22,7 +22,7 @@ from sklearn.model_selection import (
 )
 from sklearn.svm import SVC
 
-from graphs.graph_utils.graph_funcs import plot_learning_curve
+from graphs.graph_utils.helpers import plot_learning_curve
 from neuralnetwork.nn_utils._properties import _validate, _props
 from neuralnetwork.nn_utils.datahandler import DataHandler
 from neuralnetwork.nn_utils.scores import Scoring
