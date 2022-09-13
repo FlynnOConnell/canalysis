@@ -6,73 +6,33 @@
 
 from __future__ import annotations
 
-from typing import Optional, ClassVar
-import logging
-import matplotlib.pyplot as plt
-import numpy as np
+from graph_utils import helpers
+from base._base_heatmap import BaseHeatmap
 import pandas as pd
+import numpy as np
 import seaborn as sns
-from matplotlib import rcParams
-
 from scipy.ndimage.filters import gaussian_filter
-from utils import funcs
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(message)s")
-
-
-def set_pub():
-    """Update matplotlib backend default styles to be bigger and bolder."""
-    rcParams.update(
-        {
-            "font.weight": "bold",
-            "axes.labelweight": "bold",
-            "axes.facecolor": "w",
-            "axes.labelsize": 15,
-            "lines.linewidth": 1,
-        }
-    )
-
-
-# %%
-
-class BaseHeatmap:
-    def __init__(
-            self,
-            data,
-            save_dir: str = '',
-            save_id: str = '',
-            cmap: str = "RdBu",
-            sigma: int | None = None,
-            colorbar: bool = False,
-    ):
-        self.save_dir = save_dir
-        self.save_id = save_id
-        self.cmap = plt.get_cmap(cmap)
-        self.sigma = sigma
-        self.colorbar = colorbar
-
-    @staticmethod
-    def show_heatmap():
-        plt.show()
-
-    def save(self):
-        file = f"{self.save_dir}/{self.save_id}.png"
-        savefile = funcs.check_unique_path(file)
-        plt.savefig(f"{savefile}", dpi=400, bbox_inches="tight", pad_inches=0.01, )
+helpers.update_rcparams()
 
 
 class EatingHeatmap(BaseHeatmap):
     def __init__(
-            self,
-            data,
-            save_dir: str | None = "",
-            title: str | None = "",
+        self,
+        data,
+        save_id: str = '',
+        cmap: str = "plasma",
+        sigma: int | None = None,
+        colorbar: bool = False,
+        save_dir: str | None = "",
+        title: str | None = "",
+        **kwargs
     ):
-        super().__init__(save_dir)
+        super().__init__(save_dir, save_id, cmap, sigma, colorbar)
         self.data = data
-        self.fig, self.ax = plt.subplots()
+        self.data.columns = np.round(np.arange(0, len(self.data.columns)/10, 0.1), 1)
         self.title = title
+        self.kwargs = kwargs
 
         """
         Create heatmaps.
@@ -112,43 +72,48 @@ class EatingHeatmap(BaseHeatmap):
         """
 
     @property
-    def ax(self,):
+    def ax(self, ):
         return self._ax
 
     @ax.setter
     def ax(self, value):
         self._ax = value
 
-    def interval_heatmap(self, eatingstart, entrystart, eatingend, **kwargs):
-        """
-        Plot single heatmap with seaborn library.
-        """
-        set_pub()
+    def show(self):
+        super().show_heatmap()
+
+    def interval_heatmap(self,
+                         eatingstart,
+                         entrystart,
+                         eatingend,
+                         **kwargs
+                         ):
+        """Plot single heatmap with seaborn library."""
+
         if self.sigma:
-            self.data = pd.DataFrame(gaussian_filter(self.data, sigma=self.sigma))
-        self.ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
+            self.data = pd.DataFrame(gaussian_filter(self.data.T, sigma=self.sigma))
+            self.data = self.data.T
+
         self.ax.set_title('Z scores', fontweight="bold")
+        self.ax = sns.heatmap(self.data, cbar=self.colorbar, cmap=self.cmap, **kwargs)
         self.set_heatmap_lines(eatingstart, entrystart, eatingend)
-        sns.heatmap(self.data, cbar=self.colorbar, cmap=self.cmap, **kwargs)
+        self.ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
+        self.ax.xaxis.set_ticklabels(ticklabels=self.ax.get_xticklabels(), rotation=45)
+        n = 2
+        [l.set_visible(False) for (i, l) in enumerate(self.ax.xaxis.get_ticklabels()) if i % n != 0]
+        return None
 
     def set_heatmap_lines(self, eatingstart, entrystart, eatingend):
-        my_ticks = self.ax.get_xticks()
-        line_loc1 = (eatingstart - entrystart) * 10,
-        line_loc2 = (eatingend - eatingstart) * 10,
-        self.ax.set_xticks([my_ticks[0],
-                            my_ticks[-1]],
-                           ['{:.2f}'.format(0),
-                            '{:.2f}'.format(my_ticks[-1] / 10)],
-                           visible=True,
-                           rotation="horizontal")
+        line_loc1 = (eatingstart - entrystart) * 10
+        line_loc2 = (eatingend - eatingstart) * 10
         self.ax.axvline(
-            line_loc1,
-            color='k',
-            linewidth=3.5,
-            alpha=0.9)
+                line_loc1,
+                color='k',
+                linewidth=3.5,
+                alpha=0.9)
         self.ax.axvline(
-            line_loc2,
-            color='k',
-            linewidth=3.5,
-            alpha=0.9)
+                line_loc2,
+                color='k',
+                linewidth=3.5,
+                alpha=0.9)
         return None
