@@ -1,38 +1,41 @@
 
 # Load a single session
-SESSION:
+Session:
   animal: 'PGT13'
   date: '052622'                # for single day analysis
   dates: ['070121, 071621']     # iterate for multi-day analysis
 
-DIRECTORY:
-  data : 'A:\'
-  save: './Desktop'
+Directory:
+  data : 'C:\Users\flynn\repos\CalciumAnalysis\datasets'
+  statsave: './Desktop'
+  plotsave: 'C:\Users\dilorenzo\Desktop\CalciumPlots\'
 
 # Names used in pattern matching to distinguish files
-FILENAMES:
+Filenames:
   traces: 'traces3'
   events: 'processed'
+  eating: 'Scored2'
   gpio: 'gpio.csv'
 
 # Map event names to color for graphing
-COLORS:
-    ArtSal : dodgerblue
-    MSG : darkorange
-    NaCl : lime
-    Sucrose : magenta
-    Citric : yellow
+Colors:
+    Chocolate : saddlebrown
+    Peanut : darkorange
+    NaCl : green
+    Sucrose : purple
+    Acid : yellow
     Quinine : red
     Rinse : lightsteelblue
     Lick : darkgray
-    Peanut: darkorange
-    Chocolate: saddlebrown
+    Approach : pink
     Eating: blue
-    Grooming: slategray
+    Grooming: cyan
     Entry: lime
+    Doing Nothing: k
+
 
 # For GPIO ports 1-4. Value indicates GPIO number.
-DECODER:
+Decoder:
     Rinse : [1, 2, 3, 4]
     ArtSal : [1, 3, 4]
     Quinine : [1, 2, 4]
@@ -42,11 +45,11 @@ DECODER:
     Citric : [1, 2, 3]
 
 # For Plots.
-PLOTS:
+Plots:
   # FFMPEG is used for interactive / 3d plots. For guide on downloading:
   # https://stackoverflow.com/questions/13316397/matplotlib-animation-no-moviewriters-available
   # https://suryadayn.medium.com/error-requested-moviewriter-ffmpeg-not-available-easy-fix-9d1890a487d3
   # download from: https://ffmpeg.org/download.html
   FFMPEG : 'C:\ProgramData\Anaconda3\envs\cax\Library\bin\ffmpeg'
-  SaveDir : 'C:\Users\dilorenzo\Desktop\CalciumPlots\'
+
 
