@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 from collections import namedtuple
 from pathlib import Path
-from pprint import pprint
 from typing import Optional
 
 import pandas as pd
@@ -258,17 +257,3 @@ class FileHandler:
             if x.is_file():
                 file_list.append(x)
         return file_list
-
-    @staticmethod
-    def uniquify(path: Path | str):
-        if isinstance(path, str):
-            path = Path(path)
-        assert hasattr(path, "stem")
-
-        counter = 1
-        while path.is_file:
-            counter += 1
-            path = path.parent / str(
-                path.stem + "_(" + str(counter) + ")" + path.anchor
-            )
-        return str(path)

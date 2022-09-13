@@ -9,19 +9,10 @@ Module (graphs.graph_utils): Functions for manipulating axes objects.
 from __future__ import annotations
 
 import logging
-
-from typing import Optional, Sized
-import seaborn as sns
-import matplotlib.font_manager as fm
-import matplotlib.pyplot as plt
 import numpy as np
-
-from matplotlib import rcParams, figure
 import graphs.graph_utils.helpers as gr_func
-import matplotlib
-from pathlib import Path
 
-matplotlib.use("TkAgg")
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
 

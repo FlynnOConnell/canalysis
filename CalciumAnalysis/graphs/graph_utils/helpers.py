@@ -8,8 +8,8 @@ Module (graph): General functions for graphing.
 from __future__ import annotations
 from typing import Tuple, Optional
 
-import matplotlib as mpl
-from matplotlib import rcParams, figure, lines
+import matplotlib
+from matplotlib import rcParams, lines
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -19,22 +19,23 @@ from sklearn.model_selection import learning_curve
 def update_rcparams():
     # Function to set some easy params and avoid some annoying bugs
     rcParams.update(
-        {
-            "font.weight": "bold",
-            "axes.labelweight": "bold",
-            "axes.facecolor": "w",
-            "axes.labelsize": 15,
-            "lines.linewidth": 1,
-            'animation.ffmpeg_path': r'/c/ffmpeg/bin/ffmpeg',
-            'scatter.edgecolors': None
-        })
+            {
+                "font.weight": "bold",
+                "axes.labelweight": "bold",
+                "xtick.major.width": "1.3",
+                "axes.facecolor": "w",
+                "axes.labelsize": 17,
+                "lines.linewidth": 1,
+                'animation.ffmpeg_path': r'/c/ffmpeg/bin/ffmpeg',
+                'scatter.edgecolors': None
+            })
 
 
 def get_handles_from_dict(
-        color_dict: dict,
-        markersize,
-        marker: Optional[str] = 'o',
-        **kwargs
+    color_dict: dict,
+    markersize,
+    marker: Optional[str] = 'o',
+    **kwargs
 ) -> Tuple[list, list]:
     """
     Get matplotlib handles for input dictionary.
@@ -49,21 +50,21 @@ def get_handles_from_dict(
     proxy, label = [], []
     for t, c in color_dict.items():
         proxy.append(
-            lines.Line2D(
-                [0],
-                [0],
-                marker=marker,
-                markersize=markersize,
-                markerfacecolor=c,
-                markeredgecolor="None",
-                linestyle="None",
-                **kwargs
-            ))
+                lines.Line2D(
+                        [0],
+                        [0],
+                        marker=marker,
+                        markersize=markersize,
+                        markerfacecolor=c,
+                        markeredgecolor="None",
+                        linestyle="None",
+                        **kwargs
+                ))
         label.append(t)
     return proxy, label
 
 
-def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs) -> mpl.figure.Axes:
+def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs) -> matplotlib.figure.Axes:
     """
     Create a covariance confidence ellipse of `x` and `y`
             
@@ -95,16 +96,16 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs) -> mpl.f
     ell_radius_x = np.sqrt(1 + pearson)
     ell_radius_y = np.sqrt(1 - pearson)
     ellipse = Ellipse(
-        (0, 0),
-        width=ell_radius_x * 2,
-        height=ell_radius_y * 2,
-        facecolor=facecolor,
-        **kwargs
+            (0, 0),
+            width=ell_radius_x * 2,
+            height=ell_radius_y * 2,
+            facecolor=facecolor,
+            **kwargs
     )
-    # Calculating the stdandard deviation of x
+    # standard deviation of x
     scale_x = np.sqrt(cov[0, 0]) * n_std
     mean_x = np.mean(x)
-    # calculating the stdandard deviation of y
+    # standard deviation of y
     scale_y = np.sqrt(cov[1, 1]) * n_std
     mean_y = np.mean(y)
     transf = (
@@ -118,15 +119,15 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs) -> mpl.f
 
 
 def plot_learning_curve(
-        estimator,
-        title,
-        X,
-        y,
-        axes=None,
-        ylim=None,
-        cv=None,
-        n_jobs=None,
-        train_sizes=np.linspace(0.1, 1.0, 5),
+    estimator,
+    title,
+    X,
+    y,
+    axes=None,
+    ylim=None,
+    cv=None,
+    n_jobs=None,
+    train_sizes=np.linspace(0.1, 1.0, 5),
 ):
     """
     Generate 3 plots: the test and training learning curve, the training
@@ -189,13 +190,13 @@ def plot_learning_curve(
     axes[0].set_ylabel("Score")
 
     train_sizes, train_scores, test_scores, fit_times, _ = learning_curve(
-        estimator,
-        X,
-        y,
-        cv=cv,
-        n_jobs=n_jobs,
-        train_sizes=train_sizes,
-        return_times=True,
+            estimator,
+            X,
+            y,
+            cv=cv,
+            n_jobs=n_jobs,
+            train_sizes=train_sizes,
+            return_times=True,
     )
     train_scores_mean = np.mean(train_scores, axis=1)
     train_scores_std = np.std(train_scores, axis=1)
@@ -207,24 +208,24 @@ def plot_learning_curve(
     # Plot learning curve
     axes[0].grid()
     axes[0].fill_between(
-        train_sizes,
-        train_scores_mean - train_scores_std,
-        train_scores_mean + train_scores_std,
-        alpha=0.1,
-        color="r",
+            train_sizes,
+            train_scores_mean - train_scores_std,
+            train_scores_mean + train_scores_std,
+            alpha=0.1,
+            color="r",
     )
     axes[0].fill_between(
-        train_sizes,
-        test_scores_mean - test_scores_std,
-        test_scores_mean + test_scores_std,
-        alpha=0.1,
-        color="g",
+            train_sizes,
+            test_scores_mean - test_scores_std,
+            test_scores_mean + test_scores_std,
+            alpha=0.1,
+            color="g",
     )
     axes[0].plot(
-        train_sizes, train_scores_mean, "o-", color="r", label="Training score"
+            train_sizes, train_scores_mean, "o-", color="r", label="Training score"
     )
     axes[0].plot(
-        train_sizes, test_scores_mean, "o-", color="g", label="Cross-validation score"
+            train_sizes, test_scores_mean, "o-", color="g", label="Cross-validation score"
     )
     axes[0].legend(loc="best")
 
@@ -232,10 +233,10 @@ def plot_learning_curve(
     axes[1].grid()
     axes[1].plot(train_sizes, fit_times_mean, "o-")
     axes[1].fill_between(
-        train_sizes,
-        fit_times_mean - fit_times_std,
-        fit_times_mean + fit_times_std,
-        alpha=0.1,
+            train_sizes,
+            fit_times_mean - fit_times_std,
+            fit_times_mean + fit_times_std,
+            alpha=0.1,
     )
     axes[1].set_xlabel("Training examples")
     axes[1].set_ylabel("fit_times")
@@ -249,10 +250,10 @@ def plot_learning_curve(
     axes[2].grid()
     axes[2].plot(fit_time_sorted, test_scores_mean_sorted, "o-")
     axes[2].fill_between(
-        fit_time_sorted,
-        test_scores_mean_sorted - test_scores_std_sorted,
-        test_scores_mean_sorted + test_scores_std_sorted,
-        alpha=0.1,
+            fit_time_sorted,
+            test_scores_mean_sorted - test_scores_std_sorted,
+            test_scores_mean_sorted + test_scores_std_sorted,
+            alpha=0.1,
     )
     axes[2].set_xlabel("fit_times")
     axes[2].set_ylabel("Score")
