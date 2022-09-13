@@ -8,29 +8,22 @@ Module (core): Functions for drawing graphs.
 """
 from __future__ import annotations
 
-import logging
-
 from typing import Optional, Sized
+
+
+from matplotlib import pyplot as plt
 import seaborn as sns
 import matplotlib.font_manager as fm
-import matplotlib.pyplot as plt
 import numpy as np
 
 from graph_utils import helpers, ax_helpers
-from graph_utils.cafigure import CalFigure
-import matplotlib
+from base._base_figure import CalFigure
 
-matplotlib.use("TkAgg")
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
-
-# Globals
-_UNSPECIFIED = object()
+helpers.update_rcparams()
 
 
 def get_figure(*args, ax=None, **kwargs):
-    helpers.update_rcparams()
-    fig = plt.figure(FigureClass=CalFigure, *args, **kwargs)
+    fig = plt.figure(*args, FigureClass=CalFigure, **kwargs)
     ax = ax if ax is not None else plt.gca()
     ax.set_facecolor = "w"
     ax.patch.set_facecolor('w')
@@ -60,7 +53,7 @@ def pca_scatter(data, colors, color_dict=None, s: int = 10, **kwargs):
         ax = ax_helpers.get_legend(ax, color_dict, colors, s)
     fig, ax = get_figure(ax=ax, figsize=(3, 3))
     plt.show()
-    return fig, ax
+    return fig
 
 
 def pca_skree(variance: Sized, title: str = "") -> plt.figure:
@@ -73,11 +66,6 @@ def pca_skree(variance: Sized, title: str = "") -> plt.figure:
         From PCA.explained_variance_ratio_.
     title : str, optional
         Title of graph. The default is ''.
-
-    Returns
-    -------
-    None
-        DESCRIPTION.
     """
     lab = np.arange(len(variance)) + 1
     fig, ax = plt.subplot(111)
@@ -92,7 +80,7 @@ def pca_skree(variance: Sized, title: str = "") -> plt.figure:
         borderpad=0.3,
         shadow=False,
         prop=fm.FontProperties(size="small"),
-        markerscale=0.4, )
+        markerscale=0.4,)
     leg.get_frame().set_alpha(1)
     plt.show()
     return fig
