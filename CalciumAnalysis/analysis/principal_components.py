@@ -8,10 +8,10 @@ from sklearn.preprocessing import StandardScaler
 
 
 def get_pca(data, numcomp: int = 4):
-    return _CaPrincipalComponentsAnalysis(data, numcomp)
+    return _PrincipalComponents(data, numcomp)
 
 
-class _CaPrincipalComponentsAnalysis:
+class _PrincipalComponents:
     def __init__(
             self,
             data: pd.DataFrame,
