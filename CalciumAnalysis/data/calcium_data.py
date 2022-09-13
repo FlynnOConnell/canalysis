@@ -66,7 +66,8 @@ class CalciumData(Mixins.CalPlots):
             self.tracedata.zscores,
             self.tracedata.time,
             self.eventdata.timestamps,
-            self.color_dict,
+            self.nr_avgs,
+            self.color_dict
         )
         self._add_instance()
 
