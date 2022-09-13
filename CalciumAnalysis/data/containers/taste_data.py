@@ -4,9 +4,11 @@
 #taste_data
 """
 import logging
-from typing import Generator, Any, Iterable
+from typing import Generator, Iterable, Optional
 import pandas as pd
+import numpy as np
 from dataclasses import dataclass
+
 from utils import funcs
 
 logger = logging.getLogger(__name__)
@@ -18,6 +20,7 @@ class TasteData:
     __signals: pd.DataFrame
     __time: pd.Series
     __timestamps: dict
+    __avgs: dict
     color_dict: dict
     baseline: int = 0
     post: int = 4
@@ -67,3 +70,32 @@ class TasteData:
         color = signal.pop('color')
         return signal, color
 
+    def get_taste_df(
+            self
+    ) -> Generator[Iterable, None, None]:
+        signals = self.__signals.drop("time", axis=1)
+        for cell in signals:
+            signals[cell] = signals[cell] - self.__avgs[cell]
+            # Replace negatives with 0 using numpys fancy indexing
+            signals[cell][signals[cell] < 0] = 0
+
+        for stim, times in self.trial_times.items():
+            for iteration, trial in enumerate(times):
+                data_ind = np.where((self.__time > trial) & (self.__time < trial + 6))[0]
+                signal = signals.iloc[data_ind, :]
+                yield stim, iteration, signal
+
+    def loop_taste(
+            self,
+            save_dir: Optional[str] = "",
+            **kwargs
+    ) -> Generator[Iterable, None, None]:
+        from heatmaps import EatingHeatmap
+        for stim, iteration, signal in self.get_taste_df():
+            heatmap = EatingHeatmap(
+                    signal.T,
+                    title="Approach, Entry and Eating Interval",
+                    save_dir=save_dir,
+                    **kwargs
+            )
+            yield heatmap
