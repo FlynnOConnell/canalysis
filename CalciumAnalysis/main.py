@@ -1,40 +1,38 @@
 # -*- coding: utf-8 -*-
-
 """
 #main_nn.py
 
 Module: Main code execution. 
         Note: Neural network requires separate main.py in neuralnetwork subpackage.
 """
+
 from __future__ import annotations
 
-import faulthandler
-import logging
 import os
 
 import pandas as pd
 import yaml
 
 import utils.funcs
+from utils.wrappers import log_time
 from analysis.principal_components import get_pca
 from analysis.process_data import ProcessData
 from calcium_data import CalciumData
 from data_utils.file_handler import FileHandler
 from graphs.plot import pca_scatter
-from utils.wrappers import log_time
 
-faulthandler.enable()
 
-logging.basicConfig(level=logging.INFO, format="%(message)s")
-logger = logging.getLogger(__name__)
 save_dir = r'C:\Users\flynn\Desktop\figs'
 # save_dir = "C:/Users/dilorenzo/Desktop/CalciumPlots/"
 
+__file__ = "main.py"
 __location__ = os.path.realpath(
         os.path.join(
                 os.getcwd(),
                 os.path.dirname(__file__)))
 
+
+# %%
 
 def get_params():
     with open(os.path.join(__location__, 'params.yaml'),
@@ -58,9 +56,9 @@ def reorder(tracedata):
     tracedata.reorder(dflist)
 
 
-def pca(df, col):
-    mypca = get_pca(df3, numcomp=3).pca_df
-    scatter = pca_scatter(mypca, color3, color_dict=params.Colors, edgecolors=None, s=20)
+def pca(df, color, param):
+    mypca = get_pca(df, numcomp=3).pca_df
+    scatter = pca_scatter(mypca, color, color_dict=param.Colors, edgecolors=None, s=20)
     return None
 
 
@@ -74,10 +72,6 @@ def statistics(_data, _dir) -> pd.DataFrame | None:
 
 
 def heatmap_loops(_data, anal, cols):
-    yield [heatmaps for heatmaps in anal.loop_taste(
-            cols=cols,
-            save_dir=r'C:\Users\dilorenzo\Desktop\CalciumPlots\heatmaps'
-    )]
     for hm in _data.eatingdata.loop_eating(cols=cols, save_dir=save_dir):
         my_hm = hm
 
@@ -92,32 +86,23 @@ if __name__ == "__main__":
             params.Filenames['traces'],
             params.Filenames['events'],
             params.Filenames['gpio'],
-            params.Filenames['eating']
-    )
+            params.Filenames['eating'])
     data = initialize_data(filehandler, adjust=34)
-
-    df, color = data.tastedata.get_signals_from_events(
-            ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Acid', 'Quinine'])
-
-    df2, color2 = data.eatingdata.get_signals_from_events(
-            ['Grooming', 'Eating', 'Approach', 'Entry', 'Doing Nothing'])
-
-    df3, color3 = data.combine(['Eating', 'Approach'],
-                               ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Acid', 'Quinine'])
-
-    hm = data.eatingdata.eating_heatmap(save_dir='', show=True)
-    for h in hm:
-        h = h
+    save_dir = r'C:\Users\flynn\Desktop\figs'
+    for f in data.eatingdata.generate_eating_heatmap(save_dir='', title=''):
+        f.show()
 
 
 
 
 
 
+# df, color = data.tastedata.get_signals_from_events(
+#         ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Acid', 'Quinine'])
+#
+# df2, color2 = data.eatingdata.get_signals_from_events(
+#         ['Grooming', 'Eating', 'Approach', 'Entry', 'Doing Nothing'])
+#
+# df3, color3 = data.combine(['Eating', 'Approach'],
+#                            ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Acid', 'Quinine'])
 
-
-
-
-
-
-# 'Eating', 'Approach', 'Entry', 'Doing Nothing',
