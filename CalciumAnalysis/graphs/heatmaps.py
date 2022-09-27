@@ -8,10 +8,10 @@ from __future__ import annotations
 
 from graph_utils import helpers
 from base._base_heatmap import BaseHeatmap
-import pandas as pd
+
 import numpy as np
 import seaborn as sns
-from scipy.ndimage.filters import gaussian_filter
+from utils import funcs
 
 helpers.update_rcparams()
 
@@ -20,20 +20,19 @@ class EatingHeatmap(BaseHeatmap):
     def __init__(
         self,
         data,
-        save_id: str = '',
+        premask: np.ndarray = None,
         cmap: str = "plasma",
-        sigma: int | None = None,
         colorbar: bool = False,
         save_dir: str | None = "",
         title: str | None = "",
-        **kwargs
+        **figargs
     ):
-        super().__init__(save_dir, save_id, cmap, sigma, colorbar)
+        super().__init__(cmap, colorbar, **figargs)
         self.data = data
-        self.data.columns = np.round(np.arange(0, len(self.data.columns)/10, 0.1), 1)
+        self.data.columns = np.round(np.arange(0, len(self.data.columns) / 10, 0.1), 1)
+        self.premask = premask
         self.title = title
-        self.kwargs = kwargs
-
+        self.save_dir = save_dir
         """
         Create heatmaps.
 
@@ -80,28 +79,41 @@ class EatingHeatmap(BaseHeatmap):
         self._ax = value
 
     def show(self):
-        super().show_heatmap()
+        self.fig.show()
 
-    def interval_heatmap(self,
-                         eatingstart,
-                         entrystart,
-                         eatingend,
-                         **kwargs
-                         ):
+    def save(self) -> None:
+        file = f"{self.save_dir}.png"
+        savefile = funcs.check_unique_path(file)
+        self.fig.savefig(f"{savefile}", dpi=400, bbox_inches="tight", pad_inches=0.01, )
+        return None
+
+    def default_heatmap(self,
+                        eatingstart,
+                        entrystart,
+                        eatingend,
+                        **kwargs
+                        ):
         """Plot single heatmap with seaborn library."""
 
-        if self.sigma:
-            self.data = pd.DataFrame(gaussian_filter(self.data.T, sigma=self.sigma))
-            self.data = self.data.T
-
-        self.ax.set_title('Z scores', fontweight="bold")
-        self.ax = sns.heatmap(self.data, cbar=self.colorbar, cmap=self.cmap, **kwargs)
+        self.ax.set_title(self.title, fontweight="bold")
+        self.data = self.data[self.data.columns].astype(float)
+        self.ax = sns.heatmap(self.data, cbar=self.colorbar, cmap=self.cmap, mask=self.data.isnull(), **kwargs)
         self.set_heatmap_lines(eatingstart, entrystart, eatingend)
         self.ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
-        self.ax.xaxis.set_ticklabels(ticklabels=self.ax.get_xticklabels(), rotation=45)
+        if self.premask is not None:
+            self.ax.set_xticks(self.premask)
+            self.ax.xaxis.set_ticklabels(ticklabels=self.premask, rotation=45)
+        else:
+            self.ax.xaxis.set_ticklabels(ticklabels=self.ax.get_xticklabels(), rotation=45)
+        self.ax.set_yticks(list(i + 0.5 for i in range(0, self.data.shape[0])))
+        self.ax.set_yticklabels(list(self.data.index.values))
         n = 2
         [l.set_visible(False) for (i, l) in enumerate(self.ax.xaxis.get_ticklabels()) if i % n != 0]
-        return None
+        if self.save_dir:
+            self.save()
+        # plt.close(self.fig)
+        self.fig.close()
+        return self.fig
 
     def set_heatmap_lines(self, eatingstart, entrystart, eatingend):
         line_loc1 = (eatingstart - entrystart) * 10
@@ -109,11 +121,9 @@ class EatingHeatmap(BaseHeatmap):
         self.ax.axvline(
                 line_loc1,
                 color='k',
-                linewidth=3.5,
-                alpha=0.9)
+                linewidth=2,)
         self.ax.axvline(
                 line_loc2,
                 color='k',
-                linewidth=3.5,
-                alpha=0.9)
+                linewidth=2,)
         return None
