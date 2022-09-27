@@ -1,10 +1,10 @@
 """A package for analysis, statistics and visualization of Calcium Imaging data,
-specificially from including from Inscopix."""
+specifically from including from Inscopix."""
 
 from __future__ import annotations
 import logging
 import faulthandler
-
+import calcium_data
 from containers.taste_data import TasteData
 from containers.all_data import AllData
 from containers.gpio_data import GpioData
@@ -15,5 +15,5 @@ faulthandler.enable()
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
-__all__ = [TasteData, EatingData, AllData, GpioData, EventData, TraceData]
-print("Importing", __name__)
+__all__ = [TasteData, EatingData, AllData, GpioData, EventData, TraceData, calcium_data]
+
