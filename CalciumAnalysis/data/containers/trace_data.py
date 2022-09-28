@@ -7,12 +7,10 @@ Module (data.data_utils): Process traces exported from inscopix trace file.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Generator
 
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-from numpy import ndarray
 
 from data.data_utils.file_handler import FileHandler
 
@@ -82,3 +80,7 @@ class TraceData:
         _df["time"] = np.round(_df["time"], 2)
         self.tracedata = _df
         return None
+
+    def reorder(self, cols) -> None:
+        self.zscores = self.zscores[cols]
+        self.zscores['time'] = self.time
