@@ -100,7 +100,7 @@ class EatingHeatmap(BaseHeatmap):
         self.ax = sns.heatmap(self.data, cbar=self.colorbar, cmap=self.cmap, mask=self.data.isnull(), **kwargs)
         self.set_heatmap_lines(eatingstart, entrystart, eatingend)
         self.ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
-        if self.premask is not None:
+        if self.premask:
             self.ax.set_xticks(self.premask)
             self.ax.xaxis.set_ticklabels(ticklabels=self.premask, rotation=45)
         else:
@@ -120,10 +120,10 @@ class EatingHeatmap(BaseHeatmap):
         line_loc2 = (eatingend - eatingstart) * 10
         self.ax.axvline(
                 line_loc1,
-                color='k',
-                linewidth=2,)
+                color='w',
+                linewidth=3,)
         self.ax.axvline(
                 line_loc2,
-                color='k',
-                linewidth=2,)
+                color='w',
+                linewidth=3,)
         return None
