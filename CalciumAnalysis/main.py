@@ -89,20 +89,8 @@ if __name__ == "__main__":
             params.Filenames['eating'])
     data = initialize_data(filehandler, adjust=34)
     save_dir = r'C:\Users\flynn\Desktop\figs'
+    reorder(data.tracedata)
     for f in data.eatingdata.generate_eating_heatmap(save_dir='', title=''):
         f.show()
 
-
-
-
-
-
-# df, color = data.tastedata.get_signals_from_events(
-#         ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Acid', 'Quinine'])
-#
-# df2, color2 = data.eatingdata.get_signals_from_events(
-#         ['Grooming', 'Eating', 'Approach', 'Entry', 'Doing Nothing'])
-#
-# df3, color3 = data.combine(['Eating', 'Approach'],
-#                            ['Peanut', 'NaCl', 'Chocolate', 'Sucrose', 'Acid', 'Quinine'])
 
