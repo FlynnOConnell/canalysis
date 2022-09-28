@@ -159,27 +159,36 @@ class EatingData:
 
     def generate_eating_heatmap(
         self,
+        premask: Optional[bool] = False,
         save_dir: Optional[str] = "",
         interv_size: Optional[str | float] = -np.inf,
         title: Optional[str] = '',
+        cols: Optional[bool] = False,
         **figargs
     ) -> Generator[Iterable, None, None]:
         for signal, time, approachstart, entrystart, eatingstart, eatingend in self.generate_entry_eating_signals():
             tsize = (len(signal.T.columns) / 10)
-            cols = self.get_reorder_cols()
             if tsize > interv_size:
-                signal = signal[cols]
+                if cols:
+                    reordercols = self.get_reorder_cols()
+                    signal = signal[reordercols]
                 for cell in signal:
                     signal[cell][signal[cell] < 0] = 0
                 signal = signal.T
                 signal.columns = np.round(np.arange(0, len(signal.columns) / 10, 0.1), 1)
-                large_cols = self.get_largest_interv() / 10
-                newcols = np.round(np.arange(signal.columns[-1] + 0.1, large_cols, 0.1), 1)
-                missingsig = pd.DataFrame(columns=newcols, index=signal.index)
-                finalsig = pd.concat([signal, missingsig], axis=1)
+                newcols = np.round(np.arange(
+                        signal.columns[-1] + 0.1,
+                        self.get_largest_interv() / 10, 0.1), 1)
+                finalsig = pd.concat([signal, pd.DataFrame(columns=newcols, index=signal.index)], axis=1)
+                if premask:
+                    premask = signal.columns
+                    data = finalsig
+                else:
+                    premask = None
+                    data = signal
                 heatmap = EatingHeatmap(
-                        data=finalsig,
-                        premask=signal.columns,
+                        data,
+                        premask=premask,
                         title=title,
                         save_dir=save_dir,
                         **figargs)
