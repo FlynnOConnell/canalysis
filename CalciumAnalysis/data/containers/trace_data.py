@@ -21,6 +21,7 @@ from data.data_utils.file_handler import FileHandler
 @dataclass
 class TraceData:
     filehandler: FileHandler = FileHandler
+    zscores: pd.DataFrame = None
 
     def __post_init__(self):
         self.tracedata = self.filehandler.get_tracedata()
