@@ -25,6 +25,8 @@
 .vs/
 .vs/**
 
+CalciumAnalysis/**/__pycache__
+
 # CMake
 cmake-build-*/
 
