@@ -7,15 +7,14 @@ Module(analysis): Stats class for PCA and general statistics/output.
 """
 from __future__ import annotations
 
-from typing import Optional, Iterable, Generator, Any, ClassVar
-
-import numpy as np
+from typing import Iterable, Any, ClassVar
 import pandas as pd
 
-from graphs.heatmaps import Heatmap
 from utils import funcs
-from .analysis_utils import ca_pca
-from .analysis_utils.analysis_funcs import map_colors
+
+
+def sort_by_value(data):
+    pass
 
 
 class ProcessData:
@@ -31,7 +30,6 @@ class ProcessData:
         self.timestamps: dict = data.eventdata.timestamps
         self.antibouts = self.get_antibouts()
         self.sponts = self.get_sponts()
-        self.ca_pca: ClassVar | None = None
 
     def get_antibouts(self) -> pd.DataFrame | pd.Series:
         antibouts = pd.DataFrame()
@@ -46,67 +44,3 @@ class ProcessData:
             df = self.signals[(self.time > (interv[0])) & (self.time < (interv[1]))]
             sponts = pd.concat([sponts, df], axis=0)
         return sponts
-
-    def get_taste_df(
-            self
-    ) -> Generator[Iterable, None, None]:
-        signals = self.zscores.copy().drop("time", axis=1)
-        for cell in signals:
-            signals[cell] = signals[cell] - self.avgs[cell]
-            # Replace negatives with 0 using numpys fancy indexing
-            signals[cell][signals[cell] < 0] = 0
-
-        for stim, times in self.trial_times.items():
-            for iteration, trial in enumerate(times):
-                data_ind = np.where((self.time > trial) & (self.time < trial + 6))[
-                    0
-                ]
-                signal = signals.iloc[data_ind, :]
-                yield stim, iteration, signal
-
-    # TO TASTEDATA
-    def loop_taste(
-            self,
-            save_dir: Optional[str] = "",
-            cols: list = None,
-            **kwargs
-    ) -> Generator[Iterable, None, None]:
-        for stim, iteration, signal in self.get_taste_df():
-            signal = signal[cols]
-            hm = Heatmap(
-                title=f"{stim}," f" trial {iteration + 1}",
-                cm="plasma",
-                line_loc=10,
-                save_dir=save_dir,
-                _id=f"{stim}",
-                **kwargs,
-            ).single(signal.T)
-            yield hm
-
-    def loop_eating(
-            self,
-            save_dir: Optional[str] = "",
-            cols: list = None,
-            **kwargs
-    ) -> Generator[Iterable, None, None]:
-        for signal, _, counter, starttime, middle, endtime in self.data.get_eating_signals():
-            for cell in signal:
-                signal[cell][signal[cell] < 0] = 0
-            xlabel = (endtime - starttime) * 0.1
-            if cols:
-                signal = signal[cols]
-            hm = Heatmap(
-                title=f"Trial: {counter}",
-                xlabel=f'{np.round(xlabel, 2)} seconds',
-                cm="plasma",
-                save_dir=save_dir,
-                _id=f"{counter}",
-                line_loc=middle - starttime,
-                **kwargs,
-            ).single(signal.T)
-            yield hm
-
-    # TO EATINGDATA
-
-
-

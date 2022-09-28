@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 from collections import namedtuple
 from pathlib import Path
-from pprint import pprint
 from typing import Optional
 
 import pandas as pd
@@ -209,18 +208,20 @@ class FileHandler:
         eatingfiles: list[Path] = self.get_eating_files()
         if eatingfiles is None:
             raise FileNotFoundError(
-                f'No files in {self.sessiondir} matching "{self._eatingname}"'
-            )
+                f'No files in {self.sessiondir} matching "{self._eatingname}"')
         if len(eatingfiles) > 1:
             logging.info(
                 f'Multiple eating-files found in {self.sessiondir} matching "'
-                f'{self._eatingname}":'
-            )
+                f'{self._eatingname}":')
             for eating_file in eatingfiles:
                 logging.info(f"{eating_file}")
             logging.info(f"Taking file: {eatingfiles[0]}")
         logging.info("Eating data set.")
-        return pd.read_csv(str(eatingfiles[0]), low_memory=False)
+        return pd.read_csv(
+            str(eatingfiles[0]),
+            low_memory=False,
+            header=0,
+            usecols=['Marker Name', 'TimeStamp', 'TimeStamp2'])
 
     def unique_path(self, filename) -> Path:
         counter = 0
@@ -256,17 +257,3 @@ class FileHandler:
             if x.is_file():
                 file_list.append(x)
         return file_list
-
-    @staticmethod
-    def uniquify(path: Path | str):
-        if isinstance(path, str):
-            path = Path(path)
-        assert hasattr(path, "stem")
-
-        counter = 1
-        while path.is_file:
-            counter += 1
-            path = path.parent / str(
-                path.stem + "_(" + str(counter) + ")" + path.anchor
-            )
-        return str(path)

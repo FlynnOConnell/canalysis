@@ -3,26 +3,29 @@ from __future__ import annotations
 from typing import Optional, Iterable, Any, ClassVar, Sized
 import numpy as np
 import pandas as pd
-from utils import excepts as e
-from graphs.plot import ScatterPlots
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 
-class CaPrincipalComponentsAnalysis:
+def get_pca(data, numcomp: int = 4):
+    return _PrincipalComponents(data, numcomp)
+
+
+class _PrincipalComponents:
     def __init__(
             self,
             data: pd.DataFrame,
-            colors: Sized[Any],
-            numcomp: Optional[int] = 4
+            numcomp: int
     ):
         self.data: pd.DataFrame = data
-        self.colors: Sized[Any] = colors
         self.numcomp: int = numcomp
         self.pca: ClassVar = None
         self.variance_explained: Iterable[Any] | None = None
         self.pca_df: pd.DataFrame | None = None
         self.fit_pca()
+
+    def __repr__(self):
+        return f"{type(self).__name__}, {self.numcomp}"
 
     def fit_pca(self, ) -> None:
         data_prepped = StandardScaler().fit_transform(self.data)
@@ -35,7 +38,4 @@ class CaPrincipalComponentsAnalysis:
         ]
         self.pca_df = pd.DataFrame(data_fit, columns=labels)
         return None
-
-    def get_plots(self, color_dict: dict, **kwargs) -> ClassVar[ScatterPlots]:
-        return ScatterPlots(self.pca_df, self.colors, color_dict, **kwargs)
 

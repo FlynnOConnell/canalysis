@@ -9,24 +9,21 @@ Module: Classes for data processing.
 from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
-from typing import ClassVar, Optional, Generator, Iterable
+from typing import ClassVar, Optional
 
 import pandas as pd
 
-from all_data import AllData
-from trace_data import TraceData
-from taste_data import TasteData
-from event_data import EventData
-from eating_data import EatingData
+from containers.all_data import AllData
+from containers.trace_data import TraceData
+from containers.taste_data import TasteData
+from containers.event_data import EventData
+from containers.eating_data import EatingData
 from data_utils.file_handler import FileHandler
 from graphs.graph_utils import Mixins
 from utils import excepts as e
 from utils import funcs
 
 logger = logging.getLogger(__name__)
-
-
-# %%
 
 
 @dataclass
@@ -36,9 +33,9 @@ class CalciumData(Mixins.CalPlots):
     storage for each session.
     """
 
-    filehandler: FileHandler
-    color_dict: color_dict
-    adjust: Optional[int] = None
+    __filehandler: FileHandler
+    color_dict: dict
+    adjust: Optional[int] | None = None
     tracedata: TraceData = field(init=False)
     eventdata: EventData = field(init=False)
     _tastedata: TasteData = field(init=False)
@@ -48,27 +45,29 @@ class CalciumData(Mixins.CalPlots):
     def __post_init__(self):
 
         # Instance info
-        self.date = self.filehandler.date
-        self.animal = self.filehandler.animal
-        self.data_dir = self.filehandler.directory
-        self.session = self.filehandler.session
+        self.date = self.__filehandler.date
+        self.animal = self.__filehandler.animal
+        self.data_dir = self.__filehandler.directory
+        self.session = self.__filehandler.session
 
         # Core data
-        self.tracedata: TraceData = TraceData(self.filehandler)
-        self.eventdata: EventData = EventData(self.filehandler, self.color_dict, self.tracedata.time)
-        if self.filehandler.eatingname is not None:
+        self.tracedata: TraceData = TraceData(self.__filehandler)
+        self.eventdata: EventData = EventData(self.__filehandler, self.color_dict, self.tracedata.time)
+        if self.__filehandler.eatingname is not None:
             self.eatingdata: EatingData = EatingData(
-                self.filehandler,
+                self.__filehandler,
                 self.tracedata,
+                self.color_dict
             )
         self.nr_avgs = self._get_nonreinforced_means()
         self._authenticate()
 
         self._tastedata: TasteData = TasteData(
-            self.tracedata.signals,
+            self.tracedata.zscores,
             self.tracedata.time,
             self.eventdata.timestamps,
-            self.color_dict,
+            self.nr_avgs,
+            self.color_dict
         )
         self._add_instance()
 
@@ -84,19 +83,16 @@ class CalciumData(Mixins.CalPlots):
         return funcs.keys_exist(element, *keys)
 
     @property
+    def size(self):
+        return len(self.tracedata.cells)
+
+    @property
     def tastedata(self):
         return self._tastedata
 
     @tastedata.setter
     def tastedata(self, **new_values):
         self._tastedata = TasteData(**new_values)
-
-    def _set_eatingdata(self) -> EatingData:
-        return EatingData(
-            self.filehandler,
-            self.tracedata,
-            self.adjust,
-        )
 
     def _authenticate(self):
         if not isinstance(self.tracedata, TraceData):
@@ -162,3 +158,7 @@ class CalciumData(Mixins.CalPlots):
         """return a list of signal values via cell integer indexing (0 through N cells"""
         return list(self.tracedata.signals.iloc[:, i])
 
+    def combine(self, eatingevent: list = None, stimevent: list = None) -> tuple[pd.DataFrame, pd.Series]:
+        eating, eatingcolors = self.eatingdata.get_signals_from_events(eatingevent)
+        stim, stimcolors = self.tastedata.get_signals_from_events(stimevent)
+        return pd.concat([eating, stim], axis=0), pd.concat([eatingcolors, stimcolors], axis=0)

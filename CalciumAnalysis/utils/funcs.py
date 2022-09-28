@@ -5,7 +5,7 @@
 Module(util): General getter/setter/checker functions.
 """
 from __future__ import annotations
-
+import os
 import itertools
 import logging
 import math
@@ -26,13 +26,9 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 # %% COLLAPSE DATA STRUCTURES
 
-
-def peek(iterable) -> tuple[Any, itertools.chain] | None:
-    try:
-        first = next(iterable)
-    except StopIteration:
-        return None
-    return first, itertools.chain([first], iterable)
+def filter_dict(my_dict: dict, to_filter: Iterable):
+    """Filter dictionary based on a list of colors."""
+    return {k: v for k, v in my_dict.items() if my_dict[k] in np.unique(to_filter)}
 
 
 @typecheck(str)
@@ -46,11 +42,6 @@ def check_path(my_str: str | Path):
     return isinstance(my_str, Path) or any(x in my_str for x in ["/", "\\"])
 
 
-def unzip(val):
-    list_of_tuples = list(zip(*val))
-    return [list(t) for t in list_of_tuples]
-
-
 def keys_exist(element, *keys):
     """Check if *keys (nested) exists in `element` (dict)"""
     if len(keys) == 0:
@@ -62,10 +53,6 @@ def keys_exist(element, *keys):
         except KeyError:
             return False
     return True
-
-
-def reorder_cols(df: pd.DataFrame, cols: list):
-    return df[cols]
 
 
 @typecheck(dict, int)
@@ -86,17 +73,15 @@ def flatten(lst: Iterable) -> list:
     return [item for sublist in lst for item in sublist]
 
 
-def check_unique_path(
-        path: Path | str
-) -> str:
-    if isinstance(path, str):
-        path = Path(path)
-    assert hasattr(path, "stem")
-    counter = 0
-    while path.exists():
+def check_unique_path(path) -> str:
+    if hasattr(path, 'stem'):
+        path = path.__str__()
+    filename, extension = os.path.splitext(path)
+    counter = 1
+    while os.path.exists(path):
+        path = filename + "" + str(counter) + "" + extension
         counter += 1
-        path = Path(f'{path.parent}/{path.stem}_{str(counter)}{path.suffix}')
-    return path.__str__()
+    return path
 
 
 @typecheck(Iterable, int)
@@ -129,50 +114,6 @@ def interval(
             interv.append(tuple((tmp[0], tmp[-1])))
             tmp = [v]
     return interv
-
-
-@typecheck(pd.DataFrame, pd.Series, int)
-def remove_outliers(
-        df, colors, std: Optional[int] = 2
-) -> Tuple[pd.DataFrame, pd.Series]:
-    df.reset_index(drop=True, inplace=True)
-    colors.reset_index(drop=True, inplace=True)
-    ind = (np.abs(stats.zscore(df)) < std).all(axis=1)
-    df[ind] = df
-    colors[ind] = colors
-    assert colors.shape[0] == df.shape[0]
-    return df, colors
-
-
-@typecheck(Iterable[any])
-def dup_check(signal: Iterable[any], peak_signal: float | int) -> None:
-    """
-    Check if multiple peak signals are present in taste-response moving window.
-    Args:
-        signal (list | np.ndarray): Signal to validate.
-        peak_signal (float | int): Largest value in moving window of taste responses.
-    Raises:
-        exception: DuplicateError.
-    Returns:
-        None.
-    """
-    checker = []
-    for value in signal:
-        dupcheck = math.isclose(value, peak_signal, abs_tol=1.0)
-        if dupcheck is True:
-            checker.append(dupcheck)
-    if not checker:
-        raise e.DuplicateError()
-    return None
-
-
-def has_duplicates(to_check: Sized | Iterable[set]):
-    """ Check iterable for duplicates.
-      Args:
-          to_check (Sized | Iterable[set]): Input iterable to check.
-      Returns:
-          Bool: Truth value if duplicates are present. """
-    return len(to_check) != len(set(to_check))
 
 
 @typecheck(Iterable[any], Iterable[any])
@@ -212,7 +153,3 @@ def get_matched_time(time: np.ndarray, match: np.ndarray) -> np.ndarray:
     match = np.asarray(match).reshape(-1, 1)
     mins = np.argmin(np.abs(match - time), axis=1)
     return np.array([time[mins[i]] for i in range(len(match))])
-
-
-if __name__ == "__main__":
-    pass

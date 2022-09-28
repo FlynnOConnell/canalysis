@@ -121,13 +121,3 @@ class GpioData:
                 else:
                     ts_holder.append(ts)
             self.timestamps[stim] = ts_holder
-
-
-if __name__ == "__main__":
-    # datadir = 'A:\\'
-    datadir = r"C:\Users\flynn\repos\CalciumAnalysis\datasets"
-    animal = "PGT08"
-    date = "071621"
-
-    filehandler = FileHandler(datadir, animal, date)
-    gpio = GpioData(filehandler)

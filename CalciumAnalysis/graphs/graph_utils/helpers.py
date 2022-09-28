@@ -1,42 +1,47 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-#graph_funcs.py
+#helpers.py
 
 Module (graph): General functions for graphing.
 """
 from __future__ import annotations
+from typing import Tuple, Optional
 
-from typing import Tuple, Optional, Iterable, Sized
-
+import matplotlib
+from matplotlib import rcParams, lines
 import matplotlib.pyplot as plt
+
 import numpy as np
-import pandas as pd
-from matplotlib import lines
-from sklearn.datasets import load_digits
-from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection import learning_curve
-from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
 
 
-def get_x_axis(df: pd.DataFrame):
-    data = df
-    assert isinstance(data.columns[0], str)
-    return np.arange(0, data.shape[0], 0.1)
+def update_rcparams():
+    # Function to set some easy params and avoid some annoying bugs
+    rcParams.update(
+            {
+                "font.weight": "bold",
+                "axes.labelweight": "bold",
+                "xtick.major.width": "1.3",
+                "axes.facecolor": "w",
+                "axes.labelsize": 17,
+                "lines.linewidth": 1,
+                'animation.ffmpeg_path': r'/c/ffmpeg/bin/ffmpeg',
+                'scatter.edgecolors': None
+            })
 
 
 def get_handles_from_dict(
     color_dict: dict,
+    markersize,
     marker: Optional[str] = 'o',
-    linestyle: Optional[int] = "none",
     **kwargs
 ) -> Tuple[list, list]:
     """
     Get matplotlib handles for input dictionary.
     Args:
+        markersize ():
         color_dict (dict): Dictionary of event:color k/v pairs.
-        linestyle (str): Connecting lines, default = none.
         marker (str): Shape of scatter point, default is circle.
     Returns:
         proxy (list): matplotlib.lines.line2D appended list.
@@ -45,71 +50,21 @@ def get_handles_from_dict(
     proxy, label = [], []
     for t, c in color_dict.items():
         proxy.append(
-            lines.Line2D(
-                [0],
-                [0],
-                marker=marker,
-                markerfacecolor=c,
-                linestyle=linestyle,
-                **kwargs
-            )
-        )
+                lines.Line2D(
+                        [0],
+                        [0],
+                        marker=marker,
+                        markersize=markersize,
+                        markerfacecolor=c,
+                        markeredgecolor="None",
+                        linestyle="None",
+                        **kwargs
+                ))
         label.append(t)
     return proxy, label
 
 
-def get_handles_from_iterables(
-    evcolor_dict: dict,
-    iterable_color: Iterable | Sized,
-    marker: Optional[str] = None,
-    linestyle: Optional[int] = "none",
-    **kwargs
-) -> Tuple[list, list]:
-    """
-    Get matplotlib handles for input dictionary.
-    Args:
-        evcolor_dict (dict): event[color] dict to map
-        iterable_color (Iterable): Iterable of colors to zip.
-        linestyle (str): Connecting lines, default = none.
-        marker (str): Shape of scatter point, default is circle.
-    Returns:
-        proxy (list): matplotlib.lines.line2D appended list.
-        label (list): legend labels for each proxy.
-
-    """
-    proxy, label = [], []
-    for t in np.unique(iterable_color):
-        # add color to list
-        proxy.append(
-            lines.Line2D(
-                [0],
-                [0],
-                marker=marker,
-                markerfacecolor=t,
-                linestyle=linestyle,
-                **kwargs
-            )
-        )
-        val = [i for i in evcolor_dict if evcolor_dict[i] == t]
-        label.append(val)
-    return proxy, label
-
-
-# if conf_interv:
-#     for color in np.unique(self.colors):
-#         _df = df.loc[(df["colors"] == color)]
-#         gr_func.confidence_ellipse(
-#             _df.iloc[:, 0],
-#             _df.iloc[:, 1],
-#             ax,
-#             facecolor=color,
-#             edgecolor="k",
-#             linestyle="--",
-#             linewidth=2,
-#             alpha=0.08,
-#        )
-
-def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs):
+def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs) -> matplotlib.figure.Axes:
     """
     Create a covariance confidence ellipse of `x` and `y`
             
@@ -141,23 +96,23 @@ def confidence_ellipse(x, y, ax, n_std=1.8, facecolor="none", **kwargs):
     ell_radius_x = np.sqrt(1 + pearson)
     ell_radius_y = np.sqrt(1 - pearson)
     ellipse = Ellipse(
-        (0, 0),
-        width=ell_radius_x * 2,
-        height=ell_radius_y * 2,
-        facecolor=facecolor,
-        **kwargs
+            (0, 0),
+            width=ell_radius_x * 2,
+            height=ell_radius_y * 2,
+            facecolor=facecolor,
+            **kwargs
     )
-    # Calculating the stdandard deviation of x
+    # standard deviation of x
     scale_x = np.sqrt(cov[0, 0]) * n_std
     mean_x = np.mean(x)
-    # calculating the stdandard deviation of y
+    # standard deviation of y
     scale_y = np.sqrt(cov[1, 1]) * n_std
     mean_y = np.mean(y)
     transf = (
         transforms.Affine2D()
-        .rotate_deg(45)
-        .scale(scale_x, scale_y)
-        .translate(mean_x, mean_y)
+            .rotate_deg(45)
+            .scale(scale_x, scale_y)
+            .translate(mean_x, mean_y)
     )
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
@@ -235,13 +190,13 @@ def plot_learning_curve(
     axes[0].set_ylabel("Score")
 
     train_sizes, train_scores, test_scores, fit_times, _ = learning_curve(
-        estimator,
-        X,
-        y,
-        cv=cv,
-        n_jobs=n_jobs,
-        train_sizes=train_sizes,
-        return_times=True,
+            estimator,
+            X,
+            y,
+            cv=cv,
+            n_jobs=n_jobs,
+            train_sizes=train_sizes,
+            return_times=True,
     )
     train_scores_mean = np.mean(train_scores, axis=1)
     train_scores_std = np.std(train_scores, axis=1)
@@ -253,24 +208,24 @@ def plot_learning_curve(
     # Plot learning curve
     axes[0].grid()
     axes[0].fill_between(
-        train_sizes,
-        train_scores_mean - train_scores_std,
-        train_scores_mean + train_scores_std,
-        alpha=0.1,
-        color="r",
+            train_sizes,
+            train_scores_mean - train_scores_std,
+            train_scores_mean + train_scores_std,
+            alpha=0.1,
+            color="r",
     )
     axes[0].fill_between(
-        train_sizes,
-        test_scores_mean - test_scores_std,
-        test_scores_mean + test_scores_std,
-        alpha=0.1,
-        color="g",
+            train_sizes,
+            test_scores_mean - test_scores_std,
+            test_scores_mean + test_scores_std,
+            alpha=0.1,
+            color="g",
     )
     axes[0].plot(
-        train_sizes, train_scores_mean, "o-", color="r", label="Training score"
+            train_sizes, train_scores_mean, "o-", color="r", label="Training score"
     )
     axes[0].plot(
-        train_sizes, test_scores_mean, "o-", color="g", label="Cross-validation score"
+            train_sizes, test_scores_mean, "o-", color="g", label="Cross-validation score"
     )
     axes[0].legend(loc="best")
 
@@ -278,10 +233,10 @@ def plot_learning_curve(
     axes[1].grid()
     axes[1].plot(train_sizes, fit_times_mean, "o-")
     axes[1].fill_between(
-        train_sizes,
-        fit_times_mean - fit_times_std,
-        fit_times_mean + fit_times_std,
-        alpha=0.1,
+            train_sizes,
+            fit_times_mean - fit_times_std,
+            fit_times_mean + fit_times_std,
+            alpha=0.1,
     )
     axes[1].set_xlabel("Training examples")
     axes[1].set_ylabel("fit_times")
@@ -295,43 +250,13 @@ def plot_learning_curve(
     axes[2].grid()
     axes[2].plot(fit_time_sorted, test_scores_mean_sorted, "o-")
     axes[2].fill_between(
-        fit_time_sorted,
-        test_scores_mean_sorted - test_scores_std_sorted,
-        test_scores_mean_sorted + test_scores_std_sorted,
-        alpha=0.1,
+            fit_time_sorted,
+            test_scores_mean_sorted - test_scores_std_sorted,
+            test_scores_mean_sorted + test_scores_std_sorted,
+            alpha=0.1,
     )
     axes[2].set_xlabel("fit_times")
     axes[2].set_ylabel("Score")
     axes[2].set_title("Performance of the model")
 
     return plt
-
-
-def main():
-    fig, axes = plt.subplots(3, 2, figsize=(10, 15))
-
-    X, y = load_digits(return_X_y=True)
-
-    title = "Learning Curves (Naive Bayes)"
-    # Cross validation with 50 iterations to get smoother mean test and train
-    # score curves, each time with 20% data randomly selected as a validation set.
-    cv = ShuffleSplit(n_splits=50, test_size=0.2, random_state=0)
-
-    estimator = GaussianNB()
-    plot_learning_curve(
-        estimator, title, X, y, axes=axes[:, 0], ylim=(0.7, 1.01), cv=cv, n_jobs=4
-    )
-
-    title = r"Learning Curves (SVM, RBF kernel, $\gamma=0.001$)"
-    # SVC is more expensive so we do a lower number of CV iterations:
-    cv = ShuffleSplit(n_splits=5, test_size=0.2, random_state=0)
-    estimator = SVC(gamma=0.001)
-    plot_learning_curve(
-        estimator, title, X, y, axes=axes[:, 1], ylim=(0.7, 1.01), cv=cv, n_jobs=4
-    )
-
-    plt.show()
-
-
-if __name__ == "main":
-    main()

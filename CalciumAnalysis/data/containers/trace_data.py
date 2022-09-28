@@ -30,7 +30,7 @@ class TraceData:
         # Core attributes
         self.signals = self._set_trace_signals()
         self.cells = np.asarray(self.tracedata.columns[1:])
-        self.time = np.asarray(self.tracedata.time)
+        self.time = np.arange(0, self.tracedata.shape[0] / 10, 0.1)
         self.binsize = self.time[2] - self.time[1]
         self.zscores = self._get_zscores()
 
@@ -79,6 +79,6 @@ class TraceData:
         _df = _df.astype(float)
         _df = _df.reset_index(drop=True)
         _df.columns = [column.replace(" ", "") for column in _df.columns]
-        _df["time"] = np.round(_df["time"], 1)
+        _df["time"] = np.round(_df["time"], 2)
         self.tracedata = _df
         return None
