@@ -98,7 +98,7 @@ fabric.properties
 thumbs.db
 =======
 # User-specific stuff
-.idea/
+../CalciumAnalysis/.idea/
 .idea
 /src/**/__pycache__
 
