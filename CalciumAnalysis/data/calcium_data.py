@@ -38,8 +38,7 @@ class CalciumData(Mixins.CalPlots):
     adjust: Optional[int] | None = None
     tracedata: TraceData = field(init=False)
     eventdata: EventData = field(init=False)
-    _tastedata: TasteData = field(init=False)
-
+    tastedata: TasteData = field(init=False)
     alldata: ClassVar[AllData] = AllData.Instance()
 
     def __post_init__(self):
@@ -62,10 +61,11 @@ class CalciumData(Mixins.CalPlots):
         self.nr_avgs = self._get_nonreinforced_means()
         self._authenticate()
 
-        self._tastedata: TasteData = TasteData(
+        self.tastedata: TasteData = TasteData(
             self.tracedata.zscores,
             self.tracedata.time,
             self.eventdata.timestamps,
+            self.eventdata.trial_times,
             self.nr_avgs,
             self.color_dict
         )
@@ -86,13 +86,15 @@ class CalciumData(Mixins.CalPlots):
     def size(self):
         return len(self.tracedata.cells)
 
-    @property
-    def tastedata(self):
-        return self._tastedata
-
-    @tastedata.setter
-    def tastedata(self, **new_values):
-        self._tastedata = TasteData(**new_values)
+    def reset_tastedata(self):
+        self.tastedata = TasteData(
+                    self.tracedata.zscores,
+                    self.tracedata.time,
+                    self.eventdata.timestamps,
+                    self.eventdata.trial_times,
+                    self.nr_avgs,
+                    self.color_dict
+                )
 
     def _authenticate(self):
         if not isinstance(self.tracedata, TraceData):
@@ -121,16 +123,6 @@ class CalciumData(Mixins.CalPlots):
         elif not self.keys_exist(my_dict, self.animal):
             my_dict[self.animal] = {self.date: self}
             logging.info(f"{self.animal} and {self.date} added")
-        return None
-
-    def reorder(
-            self,
-            cols: list
-    ) -> None:
-        self.tracedata.signals = self.tracedata.signals[cols]
-        cols.append('time')
-        self.tracedata.tracedata = self.tracedata.tracedata[cols]
-        self.tracedata.zscores = self.tracedata.zscores[cols]
         return None
 
     def _get_nonreinforced_means(

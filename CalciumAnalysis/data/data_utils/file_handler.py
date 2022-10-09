@@ -78,7 +78,9 @@ class FileHandler:
         self.session: str = f"{animal}_{date}"
         self.animaldir: Path = Path(self._directory / self.animal)
         self.sessiondir: Path = Path(self.animaldir / self.date)
-        assert self.sessiondir.is_dir()
+        if not self.sessiondir.is_dir():
+            raise NotADirectoryError(f"Directory '{self.sessiondir}' is not a valid directory,"
+                                     f"check params.yaml Directory entry.")
         self._gpio_file: Optional[bool] = False
         self._make_dirs()
 

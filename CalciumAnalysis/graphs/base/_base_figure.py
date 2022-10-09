@@ -11,6 +11,9 @@ class CalFigure(Figure):
     def close(self):
         plt.close(self)
 
+    def save(self, dir):
+        plt.savefig(dir)
+
 
 
 

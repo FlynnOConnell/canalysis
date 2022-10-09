@@ -76,8 +76,6 @@ class EatingData:
 
     def get_reorder_cols(self):
         for signal, time, approachstart, entrystart, eatingstart, eatingend in self.generate_entry_eating_signals():
-            s = signal.shape[0]
-            ss = self.get_largest_interv()
             if signal.shape[0] == self.get_largest_interv():
                 newsig = self.reorder(signal, time[time == entrystart].index[0], time[time == eatingend].index[0])
                 return list(newsig.columns)
@@ -163,25 +161,21 @@ class EatingData:
         save_dir: Optional[str] = "",
         interv_size: Optional[str | float] = -np.inf,
         title: Optional[str] = '',
-        cols: Optional[bool] = False,
         **figargs
     ) -> Generator[Iterable, None, None]:
         for signal, time, approachstart, entrystart, eatingstart, eatingend in self.generate_entry_eating_signals():
             tsize = (len(signal.T.columns) / 10)
             if tsize > interv_size:
-                if cols:
-                    reordercols = self.get_reorder_cols()
-                    signal = signal[reordercols]
                 for cell in signal:
                     signal[cell][signal[cell] < 0] = 0
                 signal = signal.T
                 signal.columns = np.round(np.arange(0, len(signal.columns) / 10, 0.1), 1)
-                newcols = np.round(np.arange(
-                        signal.columns[-1] + 0.1,
-                        self.get_largest_interv() / 10, 0.1), 1)
-                finalsig = pd.concat([signal, pd.DataFrame(columns=newcols, index=signal.index)], axis=1)
                 if premask:
                     premask = signal.columns
+                    newcols = np.round(np.arange(
+                            signal.columns[-1] + 0.1,
+                            self.get_largest_interv() / 10, 0.1), 1)
+                    finalsig = pd.concat([signal, pd.DataFrame(columns=newcols, index=signal.index)], axis=1)
                     data = finalsig
                 else:
                     premask = None
@@ -191,6 +185,7 @@ class EatingData:
                         premask=premask,
                         title=title,
                         save_dir=save_dir,
+                        save_name=str(data.shape[1]),
                         **figargs)
                 fig = heatmap.default_heatmap(eatingstart, entrystart, eatingend)
                 yield fig
