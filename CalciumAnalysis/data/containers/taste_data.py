@@ -20,6 +20,7 @@ class TasteData:
     __signals: pd.DataFrame
     __time: pd.Series
     __timestamps: dict
+    trial_times: dict
     __avgs: dict
     color_dict: dict
     baseline: int = 0
@@ -71,17 +72,18 @@ class TasteData:
         return signal, color
 
     def get_taste_df(
-            self
+            self, zero: bool=True,
     ) -> Generator[Iterable, None, None]:
         signals = self.__signals.drop("time", axis=1)
-        for cell in signals:
-            signals[cell] = signals[cell] - self.__avgs[cell]
-            # Replace negatives with 0 using numpys fancy indexing
-            signals[cell][signals[cell] < 0] = 0
+        if zero:
+            for cell in signals:
+                signals[cell] = signals[cell] - self.__avgs[cell]
+                # Replace negatives with 0 using numpys fancy indexing
+                signals[cell][signals[cell] < 0] = 0
 
         for stim, times in self.trial_times.items():
             for iteration, trial in enumerate(times):
-                data_ind = np.where((self.__time > trial) & (self.__time < trial + 6))[0]
+                data_ind = np.where((self.__time > trial-2) & (self.__time < trial + 5))[0]
                 signal = signals.iloc[data_ind, :]
                 yield stim, iteration, signal
 
@@ -94,8 +96,10 @@ class TasteData:
         for stim, iteration, signal in self.get_taste_df():
             heatmap = EatingHeatmap(
                     signal.T,
-                    title="Approach, Entry and Eating Interval",
+                    title=f'{stim}, Trial: {iteration + 1}',
                     save_dir=save_dir,
+                    save_name=f'{stim}_{iteration}',
                     **kwargs
             )
-            yield heatmap
+            fig = heatmap.default_heatmap(maptype='taste')
+            yield fig

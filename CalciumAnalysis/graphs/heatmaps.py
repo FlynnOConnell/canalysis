@@ -8,32 +8,51 @@ from __future__ import annotations
 
 from graph_utils import helpers
 from base._base_heatmap import BaseHeatmap
-import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from scipy.ndimage.filters import gaussian_filter
-
+from utils import funcs
+import logging
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
 helpers.update_rcparams()
+
+
+
+def add_slash(path):
+    """
+    Adds a slash to the path, but only when it does not already have a slash at the end
+    Params: a string
+    Returns: a string
+    """
+    if not path.endswith('/'):
+        path += '/'
+    return path
 
 
 class EatingHeatmap(BaseHeatmap):
     def __init__(
         self,
         data,
-        save_id: str = '',
+        premask: np.ndarray = None,
         cmap: str = "plasma",
-        sigma: int | None = None,
         colorbar: bool = False,
         save_dir: str | None = "",
+        save_name: str = "",
         title: str | None = "",
-        **kwargs
+        **figargs
     ):
-        super().__init__(save_dir, save_id, cmap, sigma, colorbar)
+        super().__init__(cmap, colorbar, **figargs)
         self.data = data
-        self.data.columns = np.round(np.arange(0, len(self.data.columns)/10, 0.1), 1)
+        self.data.columns = np.round(np.arange(0, len(self.data.columns) / 10, 0.1), 1)
+        self.premask = premask
         self.title = title
-        self.kwargs = kwargs
-
+        self.save_dir = save_dir
+        self.save_name = save_name
+        if self.save_dir is not None and self.save_name is None:
+            import random
+            self.save_name = str(random.random())
+            logging.info(f'No name given to save the file. Name designated: {self.save_name}')
         """
         Create heatmaps.
 
@@ -43,8 +62,10 @@ class EatingHeatmap(BaseHeatmap):
             -Using matplotlib.pyplot(plt).imshow(), each column of the heatmap corresponds to columns of the data.
         Parameters
         ----------
-        savedir: str = ''
+        save_dir: str = ''
             Path to save the file.
+        save_name: str = ''
+            Name to give the saved file.
         cm: str = 'inferno'
             Colormap color. Options:
              1) https://seaborn.pydata.org/generated/seaborn.color_palette.html?highlight=sns%20color_palette
@@ -71,6 +92,8 @@ class EatingHeatmap(BaseHeatmap):
             Color of vertical line, if line_loc is set.
         """
 
+
+
     @property
     def ax(self, ):
         return self._ax
@@ -80,40 +103,67 @@ class EatingHeatmap(BaseHeatmap):
         self._ax = value
 
     def show(self):
-        super().show_heatmap()
+        self.fig.show()
 
-    def interval_heatmap(self,
-                         eatingstart,
-                         entrystart,
-                         eatingend,
-                         **kwargs
-                         ):
-        """Plot single heatmap with seaborn library."""
-
-        if self.sigma:
-            self.data = pd.DataFrame(gaussian_filter(self.data.T, sigma=self.sigma))
-            self.data = self.data.T
-
-        self.ax.set_title('Z scores', fontweight="bold")
-        self.ax = sns.heatmap(self.data, cbar=self.colorbar, cmap=self.cmap, **kwargs)
-        self.set_heatmap_lines(eatingstart, entrystart, eatingend)
-        self.ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
-        self.ax.xaxis.set_ticklabels(ticklabels=self.ax.get_xticklabels(), rotation=45)
-        n = 2
-        [l.set_visible(False) for (i, l) in enumerate(self.ax.xaxis.get_ticklabels()) if i % n != 0]
+    def save(self,) -> None:
+        if self.save_dir is None:
+            raise AttributeError('Attempted save without save directory arg.')
+        save_dir = add_slash(self.save_dir) # make sure we start in new dir
+        filename = f'{save_dir}' + self.save_name + '.png'
+        savefile = funcs.check_unique_path(filename)
+        self.fig.savefig(f"{savefile}", dpi=400, bbox_inches="tight", pad_inches=0.01, )
         return None
 
-    def set_heatmap_lines(self, eatingstart, entrystart, eatingend):
+    def default_heatmap(self,
+                        line1=None,
+                        line2=None,
+                        line3=None,
+                        maptype: str = 'eating',
+                        **kwargs
+                        ):
+        """Plot single heatmap with seaborn library."""
+        self.ax.set_title(self.title, fontweight="bold")
+        self.data = self.data[self.data.columns].astype(float)
+        self.ax = sns.heatmap(self.data, cbar=self.colorbar, cmap=self.cmap, **kwargs)
+        if maptype == 'eating':
+            self.set_eatingmap_lines(line1, line2, line3)
+        if maptype == 'taste':
+            self.set_tastemap_lines()
+            self.set_taste_axislabel()
+        self.ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
+        self.ax.xaxis.set_ticklabels(ticklabels=self.ax.get_xticklabels(), rotation=45)
+        self.ax.set_yticks(list(i + 0.5 for i in range(0, self.data.shape[0])))
+        self.ax.set_yticklabels(list(self.data.index.values))
+        if maptype=='eating':
+            n = 2
+            [l.set_visible(False) for (i, l) in enumerate(self.ax.xaxis.get_ticklabels()) if i % n != 0]
+        if self.save_dir:
+            self.save()
+        self.fig.close()
+        return self.fig
+
+    def set_eatingmap_lines(self, eatingstart, entrystart, eatingend):
         line_loc1 = (eatingstart - entrystart) * 10
         line_loc2 = (eatingend - eatingstart) * 10
         self.ax.axvline(
                 line_loc1,
-                color='k',
-                linewidth=3.5,
-                alpha=0.9)
+                color='w',
+                linewidth=3,)
         self.ax.axvline(
                 line_loc2,
-                color='k',
-                linewidth=3.5,
-                alpha=0.9)
+                color='w',
+                linewidth=3,)
         return None
+
+    def set_tastemap_lines(self):
+        self.ax.axvline(
+                20,
+                color='w',
+                linewidth=3,)
+        return None
+
+    @staticmethod
+    def set_taste_axislabel():
+        plt.xticks([0, 20, 69], ['-2', '0', '7'])
+
+

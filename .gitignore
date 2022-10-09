@@ -25,6 +25,9 @@
 .vs/
 .vs/**
 
+CalciumAnalysis/**/__pycache__
+CalciumAnalysis/__pycache__
+
 # CMake
 cmake-build-*/
 
@@ -95,7 +98,7 @@ fabric.properties
 thumbs.db
 =======
 # User-specific stuff
-.idea/
+../CalciumAnalysis/.idea/
 .idea
 /src/**/__pycache__
 
