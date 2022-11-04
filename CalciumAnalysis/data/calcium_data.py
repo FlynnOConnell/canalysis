@@ -35,6 +35,8 @@ class CalciumData(Mixins.CalPlots):
 
     __filehandler: FileHandler
     color_dict: dict
+    doevents: [bool | None] = True
+    doeating: [bool | None] = True
     adjust: Optional[int] | None = None
     tracedata: TraceData = field(init=False)
     eventdata: EventData = field(init=False)
@@ -48,15 +50,19 @@ class CalciumData(Mixins.CalPlots):
         self.animal = self.__filehandler.animal
         self.data_dir = self.__filehandler.directory
         self.session = self.__filehandler.session
-
+        self.doevents: [bool | None] = self.doevents,
+        self.doeating: [bool | None] = self.doeating,
+        adjust: Optional[int] | None = None
         # Core data
         self.tracedata: TraceData = TraceData(self.__filehandler)
-        self.eventdata: EventData = EventData(self.__filehandler, self.color_dict, self.tracedata.time)
-        if self.__filehandler.eatingname is not None:
-            self.eatingdata: EatingData = EatingData(
-                self.__filehandler,
-                self.tracedata,
-                self.color_dict
+        if self.doevents:
+            self.eventdata: EventData = EventData(self.__filehandler, self.color_dict, self.tracedata.time)
+        if self.doeating:
+            if self.__filehandler.eatingname is not None:
+                self.eatingdata: EatingData = EatingData(
+                    self.__filehandler,
+                    self.tracedata,
+                    self.color_dict
             )
         self.nr_avgs = self._get_nonreinforced_means()
         self._authenticate()

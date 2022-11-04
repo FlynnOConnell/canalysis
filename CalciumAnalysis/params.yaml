@@ -1,8 +1,8 @@
 
 # Load a single session
 Session:
-  animal: 'PGT13'
-  date: '052622'                # for single day analysis
+  animal: 'CaP28'
+  date: '092519'                # for single day analysis
   dates: ['070121, 071621']     # iterate for multi-day analysis
 
 Directory:

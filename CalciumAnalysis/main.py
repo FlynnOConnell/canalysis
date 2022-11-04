@@ -10,5 +10,5 @@ from __future__ import annotations
 from CalciumAnalysis import get_data
 
 
-data = get_data()
+data = get_data(doevents=False)
 
