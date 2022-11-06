@@ -2,7 +2,7 @@
 # Load a single session
 Session:
   animal: 'CaP28'
-  date: '092519'                # for single day analysis
+  date: '112519'                # for single day analysis
   dates: ['070121, 071621']     # iterate for multi-day analysis
 
 Directory:
@@ -12,14 +12,19 @@ Directory:
 
 # Names used in pattern matching to distinguish files
 Filenames:
-  traces: 'traces3'
+  traces: 'traces'
   events: 'processed'
-  eating: 'Scored2'
+  eating: 'eating'
   gpio: 'gpio.csv'
+  adjust: '120.3' # time to adjust for eating events
 
 # Map event names to color for graphing
 Colors:
     Chocolate : saddlebrown
+    BackLeft: saddlebrown
+    BackRight: darkorange
+    FrontLeft: pink
+    FrontRight: yellow
     Peanut : darkorange
     NaCl : green
     Sucrose : purple
@@ -29,6 +34,7 @@ Colors:
     Lick : darkgray
     Approach : pink
     Eating: blue
+    EATING: blue
     Grooming: cyan
     Entry: lime
     Doing Nothing: k
