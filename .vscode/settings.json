@@ -1,5 +1,10 @@
 {
     "python.analysis.extraPaths": [
-        "./CalciumAnalysis/data"
+        "./CalciumAnalysis/data",
+        "./CalciumAnalysis/analysis",
+        "./CalciumAnalysis/data",
+        "./CalciumAnalysis/graphs",
+        "./CalciumAnalysis/misc",
+        "./CalciumAnalysis/utils"
     ]
 }
