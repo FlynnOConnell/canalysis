@@ -8,7 +8,8 @@ Module: Main code execution.
 
 from __future__ import annotations
 from CalciumAnalysis import get_data
+import pandas as np
 
+data = get_data(doevents=False, adjust=120.3)
 
-data = get_data()
 

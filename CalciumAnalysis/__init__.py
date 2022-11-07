@@ -44,7 +44,7 @@ def get_parameters():
         parameters = yaml.safe_load(f.read())
     return Params(parameters)
 
-def get_data():
+def get_data(doeating: bool = True, doevents: bool = True, adjust=None):
     params = get_parameters()
     filehandler = FileHandler(
             params.Session['animal'],
@@ -54,4 +54,4 @@ def get_data():
             params.Filenames['events'],
             params.Filenames['gpio'],
             params.Filenames['eating'])
-    return CalciumData(filehandler, color_dict=params.Colors, adjust=34)
+    return CalciumData(filehandler, doeating=doeating, doevents=doevents, color_dict=params.Colors, adjust=adjust)

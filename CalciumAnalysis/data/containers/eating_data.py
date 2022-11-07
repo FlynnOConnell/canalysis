@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass, field
 import pandas as pd
 import numpy as np
-from typing import ClassVar, Optional, Generator, Iterable, Any
+from typing import Optional, Generator, Iterable, Any
 from data_utils.file_handler import FileHandler
 from containers.trace_data import TraceData
 from heatmaps import EatingHeatmap
@@ -53,7 +53,16 @@ class EatingData:
 
     def __clean(self, ) -> None:
         self.raw_eatingdata = self.raw_eatingdata.loc[
-            self.raw_eatingdata["Marker Name"].isin(["Entry", "Eating", "Grooming", "Approach", "Interval"])
+            self.raw_eatingdata["Marker Name"].isin([
+                "BackLeft",
+                "BackRight",
+                "FrontLeft",
+                "FrontRight",
+                "Eating",
+                "EATING",
+                "Grooming",
+                "Approach",
+                "Interval"])
         ]
 
     def __match(self, ):
@@ -147,7 +156,9 @@ class EatingData:
         for idx, x in (enumerate(data)):
             if idx > (len(data) - 2):
                 break
-            if x[0] == 'Approach' and data[idx + 1][0] == 'Entry' and data[idx + 2][0] == 'Eating':
+            if x[0] == 'Approach'\
+                    and (data[idx + 1][0] in ['BackLeft', 'BackRight', 'FrontLeft','FrontRight'])\
+                    and data[idx + 2][0] in ['Eating', 'EATING']:
                 yield (self.get_signal_zscore(x[1], data[idx + 2][2]),  # signal
                        np.round(self.get_signal_time(x[1], data[idx + 2][2]), 1),  # time
                        np.round(x[1], 2),  # approach start

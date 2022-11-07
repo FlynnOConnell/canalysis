@@ -57,7 +57,7 @@ class FileHandler:
         animal,
         date,
         dir,
-        tracename: Optional[str] = "trace",
+        tracename: Optional[str] = "traces",
         eventname: Optional[str] = "processed",
         _gpioname: Optional[str] = "gpio.csv",
         eatingname: Optional[str] = None,

@@ -35,7 +35,9 @@ class CalciumData(Mixins.CalPlots):
 
     __filehandler: FileHandler
     color_dict: dict
-    adjust: Optional[int] | None = None
+    doevents: bool = True
+    doeating: bool = True
+    adjust: Optional[int | float | None] = None
     tracedata: TraceData = field(init=False)
     eventdata: EventData = field(init=False)
     tastedata: TasteData = field(init=False)
@@ -48,27 +50,34 @@ class CalciumData(Mixins.CalPlots):
         self.animal = self.__filehandler.animal
         self.data_dir = self.__filehandler.directory
         self.session = self.__filehandler.session
-
+        self.doevents: [bool | None] = self.doevents,
+        self.doeating: [bool | None] = self.doeating,
+        self.adjust: Optional[int] | None = self.adjust
         # Core data
         self.tracedata: TraceData = TraceData(self.__filehandler)
-        self.eventdata: EventData = EventData(self.__filehandler, self.color_dict, self.tracedata.time)
-        if self.__filehandler.eatingname is not None:
-            self.eatingdata: EatingData = EatingData(
-                self.__filehandler,
-                self.tracedata,
-                self.color_dict
+        if self.doevents is True:
+            self.eventdata: EventData = EventData(self.__filehandler, self.color_dict, self.tracedata.time)
+            self.nr_avgs = self._get_nonreinforced_means()
+            self.tastedata: TasteData = TasteData(
+                    self.tracedata.zscores,
+                    self.tracedata.time,
+                    self.eventdata.timestamps,
+                    self.eventdata.trial_times,
+                    self.nr_avgs,
+                    self.color_dict
             )
-        self.nr_avgs = self._get_nonreinforced_means()
-        self._authenticate()
 
-        self.tastedata: TasteData = TasteData(
-            self.tracedata.zscores,
-            self.tracedata.time,
-            self.eventdata.timestamps,
-            self.eventdata.trial_times,
-            self.nr_avgs,
-            self.color_dict
-        )
+        else:
+            logging.info("skipping events")
+        if self.doeating:
+            if self.__filehandler.eatingname is not None:
+                self.eatingdata: EatingData = EatingData(
+                    self.__filehandler,
+                    self.tracedata,
+                    self.color_dict
+            )
+
+        self._authenticate(doevents=self.doevents)
         self._add_instance()
 
     @classmethod
@@ -96,11 +105,12 @@ class CalciumData(Mixins.CalPlots):
                     self.color_dict
                 )
 
-    def _authenticate(self):
+    def _authenticate(self, doevents: bool | None = True):
         if not isinstance(self.tracedata, TraceData):
             raise e.DataFrameError("Trace data must be a dataframe")
-        if not isinstance(self.eventdata, EventData):
-            raise e.DataFrameError("Event data must be a dataframe.")
+        if doevents is True:
+            if not isinstance(self.eventdata, EventData):
+                raise e.DataFrameError("Event data must be a dataframe.")
         if not any(
                 x in self.tracedata.signals.columns for x in
                 ["C0", "C00", "C000", "C0000"]

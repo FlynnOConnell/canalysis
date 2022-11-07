@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 from typing import Iterable
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -27,7 +26,6 @@ def set_pub():
         }
     )
 
-
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
 
@@ -37,12 +35,9 @@ class QuickPlot:
         self,
         data: pd.DataFrame,
         time: Iterable[any],
-        input_type: str,
         cmap: str = "magma",
         **kwargs,
     ):
-
-        self.input_type = input_type
         self.cmap = plt.get_cmap(cmap)
         self.data = data
         self.time = time
@@ -62,25 +57,25 @@ class QuickPlot:
         self.kwargs = kwargs
         self.checks = {}
 
-    def line_signals(self, ptype: int):
+    def line_signals(self):
         set_pub()
 
         for col in self.data.columns:
             fig, ax = plt.subplots(1, 1)
             ax.set_xlabel("Time(s)", weight="bold")
-            ax.set_ylabel(f"DF/F ({self.input_type})", weight="bold")
+            ax.set_ylabel("DF/F", weight="bold")
             ax.patch.set_facecolor = "white"
             Y = self.data.loc[:, col]
             plt.text(0.9, 0.9, f"{col}", transform=ax.transAxes)
-            # plt.plot(self.time, Y)
             sns.lineplot(ax=ax, x=self.time, y=Y, sort=False)
-            plt.savefig(
-                f"/Users/flynnoconnell/Pictures/{ptype}/{ptype}_{col}.png",
-                bbox_inches="tight",
-                dpi=600,
-            )
+            plt.show()
 
-    def line_fourier(self, ptype: str):
+    @staticmethod
+    def show():
+        plt.show()
+
+
+    def line_fourier(self):
         for col in self.data.columns:
             plt.figure()
             Y = self.data.loc[:, col]
