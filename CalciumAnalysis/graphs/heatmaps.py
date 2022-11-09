@@ -92,8 +92,6 @@ class EatingHeatmap(BaseHeatmap):
             Color of vertical line, if line_loc is set.
         """
 
-
-
     @property
     def ax(self, ):
         return self._ax

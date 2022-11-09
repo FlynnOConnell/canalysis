@@ -9,9 +9,11 @@ Module (graphs.graph_utils): Functions for manipulating axes objects.
 from __future__ import annotations
 
 import logging
+from typing import Optional, Any
+
 import numpy as np
 import graphs.graph_utils.helpers as gr_func
-
+from graph_utils import helpers
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
@@ -40,3 +42,38 @@ def get_legend(ax, color_dict, colors, markersize):
         fancybox=True,
         markerscale=True)
     return ax
+
+def make_legend(
+    mydict: dict,
+    marker: Optional[str] = 'o',
+    show: Optional[bool] = True,
+    save: Optional[bool] = True,
+    markeralpha = None,
+) -> None:
+    helpers.update_rcparams()
+    logging.info(f"..making legend with marker {marker}")
+    import pylab
+    fig = pylab.figure()
+    figlegend = pylab.figure(figsize=(3, 2))
+    ax = fig.add_subplot(111)
+    proxy, label = gr_func.get_handles_from_dict(
+            mydict,
+            markersize=5,
+            marker=marker
+    )
+    leg = figlegend.legend(
+            handles=proxy,
+            labels=label,
+            fancybox=False,
+    )
+    if markeralpha is not None:
+        for lh in leg.legendHandles:
+            lh.set_alpha(markeralpha)
+    if show:
+        fig.show()
+        figlegend.show()
+        logging.info('Legend showing')
+    if save:
+        mydir = 'C:\\Users\\flynn\\Desktop\\figs\\legend.png'
+        figlegend.savefig(f"{mydir}", dpi=1200)
+        logging.info(f'Legend saved in {mydir}')

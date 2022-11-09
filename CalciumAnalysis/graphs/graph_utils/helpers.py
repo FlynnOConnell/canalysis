@@ -21,19 +21,23 @@ def update_rcparams():
     rcParams.update(
             {
                 "font.weight": "bold",
+                "font.family": "Arial",
+                'font.sans-serif': "Arial",
                 "axes.labelweight": "bold",
                 "xtick.major.width": "1.3",
                 "axes.facecolor": "w",
-                "axes.labelsize": 17,
+                "axes.labelsize": 10,
                 "lines.linewidth": 1,
                 'animation.ffmpeg_path': r'/c/ffmpeg/bin/ffmpeg',
                 'scatter.edgecolors': None
-            })
+            }
+
+    )
 
 
 def get_handles_from_dict(
     color_dict: dict,
-    markersize,
+    markersize: Optional[int] = 5,
     marker: Optional[str] = 'o',
     **kwargs
 ) -> Tuple[list, list]:

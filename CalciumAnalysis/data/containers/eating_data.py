@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from utils import funcs
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 import pandas as pd
 import numpy as np
 from typing import Optional, Generator, Iterable, Any
@@ -26,11 +26,11 @@ class EatingData:
     __filehandler: FileHandler
     __tracedata: TraceData
     color_dict: dict
-    adjust: Optional[int] | None = 34
+    adjust: int | float
     eatingdata: pd.DataFrame = field(init=False)
     signals: pd.DataFrame = field(init=False)
 
-    def __post_init__(self, ):
+    def __post_init__(self,):
         self.raw_eatingdata = self.__filehandler.get_eatingdata().sort_values("TimeStamp")
         # Core attributes
         self.__set_adjust()
@@ -50,6 +50,7 @@ class EatingData:
     def __set_adjust(self, ) -> None:
         for column in self.raw_eatingdata.columns[1:]:
             self.raw_eatingdata[column] = self.raw_eatingdata[column] + self.adjust
+        logging.info(f'adjust set: {self.adjust}')
 
     def __clean(self, ) -> None:
         self.raw_eatingdata = self.raw_eatingdata.loc[
@@ -62,7 +63,8 @@ class EatingData:
                 "EATING",
                 "Grooming",
                 "Approach",
-                "Interval"])
+            "Quiescent"
+            ])
         ]
 
     def __match(self, ):
@@ -75,7 +77,13 @@ class EatingData:
         aggregate_eating_signals = pd.DataFrame()
         for signal, _, event in self.generate_signals():
             if event == 'Interval':
-                event = 'Doing Nothing'
+                event = 'Quiescent'
+            if event == "Eating":
+                event = "Food Eating"
+            if event == "Entry":
+                event = "Food Acquisition"
+            if event == "Approach":
+                event = "Food Acquisition"
             signal['event'] = event
             signal['color'] = self.color_dict[event]
             aggregate_eating_signals = pd.concat(
@@ -115,25 +123,9 @@ class EatingData:
         color = signal.pop('color')
         return signal, color
 
-    def get_eating_df(self, events: list) -> pd.DataFrame:
-        """
-        Return a dataframe of eating, grooming and entry events.
-        Containes 'events' column.
-        """
-        df_interval = pd.DataFrame()
-        df_grooming = pd.DataFrame()
-        for signal, event in self.generate_signals():
-            if event == [events]:
-                df_grooming = pd.concat([df_grooming, signal], axis=0)
-                df_grooming['events'] = 'grooming'
-            if event == "Interval":
-                df_interval = pd.concat([df_interval, signal], axis=0)
-                df_interval['events'] = 'interval'
-        return pd.concat([df_interval, df_grooming], axis=0)
-
     def get_baseline(self) -> np.ndarray:
         data = self.raw_eatingdata.to_numpy()
-        baseline = data[np.where(data[:, 0] == 'Interval')[0][0]]
+        baseline = data[np.where(data[:, 0] == 'Quiescent')[0][0]]
         signal = self.get_signal_zscore(baseline[1], baseline[2])
         return signal
 
@@ -157,7 +149,7 @@ class EatingData:
             if idx > (len(data) - 2):
                 break
             if x[0] == 'Approach'\
-                    and (data[idx + 1][0] in ['BackLeft', 'BackRight', 'FrontLeft','FrontRight'])\
+                    and (data[idx + 1][0] in ['BackLeft', 'BackRight', 'FrontLeft', 'FrontRight'])\
                     and data[idx + 2][0] in ['Eating', 'EATING']:
                 yield (self.get_signal_zscore(x[1], data[idx + 2][2]),  # signal
                        np.round(self.get_signal_time(x[1], data[idx + 2][2]), 1),  # time

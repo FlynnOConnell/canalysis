@@ -53,5 +53,11 @@ def get_data(doeating: bool = True, doevents: bool = True, adjust=None):
             params.Filenames['traces'],
             params.Filenames['events'],
             params.Filenames['gpio'],
-            params.Filenames['eating'])
-    return CalciumData(filehandler, doeating=doeating, doevents=doevents, color_dict=params.Colors, adjust=adjust)
+            params.Filenames['eating'],
+    )
+    return CalciumData(filehandler,
+                       doeating=params.Filenames['doeating'],
+                       doevents=params.Filenames['doevents'],
+                       color_dict=params.Colors,
+                       adjust=params.Filenames['adjust'],
+                       )

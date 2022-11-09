@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 def get_pca(data, numcomp: int = 4):
-    return _PrincipalComponents(data, numcomp)
+    return _PrincipalComponents(data, numcomp=3)
 
 
 class _PrincipalComponents:

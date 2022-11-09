@@ -20,10 +20,6 @@
 
 .idea/**
 .bak
-*.vs
-.vs 
-.vs/
-.vs/**
 
 CalciumAnalysis/**/__pycache__
 CalciumAnalysis/__pycache__

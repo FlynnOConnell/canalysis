@@ -8,11 +8,9 @@ Module: Classes for data processing.
 
 from __future__ import annotations
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 from typing import ClassVar, Optional
-
 import pandas as pd
-
 from containers.all_data import AllData
 from containers.trace_data import TraceData
 from containers.taste_data import TasteData
@@ -35,24 +33,22 @@ class CalciumData(Mixins.CalPlots):
 
     __filehandler: FileHandler
     color_dict: dict
-    doevents: bool = True
-    doeating: bool = True
-    adjust: Optional[int | float | None] = None
+    adjust: Optional[int | float | None] = 0
+    doevents: Optional[bool] = True
+    doeating: Optional[bool] = True
     tracedata: TraceData = field(init=False)
     eventdata: EventData = field(init=False)
     tastedata: TasteData = field(init=False)
     alldata: ClassVar[AllData] = AllData.Instance()
 
     def __post_init__(self):
-
         # Instance info
         self.date = self.__filehandler.date
         self.animal = self.__filehandler.animal
         self.data_dir = self.__filehandler.directory
         self.session = self.__filehandler.session
-        self.doevents: [bool | None] = self.doevents,
-        self.doeating: [bool | None] = self.doeating,
-        self.adjust: Optional[int] | None = self.adjust
+        self.doevents: Optional[bool] = self.doevents
+        self.doeating: Optional[bool] = self.doeating
         # Core data
         self.tracedata: TraceData = TraceData(self.__filehandler)
         if self.doevents is True:
@@ -66,17 +62,17 @@ class CalciumData(Mixins.CalPlots):
                     self.nr_avgs,
                     self.color_dict
             )
-
         else:
             logging.info("skipping events")
-        if self.doeating:
+        if self.doeating is True:
             if self.__filehandler.eatingname is not None:
                 self.eatingdata: EatingData = EatingData(
                     self.__filehandler,
                     self.tracedata,
-                    self.color_dict
+                    self.color_dict,
+                    self.adjust
             )
-
+        self.cells = self.tracedata.cells
         self._authenticate(doevents=self.doevents)
         self._add_instance()
 
