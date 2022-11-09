@@ -1,44 +1,45 @@
 
 # Load a single session
 Session:
-  animal: 'CaP28'
-  date: '112519'                # for single day analysis
+  animal: 'PGT13'
+  date: '052622'                # for single day analysis
   dates: ['070121, 071621']     # iterate for multi-day analysis
 
 Directory:
   data : 'C:\Users\flynn\repos\CalciumAnalysis\datasets'
   statsave: './Desktop'
-  plotsave: 'C:\Users\dilorenzo\Desktop\CalciumPlots\'
+  plotsave: 'C:\\Users\\flynn\\Desktop\\figs'
 
 # Names used in pattern matching to distinguish files
 Filenames:
-  traces: 'traces'
+  traces: 'traces3'
   events: 'processed'
-  eating: 'eating'
+  eating: 'Scored2'
   gpio: 'gpio.csv'
-  adjust: '120.3' # time to adjust for eating events
+  adjust: 34 # time to adjust for eating events
+  doeating: True
+  doevents: True
+
 
 # Map event names to color for graphing
 Colors:
     Chocolate : saddlebrown
-    BackLeft: saddlebrown
-    BackRight: darkorange
-    FrontLeft: pink
-    FrontRight: yellow
-    Peanut : darkorange
-    NaCl : green
+    Peanut  : darkorange
+    NaCl : darkgreen
     Sucrose : purple
     Acid : yellow
     Quinine : red
-    Rinse : lightsteelblue
-    Lick : darkgray
     Approach : pink
-    Eating: blue
-    EATING: blue
     Grooming: cyan
     Entry: lime
-    Doing Nothing: k
-
+    Food Acquisition: lime
+    FrontLeft: lime
+    FrontRight: lime
+    BackLeft: lime
+    BackRight: lime
+    Food Eating: blue
+    Quiescent: black
+    Interval: k
 
 # For GPIO ports 1-4. Value indicates GPIO number.
 Decoder:
@@ -50,7 +51,7 @@ Decoder:
     MSG : [1, 4]
     Citric : [1, 2, 3]
 
-# For Plots.
+
 Plots:
   # FFMPEG is used for interactive / 3d plots. For guide on downloading:
   # https://stackoverflow.com/questions/13316397/matplotlib-animation-no-moviewriters-available

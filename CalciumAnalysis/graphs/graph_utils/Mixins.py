@@ -8,17 +8,24 @@ Module (graph): .Mixin functions to inherit, plotting functions that use instanc
 """
 from __future__ import annotations
 
+import logging
 from typing import Optional, Iterable, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import graphs.graph_utils.ax_helpers
+from graph_utils import ax_helpers
 
+logger = logging.getLogger(__name__)
 
 class CalPlots:
 
     tracedata: Any
-    eventdata: Any
+    doevents: Any
+    doeating: Any
+    eventdata: Optional[Any]
+    eatingdata: Optional[Any]
     signals: pd.DataFrame | pd.Series | np.ndarray | Iterable
     time: np.ndarray | Iterable | int | float | bool
     cells: np.ndarray | pd.Series | Iterable | int | float | bool
@@ -93,24 +100,24 @@ class CalPlots:
                     )
         return None
 
-    def plot_session(self, lickshade: int = 1, save_dir: bool = False) -> None:
+    def plot_session(self, lickshade: int = 1, save: bool = False, eatingdata=None) -> None:
         # create a series of plots with a shared x-axis
-        fig, axs = plt.subplots(
+        fig, ax = plt.subplots(
             len(self.tracedata.cells), 1, sharex=True, facecolor="white"
         )
         for i in range(len(self.tracedata.cells)):
             # get calcium trace (y axis data)
             signal = list(self.tracedata.signals.iloc[:, i])
             # plot signal
-            axs[i].plot(self.tracedata.time, signal, "k", linewidth=0.8)
+            ax[i].plot(self.tracedata.time, signal, "k", linewidth=0.8)
             # Get rid of borders
-            axs[i].get_xaxis().set_visible(False)
-            axs[i].spines["top"].set_visible(False)
-            axs[i].spines["bottom"].set_visible(False)
-            axs[i].spines["right"].set_visible(False)
-            axs[i].set_yticks([])  # no Y ticks
+            ax[i].get_xaxis().set_visible(False)
+            ax[i].spines["top"].set_visible(False)
+            ax[i].spines["bottom"].set_visible(False)
+            ax[i].spines["right"].set_visible(False)
+            ax[i].set_yticks([])  # no Y ticks
             # add the cell name as a label for this graph's y-axis
-            axs[i].set_ylabel(
+            ax[i].set_ylabel(
                 self.tracedata.signals.columns[i],
                 rotation="horizontal",
                 labelpad=15,
@@ -118,75 +125,125 @@ class CalPlots:
                 fontweight="bold",
             )
             # shade in licks
-            for lick in self.eventdata.timestamps["Lick"]:
-                label = "_yarp"
-                if lick == self.eventdata.timestamps["Lick"][0]:
-                    label = "Licking"
-                axs[i].axvspan(
-                    lick, lick + lickshade, color="lightsteelblue", lw=0, label=label
-                )
+            if self.doevents:
+                for lick in self.eventdata.timestamps["Lick"]:
+                    label = "_yarp"
+                    if lick == self.eventdata.timestamps["Lick"][0]:
+                        label = "Licking"
+                    ax[i].axvspan(
+                        lick, lick + lickshade, color="lightgray", lw=0, label=label
+                    )
+            if self.doeating:
+                for interv in self.eatingdata.raw_eatingdata.reset_index(drop=True).to_numpy():
+                    if interv[0] == 'Grooming':
+                        ax[i].axvspan(
+                                interv[1], interv[2], color='cyan', lw=0, label=interv[0]
+                        )
+                        logging.info(f"placing grooming interv {interv[1]}-{interv[0]}")
+                    if interv[0] == 'EATING':
+                        ax[i].axvspan(
+                                interv[1], interv[2], color='blue', lw=0, label=interv[0]
+                        )
+            ax[i].yaxis.label.set_fontsize(10)
+
         fig.subplots_adjust(hspace=0)
-        plt.xlabel("Time (s)")
-        fig.suptitle(f"Calcium Traces: {self.session}", y=0.95)
-        axs[-1].get_xaxis().set_visible(True)
-        axs[-1].spines["bottom"].set_visible(True)
+        ax[-1].get_xaxis().set_visible(True)
+        ax[-1].spines["bottom"].set_visible(True)
+        # ax_helpers.make_legend(
+        #         {
+        #             "Eating" : "blue",
+        #             "Grooming" : "cyan",
+        #             "Licking" : "lightgray"
+        #         },
+        #         marker="s",
+        # )
         plt.show()
-        if save_dir:
+        if save:
             fig.savefig(
-                f"A/Desktop/{self.session}_zm.png",
+                f"C:\\Users\\flynn\\Desktop\\figs\\{self.session}_session.png",
                 bbox_inches="tight",
-                dpi=600,
+                dpi=1000,
                 facecolor="white",
             )
         return None
 
     def plot_zoom(
-        self, zoomshade: float = 0.2, save_dir: Optional[bool] = True,
+        self,
+        zoomshade: float = 0.2,
+        save: Optional[bool] = True,
     ) -> None:
         # create a series of plots with a shared x-axis
-        fig, ax = plt.subplots(len(self.cells), 1, sharex=True)
+        fig, ax = plt.subplots(len(self.tracedata.cells), 1, sharex=True)
+        # zoombounding = [
+        #     int(input("Enter start time for zoomed in graph (seconds):")),
+        #     int(input("Enter end time for zoomed in graph (seconds):")),
+        # ]
         zoombounding = [
-            int(input("Enter start time for zoomed in graph (seconds):")),
-            int(input("Enter end time for zoomed in graph (seconds):")),
+            150,
+            245,
         ]
-        for i in range(len(self.cells)):
-            signal = list(self.signals.iloc[:, i])
-            ax[i].plot(self.time, signal, "k", linewidth=0.8)
+        for i in range(len(self.tracedata.cells)):
+            signal = list(self.tracedata.signals.iloc[:, i])
+            ax[i].plot(self.tracedata.time, signal, "k", linewidth=0.8)
             ax[i].get_xaxis().set_visible(False)
             ax[i].spines["top"].set_visible(False)
             ax[i].spines["bottom"].set_visible(False)
             ax[i].spines["right"].set_visible(False)
             ax[i].set_yticks([])
             ax[i].set_ylabel(
-                self.signals.columns[i], rotation="horizontal", labelpad=15, y=0.1
+                self.tracedata.signals.columns[i], rotation="horizontal", labelpad=15, y=0.1
             )
             # shade in timestamps
-            for stim, times in self.timestamps.items():
-                for ts in times:
-                    if ts == times[0]:
-                        label = stim
-                    else:
-                        label = "_"  # Keeps label from showing.
-                    ax[i].axvspan(
-                        ts,
-                        ts + zoomshade,
-                        color=self.color_dict[stim],
-                        label=label,
-                        lw=0,
-                    )
+            if self.doevents:
+                for stim, times in self.eventdata.timestamps.items():
+                    if stim != "ArtSal":
+                        for ts in times:
+                            if ts == times[0]:
+                                label = stim
+                            else:
+                                label = "_"  # Keeps label from showing.
+                            ax[i].axvspan(
+                                ts,
+                                ts + zoomshade,
+                                color=self.color_dict[stim],
+                                label=label,
+                                lw=0,
+                            )
+            if self.doeating:
+                for interv in self.eatingdata.raw_eatingdata.to_numpy():
+                    if interv[0] == 'Grooming':
+                        ax[i].axvspan(
+                                interv[1], interv[2], color='cyan', lw=0, label=interv[0]
+                        )
+                    if interv[0] == 'EATING':
+                        ax[i].axvspan(
+                                interv[1], interv[2], color='blue',alpha=0.2, lw=0, label=interv[0]
+                        )
+                    if interv[0] == 'BackLeft':
+                        ax[i].axvspan(
+                                interv[1]-0.8, interv[2], color='lime', lw=0, label=interv[0]
+                        )
+            ax[i].yaxis.label.set_fontsize(10)
         fig.subplots_adjust(hspace=0)
         plt.xlabel("Time (s)")
-        fig.suptitle(f"Calcium Traces: {self.session}", y=0.95)
         ax[-1].get_xaxis().set_visible(True)
         ax[-1].spines["bottom"].set_visible(True)
+        ax_helpers.make_legend(
+                {
+                    "Apple - Acquisition": "lime",
+                    "Apple - Eating": "blue",
+                },
+                marker="s",
+                markeralpha=0.2
+        )
         # set the x-axis to the zoomed area
         plt.setp(ax, xlim=zoombounding)
-        plt.legend(loc=(1.02, 3))
-        if save_dir:
+        plt.show()
+        if save:
             fig.savefig(
-                f"/Users/flynnoconnell/Pictures/plots/{self.session}_zm.png",
+                f"C:\\Users\\flynn\\Desktop\\figs\\{self.session}_zm.png",
                 bbox_inches="tight",
-                dpi=600,
+                dpi=1200,
             )
         return None
 

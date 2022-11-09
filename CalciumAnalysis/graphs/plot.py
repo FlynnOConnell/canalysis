@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from typing import Optional, Sized
 
-
 from matplotlib import pyplot as plt
 import seaborn as sns
 import matplotlib.font_manager as fm
@@ -18,7 +17,7 @@ import numpy as np
 
 from graph_utils import helpers, ax_helpers
 from base._base_figure import CalFigure
-
+import matplotlib
 helpers.update_rcparams()
 
 
@@ -37,21 +36,34 @@ def get_axis_points(data):
         return [data.iloc[:, 0], data.iloc[:, 1]]
 
 
-def pca_scatter(data, colors, color_dict=None, s: int = 10, **kwargs):
+def pca_scatter(data,
+                colors,
+                color_dict=None,
+                s: int = 10,
+                angles: tuple = None):
+    matplotlib.use("Qt5Agg")
     proj = '3d' if data.shape[1] > 2 else 'rectilinear'
     ax = plt.axes(projection=proj)
     ax = ax_helpers.get_axis_labels(ax, data)
     ax.set_title(f"{'Principal Components'}", fontweight="bold")
+    ax.xaxis.get_label().set_fontsize(10)
+    ax.yaxis.get_label().set_fontsize(10)
+    ax.zaxis.get_label().set_fontsize(10)
     ax.scatter(
         *get_axis_points(data),
         c=colors,
         s=s,
         marker='o',
         facecolor='w',
-        **kwargs,)
+    )
     if color_dict is not None:
         ax = ax_helpers.get_legend(ax, color_dict, colors, s)
     fig, ax = get_figure(ax=ax, figsize=(3, 3))
+    if angles:
+        ax.view_init(*angles)
+    ax.xaxis.pane.fill = False
+    ax.yaxis.pane.fill = False
+    ax.zaxis.pane.fill = False
     plt.show()
     return fig
 
