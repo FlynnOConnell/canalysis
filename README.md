@@ -36,6 +36,7 @@
 ---
 ### Installation 
 
+Ensure you have at least Python 3.6 64bit.
 ```sh
 # pip
 pip install canalysis
@@ -43,6 +44,10 @@ pip install canalysis
 #or 
 
 pip install canalysis 1.0.0
+
+#or 
+
+pip3 install canalysis
 ```
 
 ---
