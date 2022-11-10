@@ -13,7 +13,7 @@ from typing import Optional
 
 import pandas as pd
 
-from utils import funcs
+from canalysis.helpers import funcs
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, format="%(message)s")
@@ -79,7 +79,7 @@ class FileHandler:
         self.animaldir: Path = Path(self._directory / self.animal)
         self.sessiondir: Path = Path(self.animaldir / self.date)
         if not self.sessiondir.is_dir():
-            raise NotADirectoryError(f"Directory '{self.sessiondir}' is not a valid directory,"
+            raise NotADirectoryError(f"Directory '{self.sessiondir}' is not a valid directory or it does not exist, "
                                      f"check params.yaml Directory entry.")
         self._gpio_file: Optional[bool] = False
         self._make_dirs()

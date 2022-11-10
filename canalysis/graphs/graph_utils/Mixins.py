@@ -14,7 +14,7 @@ from typing import Optional, Iterable, Any
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from graph_utils import ax_helpers
+from canalysis.graphs.graph_utils import ax_helpers
 
 logger = logging.getLogger(__name__)
 

@@ -8,15 +8,15 @@ Module: Classes for food-related data processing.
 
 from __future__ import annotations
 
-from utils import funcs
 import logging
-from dataclasses import dataclass, field, InitVar
+from dataclasses import dataclass, field
 import pandas as pd
 import numpy as np
 from typing import Optional, Generator, Iterable, Any
-from ..data_utils.file_handler import FileHandler
-from ..containers.trace_data import TraceData
-from graphs.heatmaps import EatingHeatmap
+from canalysis.helpers import funcs
+from canalysis.data.data_utils.file_handler import FileHandler
+from canalysis.data.containers.trace_data import TraceData
+from canalysis.graphs.heatmaps import EatingHeatmap
 
 logger = logging.getLogger(__name__)
 

@@ -11,15 +11,15 @@ import logging
 from dataclasses import dataclass, field, InitVar
 from typing import ClassVar, Optional
 import pandas as pd
-from data.containers.all_data import AllData
-from data.containers.trace_data import TraceData
-from data.containers.taste_data import TasteData
-from data.containers.event_data import EventData
-from data.containers.eating_data import EatingData
-from data.data_utils.file_handler import FileHandler
-from graphs.graph_utils import Mixins
-from utils import excepts as e
-from utils import funcs
+from canalysis.data.containers.all_data import AllData
+from canalysis.data.containers.trace_data import TraceData
+from canalysis.data.containers.taste_data import TasteData
+from canalysis.data.containers.event_data import EventData
+from canalysis.data.containers.eating_data import EatingData
+from canalysis.data.data_utils.file_handler import FileHandler
+from canalysis.graphs.graph_utils import Mixins
+from canalysis.helpers import excepts as e
+from canalysis.helpers import funcs
 
 logger = logging.getLogger(__name__)
 

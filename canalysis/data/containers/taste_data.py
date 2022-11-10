@@ -4,12 +4,12 @@
 #taste_data
 """
 import logging
-from typing import Generator, Iterable, Optional
+from typing import Generator, Iterable, Optional, Tuple
 import pandas as pd
 import numpy as np
 from dataclasses import dataclass
 
-from utils import funcs
+from canalysis.helpers import funcs
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
@@ -66,7 +66,7 @@ class TasteData:
         logging.info("Taste data set.")
         return aggregate_signals_df
 
-    def get_signals_from_events(self, events: list) -> tuple[pd.DataFrame, pd.Series]:
+    def get_signals_from_events(self, events: list) -> Tuple[pd.DataFrame, pd.Series]:
         signal = self.tastedata[self.tastedata['event'].isin(events)].drop(columns=['event'])
         color = signal.pop('color')
         return signal, color

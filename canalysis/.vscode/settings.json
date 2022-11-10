@@ -1,10 +1,4 @@
 {
     "python.analysis.extraPaths": [
-        "./data",
-        "./analysis",
-        "./graphs",
-        "./misc",
-        "./stats",
-        "./utils"
     ]
 }

@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from typing import Optional, Any
 import numpy as np
-from graphs.graph_utils import helpers
+from canalysis.graphs.graph_utils import helpers
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
