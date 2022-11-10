@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "CalciumAnalysis"
+name = "canalysis"
 version = "0.1.0"
 description = "This project provides a structure to integrate calcium traces and events, perform statistical analysis, make graphs and do classification problems to further understand the dataset."
 authors = ["Flynn O'Connell"]

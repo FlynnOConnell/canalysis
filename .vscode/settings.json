@@ -6,7 +6,6 @@
         "./CalciumAnalysis/data",
         "./CalciumAnalysis/graphs",
         "./CalciumAnalysis/misc",
-        "./CalciumAnalysis/utils"
-        "./CalciumAnalysis/data", "./CalciumAnalysis/graphs", "./CalciumAnalysis/misc", "./CalciumAnalysis/analysis", "./CalciumAnalysis/utils"
-    ]
+        "./CalciumAnalysis/utils",]
+       
 }
