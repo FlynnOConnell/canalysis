@@ -24,11 +24,12 @@ dependency_links = [
 ]
 
 setup(
-    name="CalciumAnalysis",
+    name="canalysis",
     version=__version__,
     description="Calcium Imaging trace analysis with statistics and machine learning.",
     license="MIT",
     packages=find_packages(),
+    package_dir={"canalysis": "canalysis"},
     include_package_data=True,
     author="Flynn OConnell",
     zip_safe=False,
