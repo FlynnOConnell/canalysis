@@ -39,6 +39,10 @@
 ```sh
 # pip
 pip install canalysis
+
+#or 
+
+pip install canalysis 1.0.0
 ```
 
 ---
