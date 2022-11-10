@@ -34,6 +34,14 @@
 </table>
 
 ---
+### Installation 
+
+```sh
+# pip
+pip install canalysis
+```
+
+---
 ### Directory Structure
 For data loading, directories should be formatted a particular way that can be easily 
 modified by configuring `data.data_utils.file_handler`.
