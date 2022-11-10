@@ -9,6 +9,9 @@ import logging
 import yaml
 from canalysis.data.containers import CalciumData
 from canalysis.data.data_utils.file_handler import FileHandler
+from canalysis.graphs.plot import Plot
+from canalysis.graphs.heatmaps import Heatmaps
+from canalysis.analysis.process_data import ProcessData
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
@@ -52,4 +55,7 @@ __all__ = [
     "FileHandler",
     "get_data",
     "Params",
+    "Plot",
+    "Heatmaps",
+    "ProcessData",
     ]
