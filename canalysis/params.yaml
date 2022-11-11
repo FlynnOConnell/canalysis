@@ -6,7 +6,7 @@ Session:
   dates: ['070121, 071621']     # iterate for multi-day analysis
 
 Directory:
-  data : 'C:\Users\flynn\repos\CalciumAnalysis\datasets'
+  data : '/Users/flynnoconnell/Documents/repos/canalysis/datasets'
   statsave: './Desktop'
   plotsave: 'C:\\Users\\flynn\\Desktop\\figs'
 
@@ -14,7 +14,7 @@ Directory:
 Filenames:
   traces: 'traces3'
   events: 'processed'
-  eating: 'Scored2'
+  eating: 'Scored1'
   gpio: 'gpio.csv'
   adjust: 34 # time to adjust for eating events
   doeating: True

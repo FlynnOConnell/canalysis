@@ -50,6 +50,30 @@ pip install canalysis 1.0.0
 pip3 install canalysis
 ```
 
+### Installation 
+
+Data can be accessed via the root  ```get_data()``` function:
+  
+  ```python
+  import canalysis as ca 
+
+  #initialize data
+  data = ca.get_data()
+
+  #plot the entire session
+  data.plot_session()
+
+  #plot each cell stacked 
+  data.plot_cells()
+
+  #plot a zoomed in section
+  data.plot_zoom()
+
+  #initialize a heatmap class to plot heatmaps 
+  import canalysis.heatmap as hm
+  heatmap = hm.heatmap(data)
+  ```
+
 ---
 ### Directory Structure
 For data loading, directories should be formatted a particular way that can be easily 

@@ -170,8 +170,7 @@ class FileHandler:
             )
             for tracefile in tracefiles:
                 logging.info(f"{tracefile.stem}")
-        logging.info(f"Taking file: {tracefiles[0].stem}")
-        return pd.read_csv(str(tracefiles[0]), low_memory=False)
+            return pd.read_csv(str(tracefiles[0]), low_memory=False)
 
     def get_eventdata(self) -> pd.DataFrame:
         eventfiles: list[Path] = self.get_events()
@@ -186,7 +185,6 @@ class FileHandler:
             )
             for event_file in eventfiles:
                 logging.info(f"{event_file}")
-            logging.info(f"Taking file: {eventfiles[0]}")
         return pd.read_csv(str(eventfiles[0]), low_memory=False)
 
     def get_gpiodata(self) -> pd.DataFrame:
