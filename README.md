@@ -50,7 +50,9 @@ pip install canalysis 1.0.0
 pip3 install canalysis
 ```
 
-### Installation 
+### Getting started
+
+```python
 
 Data can be accessed via the root  ```get_data()``` function:
   
