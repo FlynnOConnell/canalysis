@@ -4,7 +4,6 @@ specifically from including from Inscopix.
 """
 from __future__ import annotations
 
-import logging
 import os
 from inspect import getsourcefile
 
@@ -62,6 +61,28 @@ def get_data():
                        adjust=params.Filenames['adjust'],
                        )
     
+__doc__ = """
+canalysis - A library for processing, manipulating, combining and visualizing Calcium Imaging datasets
+=====================================================================
+
+**canalysis** is a Python package that helps to process multivariate datasets. Calcium Imaging data can take many forms, generally 
+you have a .csv/excel file with traces (values of how bright group of pixels is on a screen at any time), events (when a stimulus is presented
+relative to the trace times). This library provides a backbone to combine and correlate these types in various ways. 
+
+Main Features
+-------------
+Here are just a few of the things that canalysis does well:
+
+  - Easy directory management to keep data clean and in the same place.
+  - Process data for NaN's, outliers, and other issues.
+  - Combine multiple datasets into one class for easy manipulations. 
+  - Visualize data in various ways, including heatmaps, traces, and events. 
+
+Calcium data can be very specific to the type of experiment being performed. This library can be easily modified to fit the type of data 
+you need to process. 
+
+"""
+
 # Path: CalciumAnalysis/CalciumAnalysis/data/containers/calcium_data.py
 __all__ = [
     "CalciumData",
