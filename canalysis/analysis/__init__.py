@@ -5,5 +5,4 @@
 
 Subpackage for statistical data processing.
 """
-
 __name__ = "analysis"
