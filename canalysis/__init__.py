@@ -13,10 +13,23 @@ import yaml
 from canalysis.data.containers import CalciumData
 from canalysis.data.data_utils.file_handler import FileHandler
 
-logging.basicConfig(level=logging.INFO, format="%(message)s")
-logger = logging.getLogger(__name__)
 __location__ = os.path.abspath(getsourcefile(lambda:0))
 ROOT_DIR = os.path.dirname(__location__)
+
+_hard_dependencies = ["numpy", "pandas"] # let users know if theyre missing any vital deps
+_missing_dependencies = []
+
+for _dependency in _hard_dependencies:
+    try:
+        __import__(_dependency)
+    except ImportError as _e:
+        _missing_dependencies.append(f"{_dependency}: {_e}")
+
+if _missing_dependencies:
+    raise ImportError(
+        "Unable to import required dependencies:\n" + "\n".join(_missing_dependencies)
+    )
+del _hard_dependencies, _dependency, _missing_dependencies
 
 class Params:
     """@DynamicAttrs"""
