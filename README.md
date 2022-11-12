@@ -33,6 +33,8 @@
    </tr>
 </table>
 
+
+
 ---
 ### Installation 
 
@@ -61,7 +63,12 @@ Data can be accessed via the root  ```get_data()``` function:
 
   #initialize data
   data = ca.get_data()
+```
 
+Data is stored in a class `CalciumData` which containes attributes with events, signals and functions to manipulate and graph those functions. See the diagram below for attributes.
+  
+
+```python
   #plot the entire session
   data.plot_session()
 

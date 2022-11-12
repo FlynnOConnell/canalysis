@@ -3,10 +3,13 @@ A package for analysis, statistics and visualization of Calcium Imaging data,
 specifically from including from Inscopix.
 """
 from __future__ import annotations
-from inspect import getsourcefile
-import os
+
 import logging
+import os
+from inspect import getsourcefile
+
 import yaml
+
 from canalysis.data.containers import CalciumData
 from canalysis.data.data_utils.file_handler import FileHandler
 
@@ -28,7 +31,7 @@ def get_parameters():
         parameters = yaml.safe_load(f.read())
     return Params(parameters)
 
-def get_data(doeating: bool = True, doevents: bool = True, adjust=None):
+def get_data():
     params = get_parameters()
     filehandler = FileHandler(
             params.Session['animal'],
@@ -56,3 +59,5 @@ __all__ = [
     "Heatmaps",
     "ProcessData",
     ]
+
+  
