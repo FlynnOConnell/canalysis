@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 
-from canalysis.data.data_utils.file_handler import FileHandler
+from data.data_utils.file_handler import FileHandler
 
 
 # %%

@@ -13,8 +13,8 @@ import numpy as np
 import pandas as pd
 from numpy import ndarray
 
-from canalysis.data.data_utils.file_handler import FileHandler
-from canalysis.helpers import funcs
+from data.data_utils.file_handler import FileHandler
+from helpers import funcs
 
 
 @dataclass(order=False)

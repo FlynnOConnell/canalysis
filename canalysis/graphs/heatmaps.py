@@ -11,7 +11,7 @@ from .base import _base_heatmap
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from canalysis.helpers import funcs
+from helpers import funcs
 import logging
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)

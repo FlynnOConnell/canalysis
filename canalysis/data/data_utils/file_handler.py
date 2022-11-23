@@ -13,7 +13,7 @@ from typing import Optional
 
 import pandas as pd
 
-from canalysis.helpers import funcs
+from helpers import funcs
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, format="%(message)s")
@@ -168,9 +168,9 @@ class FileHandler:
                 f'Multiple trace-files found in {self.sessiondir} matching "'
                 f'{self._tracename}":'
             )
-            for tracefile in tracefiles:
-                logging.info(f"{tracefile.stem}")
-            return pd.read_csv(str(tracefiles[0]), low_memory=False)
+        for tracefile in tracefiles:
+            logging.info(f"{tracefile.stem}")
+        return pd.read_csv(str(tracefiles[0]), low_memory=False)
 
     def get_eventdata(self) -> pd.DataFrame:
         eventfiles: list[Path] = self.get_events()

@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from typing import Optional, Any
 import numpy as np
-from canalysis.graphs.graph_utils import helpers
+from graphs.graph_utils import helpers
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
@@ -41,12 +41,13 @@ def get_legend(ax, color_dict, colors, markersize):
         markerscale=True)
     return ax
 
+
 def make_legend(
-    mydict: dict,
-    marker: Optional[str] = 'o',
-    show: Optional[bool] = True,
-    save: Optional[bool] = True,
-    markeralpha = None,
+        mydict: dict,
+        marker: Optional[str] = 'o',
+        show: Optional[bool] = True,
+        save: Optional[bool] = True,
+        markeralpha=None,
 ) -> None:
     helpers.update_rcparams()
     logging.info(f"..making legend with marker {marker}")
@@ -54,15 +55,15 @@ def make_legend(
     fig = pylab.figure()
     figlegend = pylab.figure(figsize=(3, 2))
     ax = fig.add_subplot(111)
-    proxy, label = gr_func.get_handles_from_dict(
-            mydict,
-            markersize=5,
-            marker=marker
+    proxy, label = helpers.get_handles_from_dict(
+        mydict,
+        markersize=5,
+        marker=marker
     )
     leg = figlegend.legend(
-            handles=proxy,
-            labels=label,
-            fancybox=False,
+        handles=proxy,
+        labels=label,
+        fancybox=False,
     )
     if markeralpha is not None:
         for lh in leg.legendHandles:
@@ -72,6 +73,6 @@ def make_legend(
         figlegend.show()
         logging.info('Legend showing')
     if save:
-        mydir = 'C:\\Users\\flynn\\Desktop\\figs\\legend.png'
+        mydir = r'C:\Users\dilorenzo\Desktop\CalciumPlots\plots\legend.png'
         figlegend.savefig(f"{mydir}", dpi=1200)
         logging.info(f'Legend saved in {mydir}')

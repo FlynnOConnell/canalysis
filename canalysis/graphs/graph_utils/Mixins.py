@@ -14,12 +14,12 @@ from typing import Optional, Iterable, Any
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from canalysis.graphs.graph_utils import ax_helpers
+from graphs.graph_utils import ax_helpers
 
 logger = logging.getLogger(__name__)
 
-class CalPlots:
 
+class CalPlots:
     tracedata: Any
     doevents: Any
     doeating: Any
@@ -178,8 +178,8 @@ class CalPlots:
         #     int(input("Enter end time for zoomed in graph (seconds):")),
         # ]
         zoombounding = [
-            150,
-            245,
+            1200,
+            1400,
         ]
         for i in range(len(self.tracedata.cells)):
             signal = list(self.tracedata.signals.iloc[:, i])
@@ -214,11 +214,11 @@ class CalPlots:
                         ax[i].axvspan(
                                 interv[1], interv[2], color='cyan', lw=0, label=interv[0]
                         )
-                    if interv[0] == 'EATING':
+                    if interv[0] == 'Eating':
                         ax[i].axvspan(
                                 interv[1], interv[2], color='blue',alpha=0.2, lw=0, label=interv[0]
                         )
-                    if interv[0] == 'BackLeft':
+                    if interv[0] == 'Entry':
                         ax[i].axvspan(
                                 interv[1]-0.8, interv[2], color='lime', lw=0, label=interv[0]
                         )
@@ -229,8 +229,8 @@ class CalPlots:
         ax[-1].spines["bottom"].set_visible(True)
         ax_helpers.make_legend(
                 {
-                    "Apple - Acquisition": "lime",
-                    "Apple - Eating": "blue",
+                    "Eating": "blue",
+                    "Entry": "lime",
                 },
                 marker="s",
                 markeralpha=0.2
@@ -240,7 +240,7 @@ class CalPlots:
         plt.show()
         if save:
             fig.savefig(
-                f"C:\\Users\\flynn\\Desktop\\figs\\{self.session}_zm.png",
+                r'C:\Users\dilorenzo\Desktop\CalciumPlots\plots\thisplot.png',
                 bbox_inches="tight",
                 dpi=1200,
             )

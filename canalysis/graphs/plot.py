@@ -15,8 +15,8 @@ import seaborn as sns
 import matplotlib.font_manager as fm
 import numpy as np
 
-from canalysis.graphs.graph_utils import helpers, ax_helpers
-from canalysis.graphs.base._base_figure import CalFigure
+from graphs.graph_utils import helpers, ax_helpers
+from graphs.base._base_figure import CalFigure
 import matplotlib
 helpers.update_rcparams()
 

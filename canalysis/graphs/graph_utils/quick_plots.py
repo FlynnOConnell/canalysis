@@ -6,7 +6,6 @@ Module (core): Functions for drawing graphs.
 """
 from __future__ import annotations
 
-import logging
 from typing import Iterable
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,9 +24,6 @@ def set_pub():
             "lines.linewidth": 0.25,
         }
     )
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
 
 
 class QuickPlot:

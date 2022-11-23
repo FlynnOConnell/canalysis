@@ -6,7 +6,7 @@
 Module: Package information.
 """
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 from codecs import open
 from os import path
 
@@ -28,7 +28,7 @@ setup(
     version=__version__,
     description="Calcium Imaging trace analysis with statistics and machine learning.",
     license="MIT",
-    packages=find_packages(),
+    packages=find_namespace_packages(),
     package_dir={"canalysis": "canalysis"},
     include_package_data=True,
     author="Flynn OConnell",

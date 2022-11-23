@@ -11,11 +11,7 @@ from pathlib import Path
 from typing import Iterable, Optional, Any
 
 import numpy as np
-import pandas as pd
-import scipy.stats as stats
 
-from .wrappers import log_time
-from . import excepts as e
 from .wrappers import typecheck
 
 logger = logging.getLogger(__name__)

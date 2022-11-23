@@ -6,7 +6,8 @@ Session:
   dates: ['070121, 071621']     # iterate for multi-day analysis
 
 Directory:
-  data : '/Users/flynnoconnell/Documents/repos/canalysis/datasets'
+  # data : '/Users/flynnoconnell/Documents/repos/canalysis/datasets'
+  data: 'C:\Users\dilorenzo\Documents\repos\canalysis\datasets'
   statsave: './Desktop'
   plotsave: 'C:\\Users\\flynn\\Desktop\\figs'
 
@@ -24,6 +25,7 @@ Filenames:
 # Map event names to color for graphing
 Colors:
     Chocolate : saddlebrown
+    Lick : gray
     Peanut  : darkorange
     NaCl : darkgreen
     Sucrose : purple
@@ -32,12 +34,12 @@ Colors:
     Approach : pink
     Grooming: cyan
     Entry: lime
-    Food Acquisition: lime
+    Acquisition: orange
     FrontLeft: lime
     FrontRight: lime
     BackLeft: lime
     BackRight: lime
-    Food Eating: blue
+    Eating: blue
     Quiescent: black
     Interval: k
 

@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
+
 A package for analysis, statistics and visualization of Calcium Imaging data,
 specifically from including from Inscopix.
+
 """
 from __future__ import annotations
 
@@ -9,13 +13,15 @@ from inspect import getsourcefile
 
 import yaml
 
-from canalysis.data.containers import CalciumData
-from canalysis.data.data_utils.file_handler import FileHandler
+from data.containers import CalciumData
+from data.data_utils.file_handler import FileHandler
+from graphs import *
 
-__location__ = os.path.abspath(getsourcefile(lambda:0))
+__location__ = os.path.abspath(getsourcefile(lambda: 0))
 ROOT_DIR = os.path.dirname(__location__)
 
-_hard_dependencies = ["numpy", "pandas"] # let users know if theyre missing any vital deps
+_hard_dependencies = ["numpy",
+                      "pandas"]  # let users know if theyre missing any vital deps
 _missing_dependencies = []
 
 for _dependency in _hard_dependencies:
@@ -30,8 +36,10 @@ if _missing_dependencies:
     )
 del _hard_dependencies, _dependency, _missing_dependencies
 
+
 class Params:
     """@DynamicAttrs"""
+
     def __init__(self, parameter_dict):
         for key in parameter_dict:
             setattr(self, key, parameter_dict[key])
@@ -43,16 +51,17 @@ def get_parameters():
         parameters = yaml.safe_load(f.read())
     return Params(parameters)
 
+
 def get_data():
     params = get_parameters()
     filehandler = FileHandler(
-            params.Session['animal'],
-            params.Session['date'],
-            params.Directory['data'],
-            params.Filenames['traces'],
-            params.Filenames['events'],
-            params.Filenames['gpio'],
-            params.Filenames['eating'],
+        params.Session['animal'],
+        params.Session['date'],
+        params.Directory['data'],
+        params.Filenames['traces'],
+        params.Filenames['events'],
+        params.Filenames['gpio'],
+        params.Filenames['eating'],
     )
     return CalciumData(filehandler,
                        doeating=params.Filenames['doeating'],
@@ -60,14 +69,19 @@ def get_data():
                        color_dict=params.Colors,
                        adjust=params.Filenames['adjust'],
                        )
-    
+
+
 __doc__ = """
-canalysis - A library for processing, manipulating, combining and visualizing Calcium Imaging datasets
+canalysis - A library for processing, manipulating, combining and visualizing Calcium 
+Imaging datasets
 =====================================================================
 
-**canalysis** is a Python package that helps to process multivariate datasets. Calcium Imaging data can take many forms, generally 
-you have a .csv/excel file with traces (values of how bright group of pixels is on a screen at any time), events (when a stimulus is presented
-relative to the trace times). This library provides a backbone to combine and correlate these types in various ways. 
+**canalysis** is a Python package that helps to process multivariate datasets. Calcium 
+Imaging data can take many forms, generally 
+you have a .csv/excel file with traces (values of how bright group of pixels is on a 
+screen at any time), events (when a stimulus is presented
+relative to the trace times). This library provides a backbone to combine and correlate 
+these types in various ways. 
 
 Main Features
 -------------
@@ -78,7 +92,8 @@ Here are just a few of the things that canalysis does well:
   - Combine multiple datasets into one class for easy manipulations. 
   - Visualize data in various ways, including heatmaps, traces, and events. 
 
-Calcium data can be very specific to the type of experiment being performed. This library can be easily modified to fit the type of data 
+Calcium data can be very specific to the type of experiment being performed. This 
+library can be easily modified to fit the type of data 
 you need to process. 
 
 """
@@ -89,9 +104,6 @@ __all__ = [
     "FileHandler",
     "get_data",
     "Params",
-    "Plot",
-    "Heatmaps",
-    "ProcessData",
-    ]
-
-  
+    "graphs",
+    "heatmaps",
+]

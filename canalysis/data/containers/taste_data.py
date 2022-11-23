@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 from dataclasses import dataclass
 
-from canalysis.helpers import funcs
+from helpers import funcs
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
@@ -92,7 +92,7 @@ class TasteData:
             save_dir: Optional[str] = "",
             **kwargs
     ) -> Generator[Iterable, None, None]:
-        from heatmaps import EatingHeatmap
+        from graphs.heatmaps import EatingHeatmap
         for stim, iteration, signal in self.get_taste_df():
             heatmap = EatingHeatmap(
                     signal.T,

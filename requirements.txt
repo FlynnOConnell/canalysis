@@ -3,8 +3,6 @@ build==0.9.0
 # Editable install with no version control (CalciumAnalysis==0.0.1)
 -e /Users/flynnoconnell/Documents/repos/canalysis
 cycler==0.11.0
-easy-gui==0.4.2
-easygui==0.98.2
 fonttools==4.28.5
 joblib==1.2.0
 kiwisolver==1.3.2

@@ -1,5 +1,5 @@
 from collections.abc import MutableMapping
-from canalysis.helpers.wrappers import Singleton
+from helpers.wrappers import Singleton
 
 
 @Singleton

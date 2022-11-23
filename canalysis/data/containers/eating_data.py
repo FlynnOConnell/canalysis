@@ -13,10 +13,10 @@ from dataclasses import dataclass, field
 import pandas as pd
 import numpy as np
 from typing import Optional, Generator, Iterable, Any
-from canalysis.helpers import funcs
-from canalysis.data.data_utils.file_handler import FileHandler
-from canalysis.data.containers.trace_data import TraceData
-from canalysis.graphs.heatmaps import EatingHeatmap
+from helpers import funcs
+from data.data_utils.file_handler import FileHandler
+from data.containers.trace_data import TraceData
+from graphs.heatmaps import EatingHeatmap
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class EatingData:
     eatingdata: pd.DataFrame = field(init=False)
     signals: pd.DataFrame = field(init=False)
 
-    def __post_init__(self,):
+    def __post_init__(self, ):
         self.raw_eatingdata = self.__filehandler.get_eatingdata().sort_values("TimeStamp")
         # Core attributes
         self.__set_adjust()
@@ -60,46 +60,45 @@ class EatingData:
                 "FrontLeft",
                 "FrontRight",
                 "Eating",
+                "Entry",
                 "EATING",
                 "Grooming",
                 "Approach",
-            "Quiescent"
+                "Quiescent"
             ])
         ]
 
     def __match(self, ):
         self.raw_eatingdata['TimeStamp'] = funcs.get_matched_time(
-                self.__tracedata.time, self.raw_eatingdata['TimeStamp'])
+            self.__tracedata.time, self.raw_eatingdata['TimeStamp'])
         self.raw_eatingdata['TimeStamp2'] = funcs.get_matched_time(
-                self.__tracedata.time, self.raw_eatingdata['TimeStamp2'])
+            self.__tracedata.time, self.raw_eatingdata['TimeStamp2'])
 
     def __set_eating_signals(self, ):
         aggregate_eating_signals = pd.DataFrame()
         for signal, _, event in self.generate_signals():
             if event == 'Interval':
                 event = 'Quiescent'
-            if event == "Eating":
-                event = "Food Eating"
-            if event == "Entry":
-                event = "Food Acquisition"
-            if event == "Approach":
-                event = "Food Acquisition"
             signal['event'] = event
             signal['color'] = self.color_dict[event]
             aggregate_eating_signals = pd.concat(
-                    [aggregate_eating_signals, signal],
-                    axis=0)
+                [aggregate_eating_signals, signal],
+                axis=0)
         return aggregate_eating_signals.sort_index()
 
     def get_reorder_cols(self):
-        for signal, time, approachstart, entrystart, eatingstart, eatingend in self.generate_entry_eating_signals():
+        for signal, time, approachstart, entrystart, eatingstart, eatingend in \
+                self.generate_entry_eating_signals():
             if signal.shape[0] == self.get_largest_interv():
-                newsig = self.reorder(signal, time[time == entrystart].index[0], time[time == eatingend].index[0])
+                newsig = self.reorder(signal, time[time == entrystart].index[0],
+                                      time[time == eatingend].index[0])
                 return list(newsig.columns)
 
     @staticmethod
     def reorder(signal: pd.DataFrame, start: int, stop: int) -> pd.DataFrame:
-        return signal.reindex(signal.loc[[start, stop], :].mean().sort_values(ascending=False).index, axis=1)
+        return signal.reindex(
+            signal.loc[[start, stop], :].mean().sort_values(ascending=False).index,
+            axis=1)
 
     def get_time_index(self, time: int | float, ):
         """Return INDEX where tracedata time matches argument num."""
@@ -119,7 +118,8 @@ class EatingData:
                self.get_time_index(stop)]
 
     def get_signals_from_events(self, events: Any) -> tuple[pd.DataFrame, pd.Series]:
-        signal = self.eatingdata[self.eatingdata['event'].isin(events)].drop(columns=['event'])
+        signal = self.eatingdata[self.eatingdata['event'].isin(events)].drop(
+            columns=['event'])
         color = signal.pop('color')
         return signal, color
 
@@ -136,7 +136,8 @@ class EatingData:
         return max(tmp)
 
     def generate_signals(self, ) -> Generator[(pd.DataFrame, str), None, None]:
-        """Generator for each eating event signal (Interval(baseline), Eating, Grooming, Entry."""
+        """Generator for each eating event signal (Interval(baseline), Eating,
+        Grooming, Entry."""
         return ((
             self.get_signal_zscore(x[1], x[2]),
             self.get_signal_time(x[1], x[2]), x[0])
@@ -148,9 +149,7 @@ class EatingData:
         for idx, x in (enumerate(data)):
             if idx > (len(data) - 2):
                 break
-            if x[0] == 'Approach'\
-                    and (data[idx + 1][0] in ['BackLeft', 'BackRight', 'FrontLeft', 'FrontRight'])\
-                    and data[idx + 2][0] in ['Eating', 'EATING']:
+            if x[0] == 'Entry' and (data[idx + 1][0] in ["Eating"]):
                 yield (self.get_signal_zscore(x[1], data[idx + 2][2]),  # signal
                        np.round(self.get_signal_time(x[1], data[idx + 2][2]), 1),  # time
                        np.round(x[1], 2),  # approach start
@@ -159,14 +158,15 @@ class EatingData:
                        np.round(data[idx + 2][2], 2))  # eating end
 
     def generate_eating_heatmap(
-        self,
-        premask: Optional[bool] = False,
-        save_dir: Optional[str] = "",
-        interv_size: Optional[str | float] = -np.inf,
-        title: Optional[str] = '',
-        **figargs
+            self,
+            premask: Optional[bool] = False,
+            save_dir: Optional[str] = "",
+            interv_size: Optional[str | float] = -np.inf,
+            title: Optional[str] = '',
+            **figargs
     ) -> Generator[Iterable, None, None]:
-        for signal, time, approachstart, entrystart, eatingstart, eatingend in self.generate_entry_eating_signals():
+        for signal, time, approachstart, entrystart, eatingstart, eatingend in \
+                self.generate_entry_eating_signals():
             tsize = (len(signal.T.columns) / 10)
             if tsize > interv_size:
                 for cell in signal:
@@ -176,32 +176,35 @@ class EatingData:
                 if premask:
                     premask = signal.columns
                     newcols = np.round(np.arange(
-                            signal.columns[-1] + 0.1,
-                            self.get_largest_interv() / 10, 0.1), 1)
-                    finalsig = pd.concat([signal, pd.DataFrame(columns=newcols, index=signal.index)], axis=1)
+                        signal.columns[-1] + 0.1,
+                        self.get_largest_interv() / 10, 0.1), 1)
+                    finalsig = pd.concat(
+                        [signal, pd.DataFrame(columns=newcols, index=signal.index)],
+                        axis=1)
                     data = finalsig
                 else:
                     premask = None
                     data = signal
                 heatmap = EatingHeatmap(
-                        data,
-                        premask=premask,
-                        title=title,
-                        save_dir=save_dir,
-                        save_name=str(data.shape[1]),
-                        **figargs)
+                    data,
+                    premask=premask,
+                    title=title,
+                    save_dir=save_dir,
+                    save_name=str(data.shape[1]),
+                    **figargs)
                 fig = heatmap.default_heatmap(eatingstart, entrystart, eatingend)
                 yield fig
 
     def store_eating_heatmaps(
-        self,
-        save_dir: Optional[str] = "",
-        interv_size: Optional[str | float] = -np.inf,
-        title: Optional[str] = '',
-        **figargs
+            self,
+            save_dir: Optional[str] = "",
+            interv_size: Optional[str | float] = -np.inf,
+            title: Optional[str] = '',
+            **figargs
     ) -> dict[float: EatingHeatmap]:
         heatmap_holder = {}
-        for signal, time, approachstart, entrystart, eatingstart, eatingend in self.generate_entry_eating_signals():
+        for signal, time, approachstart, entrystart, eatingstart, eatingend in \
+                self.generate_entry_eating_signals():
             tsize = (len(signal.T.columns) / 10)
             cols = self.get_reorder_cols()
             if tsize > interv_size:
@@ -211,14 +214,15 @@ class EatingData:
                 signal = signal.T
                 signal.columns = np.round(np.arange(0, len(signal.columns) / 10, 0.1), 1)
                 large_cols = self.get_largest_interv() / 10
-                newcols = np.round(np.arange(signal.columns[-1] + 0.1, large_cols, 0.1), 1)
+                newcols = np.round(np.arange(signal.columns[-1] + 0.1, large_cols, 0.1),
+                                   1)
                 missingsig = pd.DataFrame(columns=newcols, index=signal.index)
                 finalsig = pd.concat([signal, missingsig], axis=1)
                 heatmap = EatingHeatmap(
-                        data=finalsig,
-                        title=title,
-                        save_dir=save_dir,
-                        **figargs)
+                    data=finalsig,
+                    title=title,
+                    save_dir=save_dir,
+                    **figargs)
                 fig = heatmap.default_heatmap(eatingstart, entrystart, eatingend)
                 heatmap_holder[tsize] = fig
         return heatmap_holder

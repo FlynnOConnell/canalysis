@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from canalysis.data.data_utils.file_handler import FileHandler
+from data.data_utils.file_handler import FileHandler
 
 
 @dataclass
