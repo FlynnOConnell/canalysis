@@ -28,8 +28,7 @@ def update_rcparams():
                 "axes.facecolor": "w",
                 "axes.labelsize": 10,
                 "lines.linewidth": 1,
-                'animation.ffmpeg_path': r'/c/ffmpeg/bin/ffmpeg',
-                'scatter.edgecolors': None
+                'animation.ffmpeg_path': r'/c/ffmpeg/bin/ffmpeg'
             }
 
     )

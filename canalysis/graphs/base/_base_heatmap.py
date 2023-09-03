@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 from ..base import _base_figure 
 from ..graph_utils import helpers
 
-helpers.update_rcparams()
-
 
 class BaseHeatmap:
     def __init__(
