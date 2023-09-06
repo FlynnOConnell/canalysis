@@ -1,5 +1,5 @@
 from collections.abc import MutableMapping
-from helpers.wrappers import Singleton
+from canalysis.helpers.wrappers import Singleton
 
 
 @Singleton
@@ -34,11 +34,7 @@ class AllData(MutableMapping):
         return len(self.__dict__)
 
     def __str__(self):
-        return "\n".join(
-            f"{key} - {len(value)} sessions." for key, value in self.__dict__.items()
-        )
+        return "\n".join(f"{key} - {len(value)} sessions." for key, value in self.__dict__.items())
 
     def __repr__(self):
-        return "\n".join(
-            f"{key} - {len(value)} sessions." for key, value in self.__dict__.items()
-        )
+        return "\n".join(f"{key} - {len(value)} sessions." for key, value in self.__dict__.items())

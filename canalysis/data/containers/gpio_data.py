@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from data.data_utils.file_handler import FileHandler
+from canalysis.data.data_utils.file_handler import FileHandler
 
 
 @dataclass
@@ -49,27 +49,20 @@ class GpioData:
         return rec_end
 
     def trim(self):
-        self.gpiodata = self.gpiodata.iloc[
-            np.where(self.gpiodata[" Channel Name"].str.contains("GPIO"))[0], :
-        ]
+        self.gpiodata = self.gpiodata.iloc[np.where(self.gpiodata[" Channel Name"].str.contains("GPIO"))[0], :]
 
     def get_timestamps(self):
         for chan in pd.unique(self.gpiodata[" Channel Name"]):
             print("Processing events for:", chan)
             event = []
-            gp_chan = self.gpiodata.iloc[
-                np.where(self.gpiodata[" Channel Name"] == chan)[0], :
-            ]
+            gp_chan = self.gpiodata.iloc[np.where(self.gpiodata[" Channel Name"] == chan)[0], :]
             gp_check = gp_chan[gp_chan[" Value"] > self.threshold]
             for index, row in gp_check.iterrows():
                 t = row["Time (s)"]
                 # see if any times in the last 11 ms exceed the threshold.
                 # pulses last 10 ms, should not any true values
                 tcomp = (
-                    gp_chan[
-                        (gp_chan["Time (s)"] >= t - 0.011) & (gp_chan["Time (s)"] < t)
-                    ][" Value"]
-                    > self.threshold
+                    gp_chan[(gp_chan["Time (s)"] >= t - 0.011) & (gp_chan["Time (s)"] < t)][" Value"] > self.threshold
                 )
                 # if all checks are good add the event
                 if row[" Value"] > self.threshold and not np.any(tcomp):
@@ -83,16 +76,10 @@ class GpioData:
                 # if the timestamp is not in channel 1 (all licks)
                 if ts not in self.timestamps[" GPIO-1"]:
                     # get all nearby timestamps from GPIO1
-                    tscheck = self.within(
-                        self.timestamps[" GPIO-1"], ts, self.dist_adjust
-                    )
+                    tscheck = self.within(self.timestamps[" GPIO-1"], ts, self.dist_adjust)
                     if len(tscheck) == 1:  # there should only be one
                         # if so replace the timestamp with the one from GPIO-1
-                        print(
-                            "Adjusted GPIO-{} timestamps from {} to {}".format(
-                                i, ts, tscheck[0]
-                            )
-                        )
+                        print("Adjusted GPIO-{} timestamps from {} to {}".format(i, ts, tscheck[0]))
                         self.timestamps[" GPIO-{}".format(i)].remove(ts)
                         self.timestamps[" GPIO-{}".format(i)].append(tscheck[0])
             self.timestamps[" GPIO-{}".format(i)].sort()
@@ -108,15 +95,9 @@ class GpioData:
             ts_holder = []
             for ts in self.timestamps[" GPIO-1"]:  # for each lick
                 for chan in range(1, 5):
-                    if (
-                        ts not in self.timestamps[" GPIO-{}".format(chan)]
-                        and chan in inputs
-                    ):
+                    if ts not in self.timestamps[" GPIO-{}".format(chan)] and chan in inputs:
                         break  # if the input is needed to code for this stimulus and isn't present, move on
-                    elif (
-                        ts in self.timestamps[" GPIO-{}".format(chan)]
-                        and chan not in inputs
-                    ):
+                    elif ts in self.timestamps[" GPIO-{}".format(chan)] and chan not in inputs:
                         break  # if the input is not needed to code for this stimulus and is present, move on
                 else:
                     ts_holder.append(ts)

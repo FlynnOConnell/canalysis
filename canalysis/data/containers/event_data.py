@@ -13,8 +13,8 @@ import numpy as np
 import pandas as pd
 from numpy import ndarray
 
-from data.data_utils.file_handler import FileHandler
-from helpers import funcs
+from canalysis.data.data_utils.file_handler import FileHandler
+from canalysis.helpers import funcs
 
 
 @dataclass(order=False)
@@ -32,7 +32,9 @@ class EventData:
     nonreinforced: Iterable = field(default_factory=list)
     matched: bool = False
 
-    def __post_init__(self, ):
+    def __post_init__(
+        self,
+    ):
         self.timestamps: dict = self.__get_timestamps()
         self.drylicks = [x for x in self.timestamps["Lick"] if x not in self.__allstim]
         self.trial_times: dict = self.__get_trial_times()
@@ -41,18 +43,20 @@ class EventData:
     def __repr__(self):
         return type(self).__name__
 
-    def __len__(self, ):
+    def __len__(
+        self,
+    ):
         return len(self.numlicks)
 
-    def __get_timestamps(self, ):
+    def __get_timestamps(
+        self,
+    ):
         timestamps: dict = {}
         data: pd.DataFrame = self.filehandler.get_eventdata()
         events = data.rename(columns={"Time(s)": "time"})
-        events['time'] = funcs.get_matched_time(self.tracedata_time, events['time'])
+        events["time"] = funcs.get_matched_time(self.tracedata_time, events["time"])
         for stimulus in events.columns[1:]:
-            timestamps[stimulus] = list(
-                events["time"].iloc[np.where(events[stimulus] == 1)[0]]
-            )
+            timestamps[stimulus] = list(events["time"].iloc[np.where(events[stimulus] == 1)[0]])
             if stimulus != "Lick":
                 self.__allstim.extend(timestamps[stimulus])
             if stimulus != "Lick" and stimulus != "ArtSal":
@@ -61,16 +65,14 @@ class EventData:
         self.alltastestim.sort()
         return timestamps
 
-    def __get_nonreinforced(self, ):
+    def __get_nonreinforced(
+        self,
+    ):
         times = []
         lickstamps = np.array(self.timestamps["Lick"])
         intervals = funcs.interval(self.alltastestim, 2)
         for iteration, interv in enumerate(intervals):
-            times.extend(
-                lickstamps[
-                    np.where((lickstamps >= interv[0]) & (lickstamps <= interv[1]))
-                ]
-            )
+            times.extend(lickstamps[np.where((lickstamps >= interv[0]) & (lickstamps <= interv[1]))])
         nr = np.setdiff1d(lickstamps, times)
         return nr
 
@@ -91,7 +93,10 @@ class EventData:
                 # Add each tastant delivery preceded by a drylick (trial start).
                 for ts in tslist:
                     last_stimtime = tslist[np.where(tslist == ts)[0] - 1]
-                    last_drytime = self.drylicks[np.where(self.drylicks < ts)[0][-1]]
+                    try:
+                        last_drytime = self.drylicks[np.where(self.drylicks < ts)[0][-1]]
+                    except IndexError:
+                        last_drytime = 0
                     if last_drytime > last_stimtime:
                         times.append(ts)
                 trial_times[stim] = times

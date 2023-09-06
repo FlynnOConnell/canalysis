@@ -2,23 +2,23 @@
 # Load a single session
 Session:
   animal: 'PGT13'
-  date: '052622'                # for single day analysis
+  date: '030322'                # for single day analysis
   dates: ['070121, 071621']     # iterate for multi-day analysis
 
 Directory:
   # data : '/Users/flynnoconnell/Documents/repos/canalysis/datasets'
-  data: 'C:\Users\dilorenzo\Documents\repos\canalysis\datasets'
-  statsave: './Desktop'
-  plotsave: 'C:\\Users\\flynn\\Desktop\\figs'
+  data: '/Users/flynnoconnell/Dropbox/Lab/Calcium_Imaging/Data'
+  statsave: 'Users/flynnoconnell/Dropbox/Lab/Calcium_Imaging/CalciumImages'
+  plotsave: 'Users/flynnoconnell/Dropbox/Lab/Calcium_Imaging/CalciumImages'
 
 # Names used in pattern matching to distinguish files
 Filenames:
-  traces: 'traces3'
+  traces: 'PGT13_030322_ROI_traces_allcells'
   events: 'processed'
   eating: 'Scored1'
   gpio: 'gpio.csv'
   adjust: 34 # time to adjust for eating events
-  doeating: True
+  doeating: False
   doevents: True
 
 
@@ -29,6 +29,9 @@ Colors:
     Peanut  : darkorange
     NaCl : darkgreen
     Sucrose : purple
+    MSG : orange
+    Citric : yellow
+    ArtSal : darkblue
     Acid : yellow
     Quinine : red
     Approach : pink
@@ -41,6 +44,7 @@ Colors:
     BackRight: lime
     Eating: blue
     Quiescent: black
+    Rinse: blue
     Interval: k
 
 # For GPIO ports 1-4. Value indicates GPIO number.
@@ -59,6 +63,6 @@ Plots:
   # https://stackoverflow.com/questions/13316397/matplotlib-animation-no-moviewriters-available
   # https://suryadayn.medium.com/error-requested-moviewriter-ffmpeg-not-available-easy-fix-9d1890a487d3
   # download from: https://ffmpeg.org/download.html
-  FFMPEG : 'C:\ProgramData\Anaconda3\envs\cax\Library\bin\ffmpeg'
+  FFMPEG : 'Users/flynnoconnell/miniconda3/envs/caiman/bin/ffmpeg'
 
 

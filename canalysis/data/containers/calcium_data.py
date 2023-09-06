@@ -11,15 +11,15 @@ import logging
 from dataclasses import dataclass, field, InitVar
 from typing import ClassVar, Optional
 import pandas as pd
-from data.containers.all_data import AllData
-from data.containers.trace_data import TraceData
-from data.containers.taste_data import TasteData
-from data.containers.event_data import EventData
-from data.containers.eating_data import EatingData
-from data.data_utils.file_handler import FileHandler
-from graphs.graph_utils import Mixins
-from helpers import excepts as e
-from helpers import funcs
+from canalysis.data.containers.all_data import AllData
+from canalysis.data.containers.trace_data import TraceData
+from canalysis.data.containers.taste_data import TasteData
+from canalysis.data.containers.event_data import EventData
+from canalysis.data.containers.eating_data import EatingData
+from canalysis.data.data_utils.file_handler import FileHandler
+from canalysis.graphs.graph_utils import Mixins
+from canalysis.helpers import excepts as e
+from canalysis.helpers import funcs
 
 logger = logging.getLogger(__name__)
 
@@ -55,23 +55,20 @@ class CalciumData(Mixins.CalPlots):
             self.eventdata: EventData = EventData(self.__filehandler, self.color_dict, self.tracedata.time)
             self.nr_avgs = self._get_nonreinforced_means()
             self.tastedata: TasteData = TasteData(
-                    self.tracedata.zscores,
-                    self.tracedata.time,
-                    self.eventdata.timestamps,
-                    self.eventdata.trial_times,
-                    self.nr_avgs,
-                    self.color_dict
+                self.tracedata.zscores,
+                self.tracedata.time,
+                self.eventdata.timestamps,
+                self.eventdata.trial_times,
+                self.nr_avgs,
+                self.color_dict,
             )
         else:
             logging.info("skipping events")
         if self.doeating is True:
             if self.__filehandler.eatingname is not None:
                 self.eatingdata: EatingData = EatingData(
-                    self.__filehandler,
-                    self.tracedata,
-                    self.color_dict,
-                    self.adjust
-            )
+                    self.__filehandler, self.tracedata, self.color_dict, self.adjust
+                )
         self.cells = self.tracedata.cells
         self._authenticate(doevents=self.doevents)
         self._add_instance()
@@ -93,13 +90,13 @@ class CalciumData(Mixins.CalPlots):
 
     def reset_tastedata(self):
         self.tastedata = TasteData(
-                    self.tracedata.zscores,
-                    self.tracedata.time,
-                    self.eventdata.timestamps,
-                    self.eventdata.trial_times,
-                    self.nr_avgs,
-                    self.color_dict
-                )
+            self.tracedata.zscores,
+            self.tracedata.time,
+            self.eventdata.timestamps,
+            self.eventdata.trial_times,
+            self.nr_avgs,
+            self.color_dict,
+        )
 
     def _authenticate(self, doevents: bool | None = True):
         if not isinstance(self.tracedata, TraceData):
@@ -107,23 +104,16 @@ class CalciumData(Mixins.CalPlots):
         if doevents is True:
             if not isinstance(self.eventdata, EventData):
                 raise e.DataFrameError("Event data must be a dataframe.")
-        if not any(
-                x in self.tracedata.signals.columns for x in
-                ["C0", "C00", "C000", "C0000"]
-        ):
+        if not any(x in self.tracedata.signals.columns for x in ["C0", "C00", "C000", "C0000"]):
             logging.debug(f"{self.tracedata.signals.head()}")
-            raise AttributeError(
-                f"No cells found in DataFrame: " f"{self.tracedata.signals.head()}"
-            )
+            raise AttributeError(f"No cells found in DataFrame: " f"{self.tracedata.signals.head()}")
         return None
 
     def _add_instance(self):
         my_dict = type(self).alldata
         if self.keys_exist(my_dict, self.animal, self.date):
             logging.info(f"{self.animal}-{self.date} already exist.")
-        elif self.keys_exist(my_dict, self.animal) and not self.keys_exist(
-                my_dict, self.date
-        ):
+        elif self.keys_exist(my_dict, self.animal) and not self.keys_exist(my_dict, self.date):
             my_dict[self.animal][self.date] = self
             logging.info(f"{self.animal} exists, {self.date} added.")
         elif not self.keys_exist(my_dict, self.animal):
@@ -132,7 +122,7 @@ class CalciumData(Mixins.CalPlots):
         return None
 
     def _get_nonreinforced_means(
-            self,
+        self,
     ) -> dict:
         """
         Get a dictionary (Cell: mean) of means for non-reinforced lick events.
@@ -140,19 +130,16 @@ class CalciumData(Mixins.CalPlots):
         -------
         Cell: mean dictionary.
         """
-        nr_signal = self.tracedata.zscores.loc[
-            self.tracedata.zscores["time"].isin(self.eventdata.nonreinforced)
-        ].drop("time", axis=1)
+        nr_signal = self.tracedata.zscores.loc[self.tracedata.zscores["time"].isin(self.eventdata.nonreinforced)].drop(
+            "time", axis=1
+        )
         avgs = {}
         for column in nr_signal.columns:
             mean = (nr_signal[column]).mean()
             avgs[column] = mean
         return avgs
 
-    def get_signal_bycell(
-            self,
-            i
-    ) -> list[pd.Series]:
+    def get_signal_bycell(self, i) -> list[pd.Series]:
         """return a list of signal values via cell integer indexing (0 through N cells"""
         return list(self.tracedata.signals.iloc[:, i])
 

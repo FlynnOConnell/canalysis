@@ -13,7 +13,7 @@ from typing import Optional
 
 import pandas as pd
 
-from helpers import funcs
+from canalysis.helpers import funcs
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, format="%(message)s")
@@ -39,7 +39,7 @@ class FileHandler:
 
     Directory structure:
     ___________
-    
+
     ./directory
         -| Animal
         --| Date
@@ -79,8 +79,10 @@ class FileHandler:
         self.animaldir: Path = Path(self._directory / self.animal)
         self.sessiondir: Path = Path(self.animaldir / self.date)
         if not self.sessiondir.is_dir():
-            raise NotADirectoryError(f"Directory '{self.sessiondir}' is not a valid directory or it does not exist, "
-                                     f"check params.yaml Directory entry.")
+            raise NotADirectoryError(
+                f"Directory '{self.sessiondir}' is not a valid directory or it does not exist, "
+                f"check params.yaml Directory entry."
+            )
         self._gpio_file: Optional[bool] = False
         self._make_dirs()
 
@@ -91,10 +93,7 @@ class FileHandler:
         if not funcs.check_path(self._directory):
             raise AttributeError(f'Directory must contain "/", not {self._directory}')
         if funcs.check_numeric(self.animal) or funcs.check_path(self.animal):
-            raise AttributeError(
-                f"Animal must not be only numeric or contain path characters, "
-                f"{self.animal}"
-            )
+            raise AttributeError(f"Animal must not be only numeric or contain path characters, " f"{self.animal}")
 
     @property
     def directory(self) -> Path:
@@ -159,15 +158,11 @@ class FileHandler:
         if not tracefiles:
             files = self.search_files()
             raise FileNotFoundError(
-                f'No files in {self.sessiondir} matching "{self._tracename}"'
-                f"Files found: {files}"
+                f'No files in {self.sessiondir} matching "{self._tracename}"' f"Files found: {files}"
             )
 
         if len(tracefiles) > 1:
-            logging.info(
-                f'Multiple trace-files found in {self.sessiondir} matching "'
-                f'{self._tracename}":'
-            )
+            logging.info(f'Multiple trace-files found in {self.sessiondir} matching "' f'{self._tracename}":')
         for tracefile in tracefiles:
             logging.info(f"{tracefile.stem}")
         return pd.read_csv(str(tracefiles[0]), low_memory=False)
@@ -175,14 +170,9 @@ class FileHandler:
     def get_eventdata(self) -> pd.DataFrame:
         eventfiles: list[Path] = self.get_events()
         if eventfiles is None:
-            raise FileNotFoundError(
-                f'No files in {self.sessiondir} matching "{self._eventname}"'
-            )
+            raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._eventname}"')
         if len(eventfiles) > 1:
-            logging.info(
-                f'Multiple event-files found in {self.sessiondir} matching "'
-                f'{self._eventname}":'
-            )
+            logging.info(f'Multiple event-files found in {self.sessiondir} matching "' f'{self._eventname}":')
             for event_file in eventfiles:
                 logging.info(f"{event_file}")
         return pd.read_csv(str(eventfiles[0]), low_memory=False)
@@ -190,15 +180,10 @@ class FileHandler:
     def get_gpiodata(self) -> pd.DataFrame:
         gpiofiles: list[Path] = self.get_gpio_files()
         if gpiofiles is None:
-            raise FileNotFoundError(
-                f'No files in {self.sessiondir} matching "{self._gpioname}"'
-            )
+            raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._gpioname}"')
         if len(gpiofiles) > 1:
             self._gpio_file = True
-            logging.info(
-                f'Multiple gpio-files found in {self.sessiondir} matching "'
-                f'{self._gpioname}":'
-            )
+            logging.info(f'Multiple gpio-files found in {self.sessiondir} matching "' f'{self._gpioname}":')
             for gpio_file in gpiofiles:
                 logging.info(f"{gpio_file}")
             logging.info(f"Taking file: {gpiofiles[0]}")
@@ -207,21 +192,16 @@ class FileHandler:
     def get_eatingdata(self) -> pd.DataFrame:
         eatingfiles: list[Path] = self.get_eating_files()
         if eatingfiles is None:
-            raise FileNotFoundError(
-                f'No files in {self.sessiondir} matching "{self._eatingname}"')
+            raise FileNotFoundError(f'No files in {self.sessiondir} matching "{self._eatingname}"')
         if len(eatingfiles) > 1:
-            logging.info(
-                f'Multiple eating-files found in {self.sessiondir} matching "'
-                f'{self._eatingname}":')
+            logging.info(f'Multiple eating-files found in {self.sessiondir} matching "' f'{self._eatingname}":')
             for eating_file in eatingfiles:
                 logging.info(f"{eating_file}")
             logging.info(f"Taking file: {eatingfiles[0]}")
         logging.info("Eating data set.")
         return pd.read_csv(
-            str(eatingfiles[0]),
-            low_memory=False,
-            header=0,
-            usecols=['Marker Name', 'TimeStamp', 'TimeStamp2'])
+            str(eatingfiles[0]), low_memory=False, header=0, usecols=["Marker Name", "TimeStamp", "TimeStamp2"]
+        )
 
     def unique_path(self, filename) -> Path:
         counter = 0

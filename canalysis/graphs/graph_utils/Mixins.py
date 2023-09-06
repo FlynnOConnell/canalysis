@@ -14,7 +14,8 @@ from typing import Optional, Iterable, Any
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from graphs.graph_utils import ax_helpers
+from canalysis.graphs.graph_utils import ax_helpers
+import seaborn as sns
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +43,7 @@ class CalPlots:
             for trial in times:
                 trialno += 1
                 # get only the data within the analysis window
-                data_ind = np.where((self.time > trial - 2) & (self.time < trial + 5))[
-                    0
-                ]
+                data_ind = np.where((self.time > trial - 2) & (self.time < trial + 5))[0]
                 # index to analysis data
                 this_time = self.time[data_ind]
 
@@ -100,149 +99,150 @@ class CalPlots:
         return None
 
     def plot_session(self, lickshade: int = 1, save: bool = False, eatingdata=None) -> None:
-        # create a series of plots with a shared x-axis
-        fig, ax = plt.subplots(
-            len(self.tracedata.cells), 1, sharex=True, facecolor="white"
-        )
+        # Set Seaborn style
+        sns.set(style="darkgrid")
+
+        # Create a series of plots with a shared x-axis
+        fig, ax = plt.subplots(len(self.tracedata.cells), 1, sharex=True)
+
         for i in range(len(self.tracedata.cells)):
-            # get calcium trace (y axis data)
+            # Get calcium trace (y axis data)
             signal = list(self.tracedata.signals.iloc[:, i])
-            # plot signal
-            ax[i].plot(self.tracedata.time, signal, "k", linewidth=0.8)
-            # Get rid of borders
-            ax[i].get_xaxis().set_visible(False)
+
+            # Plot signal with a contrasting color
+            sns.lineplot(x=self.tracedata.time, y=signal, ax=ax[i], color="lime", linewidth=0.5)
+
+            # Set axis and label colors
+            ax[i].tick_params(colors="white")
+            ax[i].xaxis.label.set_color("white")
+            ax[i].yaxis.label.set_color("white")
+
+            # Remove borders
             ax[i].spines["top"].set_visible(False)
             ax[i].spines["bottom"].set_visible(False)
             ax[i].spines["right"].set_visible(False)
-            ax[i].set_yticks([])  # no Y ticks
-            # add the cell name as a label for this graph's y-axis
+
+            ax[i].set_yticks([])  # No Y ticks
+            ax[i].grid(False, which="both", axis="both")
+
+            # Add the cell name as a label for this graph's y-axis
             ax[i].set_ylabel(
                 self.tracedata.signals.columns[i],
                 rotation="horizontal",
                 labelpad=15,
                 y=0.1,
                 fontweight="bold",
+                color="white",
             )
-            # shade in licks
+
+            # Shade in licks
             if self.doevents:
                 for lick in self.eventdata.timestamps["Lick"]:
                     label = "_yarp"
                     if lick == self.eventdata.timestamps["Lick"][0]:
                         label = "Licking"
-                    ax[i].axvspan(
-                        lick, lick + lickshade, color="lightgray", lw=0, label=label
-                    )
+                    ax[i].axvspan(lick, lick + lickshade, color="lightgray", lw=0, label=label)
+
             if self.doeating:
                 for interv in self.eatingdata.raw_eatingdata.reset_index(drop=True).to_numpy():
-                    if interv[0] == 'Grooming':
-                        ax[i].axvspan(
-                                interv[1], interv[2], color='cyan', lw=0, label=interv[0]
-                        )
-                        logging.info(f"placing grooming interv {interv[1]}-{interv[0]}")
-                    if interv[0] == 'EATING':
-                        ax[i].axvspan(
-                                interv[1], interv[2], color='blue', lw=0, label=interv[0]
-                        )
+                    if interv[0] == "Grooming":
+                        ax[i].axvspan(interv[1], interv[2], color="cyan", lw=0, label=interv[0])
+                    if interv[0] == "EATING":
+                        ax[i].axvspan(interv[1], interv[2], color="blue", lw=0, label=interv[0])
+
             ax[i].yaxis.label.set_fontsize(10)
 
         fig.subplots_adjust(hspace=0)
-        ax[-1].get_xaxis().set_visible(True)
-        ax[-1].spines["bottom"].set_visible(True)
-        # ax_helpers.make_legend(
-        #         {
-        #             "Eating" : "blue",
-        #             "Grooming" : "cyan",
-        #             "Licking" : "lightgray"
-        #         },
-        #         marker="s",
-        # )
+
+        ax[-1].xaxis.label.set_color("white")
+        ax[-1].tick_params(colors="white")
+        ax[-1].spines["bottom"].set_color("white")
+
         plt.show()
+
         if save:
             fig.savefig(
-                f"C:\\Users\\flynn\\Desktop\\figs\\{self.session}_session.png",
+                f"/Users/flynnoconnell/Dropbox/Lab/{self.session}_session.png",
                 bbox_inches="tight",
                 dpi=1000,
-                facecolor="white",
+                facecolor="none",
+                transparent=True,
             )
+
         return None
 
     def plot_zoom(
         self,
-        zoomshade: float = 0.2,
+        zoomshade: float = 0.4,
+        cells="all",
         save: Optional[bool] = True,
+        zoombounding=None,
+        savename=None,
     ) -> None:
-        # create a series of plots with a shared x-axis
-        fig, ax = plt.subplots(len(self.tracedata.cells), 1, sharex=True)
-        # zoombounding = [
-        #     int(input("Enter start time for zoomed in graph (seconds):")),
-        #     int(input("Enter end time for zoomed in graph (seconds):")),
-        # ]
-        zoombounding = [
-            1200,
-            1400,
-        ]
-        for i in range(len(self.tracedata.cells)):
-            signal = list(self.tracedata.signals.iloc[:, i])
-            ax[i].plot(self.tracedata.time, signal, "k", linewidth=0.8)
-            ax[i].get_xaxis().set_visible(False)
+        # Set Seaborn style
+        sns.set(style="darkgrid")
+        if cells == "all":
+            cells_to_plot = self.tracedata.signals.columns.tolist()
+        else:
+            cells_to_plot = [cell for cell in cells if cell in self.tracedata.signals.columns]
+
+        fig, ax = plt.subplots(len(cells_to_plot), 1, sharex=True, facecolor="black")
+        if len(cells_to_plot) == 1:
+            ax = [ax]
+
+        if not zoombounding:
+            zoombounding = [0, 40]
+
+        for i, cell in enumerate(cells_to_plot):
+            signal = self.tracedata.signals[cell]
+            # Seaborn lineplot
+            sns.lineplot(x=self.tracedata.time, y=signal, ax=ax[i], color="lime", linewidth=0.5)
+
+            # Styling adjustments
+            ax[i].tick_params(colors="white")
+            ax[i].grid(False, which="both", axis="both")
+            ax[i].xaxis.label.set_color("white")
+            ax[i].yaxis.label.set_color("white")
             ax[i].spines["top"].set_visible(False)
             ax[i].spines["bottom"].set_visible(False)
             ax[i].spines["right"].set_visible(False)
+
             ax[i].set_yticks([])
             ax[i].set_ylabel(
-                self.tracedata.signals.columns[i], rotation="horizontal", labelpad=15, y=0.1
+                self.tracedata.signals.columns[i],
+                rotation="horizontal",
+                labelpad=15,
+                y=0.1,
+                fontweight="bold",
+                color="white",
             )
-            # shade in timestamps
+
+            # Shade in timestamps
             if self.doevents:
                 for stim, times in self.eventdata.timestamps.items():
-                    if stim != "ArtSal":
+                    if stim != "Rinse":
                         for ts in times:
+                            label = "_"  # Keeps label from showing.
                             if ts == times[0]:
                                 label = stim
-                            else:
-                                label = "_"  # Keeps label from showing.
-                            ax[i].axvspan(
-                                ts,
-                                ts + zoomshade,
-                                color=self.color_dict[stim],
-                                label=label,
-                                lw=0,
-                            )
-            if self.doeating:
-                for interv in self.eatingdata.raw_eatingdata.to_numpy():
-                    if interv[0] == 'Grooming':
-                        ax[i].axvspan(
-                                interv[1], interv[2], color='cyan', lw=0, label=interv[0]
-                        )
-                    if interv[0] == 'Eating':
-                        ax[i].axvspan(
-                                interv[1], interv[2], color='blue',alpha=0.2, lw=0, label=interv[0]
-                        )
-                    if interv[0] == 'Entry':
-                        ax[i].axvspan(
-                                interv[1]-0.8, interv[2], color='lime', lw=0, label=interv[0]
-                        )
-            ax[i].yaxis.label.set_fontsize(10)
+                            ax[i].axvspan(ts, ts + zoomshade, color=self.color_dict[stim], label=label, lw=0)
+
         fig.subplots_adjust(hspace=0)
-        plt.xlabel("Time (s)")
-        ax[-1].get_xaxis().set_visible(True)
-        ax[-1].spines["bottom"].set_visible(True)
-        ax_helpers.make_legend(
-                {
-                    "Eating": "blue",
-                    "Entry": "lime",
-                },
-                marker="s",
-                markeralpha=0.2
-        )
-        # set the x-axis to the zoomed area
+        plt.xlabel("Time (s)", color="white")
+        ax[-1].xaxis.label.set_color("white")
+        ax[-1].tick_params(colors="white")
+        ax[-1].spines["bottom"].set_color("white")
+
         plt.setp(ax, xlim=zoombounding)
         plt.show()
+
         if save:
             fig.savefig(
-                r'C:\Users\dilorenzo\Desktop\CalciumPlots\plots\thisplot.png',
+                savename,
                 bbox_inches="tight",
                 dpi=1200,
+                facecolor="none",
+                transparent=True,
             )
         return None
 
@@ -261,9 +261,7 @@ class CalPlots:
                 minmax = []
                 # Max/mins to standardize plots
                 for it, tri in enumerate(times):
-                    temp_data_ind = np.where(
-                        (self.time > tri - 2) & (self.time < tri + 5)
-                    )[0]
+                    temp_data_ind = np.where((self.time > tri - 2) & (self.time < tri + 5))[0]
                     temp_signal = self.tracedata.iloc[temp_data_ind, currcell + 1]
                     norm_min = min(temp_signal)
                     norm_max = max(temp_signal)
@@ -276,9 +274,7 @@ class CalPlots:
                     xaxs.flatten()
                 for iteration, trial in enumerate(times):
                     i = int(iteration)
-                    data_ind = np.where(
-                        (self.time > trial - 2) & (self.time < trial + 4)
-                    )[0]
+                    data_ind = np.where((self.time > trial - 2) & (self.time < trial + 4))[0]
                     this_time = self.time[data_ind]
                     signal = list(self.tracedata.iloc[data_ind, currcell + 1])
                     signal[:] = [number - stim_min for number in signal]
@@ -320,9 +316,7 @@ class CalPlots:
                                     lw=0,
                                 )
                 plt.xlabel("Time (s)")
-                fig.suptitle(
-                    "Calcium Traces: {}\n{}: {}".format(cell, self.session, stim), y=1.0
-                )
+                fig.suptitle("Calcium Traces: {}\n{}: {}".format(cell, self.session, stim), y=1.0)
                 fig.set_figwidth(6)
                 fig.text(
                     0,
@@ -336,4 +330,3 @@ class CalPlots:
         if save_dir:
             plt.savefig(str(save_dir) + ".png", bbox_inches="tight", dpi=600)
         return None
-

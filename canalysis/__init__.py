@@ -12,16 +12,14 @@ import os
 from inspect import getsourcefile
 
 import yaml
-
-from data.containers import CalciumData
-from data.data_utils.file_handler import FileHandler
-from graphs import *
+from canalysis import helpers
+from canalysis.data.containers import CalciumData
+from canalysis.data.data_utils.file_handler import FileHandler
 
 __location__ = os.path.abspath(getsourcefile(lambda: 0))
 ROOT_DIR = os.path.dirname(__location__)
 
-_hard_dependencies = ["numpy",
-                      "pandas"]  # let users know if theyre missing any vital deps
+_hard_dependencies = ["numpy", "pandas"]  # let users know if theyre missing any vital deps
 _missing_dependencies = []
 
 for _dependency in _hard_dependencies:
@@ -31,9 +29,7 @@ for _dependency in _hard_dependencies:
         _missing_dependencies.append(f"{_dependency}: {_e}")
 
 if _missing_dependencies:
-    raise ImportError(
-        "Unable to import required dependencies:\n" + "\n".join(_missing_dependencies)
-    )
+    raise ImportError("Unable to import required dependencies:\n" + "\n".join(_missing_dependencies))
 del _hard_dependencies, _dependency, _missing_dependencies
 
 
@@ -46,8 +42,7 @@ class Params:
 
 
 def get_parameters():
-    with open(os.path.join(ROOT_DIR, 'params.yaml'),
-              'rb') as f:
+    with open(os.path.join(ROOT_DIR, "params.yaml"), "rb") as f:
         parameters = yaml.safe_load(f.read())
     return Params(parameters)
 
@@ -55,20 +50,21 @@ def get_parameters():
 def get_data():
     params = get_parameters()
     filehandler = FileHandler(
-        params.Session['animal'],
-        params.Session['date'],
-        params.Directory['data'],
-        params.Filenames['traces'],
-        params.Filenames['events'],
-        params.Filenames['gpio'],
-        params.Filenames['eating'],
+        params.Session["animal"],
+        params.Session["date"],
+        params.Directory["data"],
+        params.Filenames["traces"],
+        params.Filenames["events"],
+        params.Filenames["gpio"],
+        params.Filenames["eating"],
     )
-    return CalciumData(filehandler,
-                       doeating=params.Filenames['doeating'],
-                       doevents=params.Filenames['doevents'],
-                       color_dict=params.Colors,
-                       adjust=params.Filenames['adjust'],
-                       )
+    return CalciumData(
+        filehandler,
+        doeating=params.Filenames["doeating"],
+        doevents=params.Filenames["doevents"],
+        color_dict=params.Colors,
+        adjust=params.Filenames["adjust"],
+    )
 
 
 __doc__ = """

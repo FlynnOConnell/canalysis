@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 
-from data.data_utils.file_handler import FileHandler
+from canalysis.data.data_utils.file_handler import FileHandler
 
 
 # %%
@@ -84,4 +84,4 @@ class TraceData:
 
     def reorder(self, cols) -> None:
         self.zscores = self.zscores[cols]
-        self.zscores['time'] = self.time
+        self.zscores["time"] = self.time
