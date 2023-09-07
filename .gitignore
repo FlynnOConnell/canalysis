@@ -1,4 +1,12 @@
 
+.vscode/
+.idea/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dll
+
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml
