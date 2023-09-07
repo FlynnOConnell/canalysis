@@ -2,7 +2,7 @@
 # Load a single session
 Session:
   animal: 'PGT13'
-  date: '030322'                # for single day analysis
+  date: '030422'                # for single day analysis
   dates: ['070121, 071621']     # iterate for multi-day analysis
 
 Directory:
@@ -13,7 +13,7 @@ Directory:
 
 # Names used in pattern matching to distinguish files
 Filenames:
-  traces: 'PGT13_030322_ROI_traces_allcells'
+  traces: 'raw'
   events: 'processed'
   eating: 'Scored1'
   gpio: 'gpio.csv'

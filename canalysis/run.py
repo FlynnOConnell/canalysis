@@ -6,6 +6,7 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
+import seaborn as sns
 from typing import List, Dict, Tuple, Union, Optional, Any
 
 
@@ -118,40 +119,94 @@ if __name__ == "__main__":
 
     data = get_data()
     savename = Path().home() / "Dropbox" / "Lab"
-    # data.plot_session(save=True)
-    # data.plot_zoom(save=True, savename=savename / "zoom", cells=data.cells[:5].tolist(), zoombounding=(1000, 1400))
-    corr = data.tracedata.signals.corr()
-    # Generate a mask for the upper triangle, excluding the diagonal
-    mask = np.triu(np.ones_like(corr, dtype=bool), k=1)  # k=1 excludes the diagonal
+    trials = data.tastedata.trial_times
+    signals = data.tracedata.signals
+    signal_time = data.tracedata.time
 
-    # Set up the matplotlib figure
-    fig, ax = plt.subplots(figsize=(10, 8))
+    sns.set_style("darkgrid")
+    sns.set_palette("husl")
 
-    # Generate a custom diverging colormap
-    cmap = sns.diverging_palette(220, 20, as_cmap=True)
+    cell_to_plot = "C01"  # The cell you're interested in
 
-    # Draw the heatmap with the mask and correct aspect ratio
-    sns.heatmap(corr, mask=mask, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5})
+    for event, times in trials.items():
+        if event == "Rinse":
+            continue
+        # Initialize a list to hold the sliced data for this cell for each time
+        cell_data_list = []
 
-    plt.title("Cell Correlation Heatmap")
-    plt.show()
-    # Calculate correlations
-    pre = data.tastedata.tastedata.drop(columns="color")
-    # One-hot encode the events
-    one_hot_events = pd.get_dummies(pre["event"], prefix="event")
-    neural_data_one_hot = pd.concat([pre, one_hot_events], axis=1).drop("event", axis=1)
-    # Calculate the correlation matrix
-    correlation_matrix = neural_data_one_hot.corr()
+        # Create figure and axis objects
+        fig, ax = plt.subplots()
+        plt.title(f"Cell {cell_to_plot} for event {event}", fontsize=16)
 
-    # Isolate the subset of the correlation matrix that describes the correlation between neurons and events
-    cell_names = data.tracedata.cells  # Replace this with the actual list of your cell names
-    event_names = one_hot_events.columns  # This will dynamically get all the event names
+        for time in times:
+            start_time = time - 2  # 2 seconds before the event
+            end_time = time + 4  # 4 seconds after the event
 
-    # Get the sub-matrix that contains only the correlations between the specified neurons and events
-    neuron_event_corr = correlation_matrix.loc[cell_names, event_names]
+            # Get the indices corresponding to this time range
+            idx = np.where((signal_time >= start_time) & (signal_time <= end_time))[0]
 
-    # Plot this subset as a heatmap
-    plt.figure(figsize=(10, 6))
-    sns.heatmap(neuron_event_corr, annot=False, cmap="coolwarm", cbar=True, square=False)
-    plt.title("Correlation between Neurons and Events")
-    plt.show()
+            # Extract the relevant signal slice for this cell and time
+            sliced_data = signals.iloc[idx][cell_to_plot]
+
+            # Check if data is as expected
+            if sliced_data.shape[0] != len(idx):
+                print(f"Skipping time {time} for event {event} due to mismatch in data.")
+                continue
+
+            # Store it in the list
+            cell_data_list.append(sliced_data.values)
+
+        # Average across all times for this cell and event
+        avg_signal = np.mean(cell_data_list, axis=0)
+
+        # Generate the time axis corresponding to -2 to +4 seconds
+        time_axis = np.linspace(-2, 4, len(avg_signal))
+
+        sns.lineplot(x=time_axis, y=avg_signal, ax=ax, label=f"{event} average", linewidth=2)
+
+        ax.legend(fontsize=12)
+        ax.set_xlabel("Time (s)", fontsize=14)
+        ax.set_ylabel("DF/F", fontsize=14)
+        ax.tick_params(labelsize=12)
+
+        sns.despine()
+
+        plt.show()
+
+    # data.plot_session(save=False)
+    # data.plot_zoom(save=False, savename=savename / "zoom", cells=data.cells[:5].tolist(), zoombounding=(1000, 1400))
+    # corr = data.tracedata.signals.corr()
+    # # Generate a mask for the upper triangle, excluding the diagonal
+    # mask = np.triu(np.ones_like(corr, dtype=bool), k=1)  # k=1 excludes the diagonal
+    #
+    # # Set up the matplotlib figure
+    # fig, ax = plt.subplots(figsize=(10, 8))
+    #
+    # # Generate a custom diverging colormap
+    # cmap = sns.diverging_palette(220, 20, as_cmap=True)
+    #
+    # # Draw the heatmap with the mask and correct aspect ratio
+    # sns.heatmap(corr, mask=mask, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5})
+    #
+    # plt.title("Cell Correlation Heatmap")
+    # plt.show()
+    # # Calculate correlations
+    # pre = data.tastedata.tastedata.drop(columns="color")
+    # # One-hot encode the events
+    # one_hot_events = pd.get_dummies(pre["event"], prefix="event")
+    # neural_data_one_hot = pd.concat([pre, one_hot_events], axis=1).drop("event", axis=1)
+    # # Calculate the correlation matrix
+    # correlation_matrix = neural_data_one_hot.corr()
+    #
+    # # Isolate the subset of the correlation matrix that describes the correlation between neurons and events
+    # cell_names = data.tracedata.cells  # Replace this with the actual list of your cell names
+    # event_names = one_hot_events.columns  # This will dynamically get all the event names
+    #
+    # # Get the sub-matrix that contains only the correlations between the specified neurons and events
+    # neuron_event_corr = correlation_matrix.loc[cell_names, event_names]
+    #
+    # # Plot this subset as a heatmap
+    # plt.figure(figsize=(10, 6))
+    # sns.heatmap(neuron_event_corr, annot=False, cmap="coolwarm", cbar=True, square=False)
+    # plt.title("Correlation between Neurons and Events")
+    # plt.show()
