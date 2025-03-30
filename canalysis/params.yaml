@@ -2,23 +2,23 @@
 # Load a single session
 Session:
   animal: 'PGT13'
-  date: '030422'                # for single day analysis
+  date: '052622'                # for single day analysis
   dates: ['070121, 071621']     # iterate for multi-day analysis
 
 Directory:
   # data : '/Users/flynnoconnell/Documents/repos/canalysis/datasets'
-  data: '/Users/flynnoconnell/Dropbox/Lab/Calcium_Imaging/Data'
-  statsave: 'Users/flynnoconnell/Dropbox/Lab/Calcium_Imaging/CalciumImages'
-  plotsave: 'Users/flynnoconnell/Dropbox/Lab/Calcium_Imaging/CalciumImages'
+  data: '/home/flynn/diloren/'
+  statsave: '/home/flynn/diloren/050622'
+  plotsave: '/home/flynn/diloren/050622'
 
 # Names used in pattern matching to distinguish files
 Filenames:
-  traces: 'raw'
+  traces: 'f_s2p'
   events: 'processed'
   eating: 'Scored1'
   gpio: 'gpio.csv'
   adjust: 34 # time to adjust for eating events
-  doeating: False
+  doeating: True
   doevents: True
 
 

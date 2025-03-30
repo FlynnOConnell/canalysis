@@ -34,23 +34,21 @@ class CalPlots:
     timestamps: dict
     color_dict: dict
 
-    def plot_stim(self, save_dir: str = None) -> None:
-        if save_dir:
-            save_dir = save_dir
-        nplot = len(self.signals.columns)
-        for stim, times in self.trial_times.items():
+    def plot_stim(self, savepath: str = None) -> None:
+        nplot = len(self.tracedata.signals.columns)
+        for stim, times in self.eventdata.trial_times.items():
             trialno = 0
             for trial in times:
                 trialno += 1
                 # get only the data within the analysis window
-                data_ind = np.where((self.time > trial - 2) & (self.time < trial + 5))[0]
+                data_ind = np.where((self.tracedata.tracedata.time > trial - 2) & (self.tracedata.time < trial + 5))[0]
                 # index to analysis data
-                this_time = self.time[data_ind]
+                this_time = self.tracedata.time[data_ind]
 
                 fig, ax = plt.subplots(nplot, 1, sharex=True)
                 for i in range(0, nplot):
                     # Get calcium trace for this analysis window
-                    signal = list(self.signals.iloc[data_ind, i])
+                    signal = list(self.tracedata.signals.iloc[data_ind, i])
                     # plot signal
                     ax[i].plot(this_time, signal, "k", linewidth=1)
                     ax[i].get_xaxis().set_visible(False)
@@ -59,15 +57,15 @@ class CalPlots:
                     ax[i].spines["right"].set_visible(False)
                     ax[i].set_yticks([])
                     ax[i].set_ylabel(
-                        self.signals.columns[i],
+                        self.tracedata.signals.columns[i],
                         rotation="horizontal",
                         labelpad=15,
                         y=0.1,
                     )
-                    # Add shading.
-                    for stimmy in ["Lick", "Rinse", stim]:
+
+                    for stimmy in ["Lick", stim]:
                         done = 0
-                        timey = self.timestamps[stimmy]
+                        timey = self.eventdata.timestamps[stimmy]
                         for ts in timey:
                             if trial - 1 < ts < trial + 3:
                                 if done == 0:
@@ -89,16 +87,16 @@ class CalPlots:
                 ax[-1].get_xaxis().set_visible(True)
                 ax[-1].spines["bottom"].set_visible(True)
                 fig.set_figwidth(4)
-                if save_dir:
+                if savepath:
                     fig.savefig(
-                        save_dir + f"/{stim}_{trial}.png",
+                        savepath,
                         bbox_inches="tight",
-                        dpi=600,
+                        dpi=200,
                         facecolor="white",
                     )
         return None
 
-    def plot_session(self, lickshade: int = 1, save: bool = False, eatingdata=None) -> None:
+    def plot_session(self, lickshade: int = 1, savepath=None, eatingdata=None) -> None:
         # Set Seaborn style
         sns.set(style="darkgrid")
 
@@ -160,11 +158,11 @@ class CalPlots:
 
         plt.show()
 
-        if save:
+        if savepath:
             fig.savefig(
-                f"/Users/flynnoconnell/Dropbox/Lab/{self.session}_session.png",
+                savepath,
                 bbox_inches="tight",
-                dpi=1000,
+                dpi=200,
                 facecolor="none",
                 transparent=True,
             )
@@ -175,9 +173,8 @@ class CalPlots:
         self,
         zoomshade: float = 0.4,
         cells="all",
-        save: Optional[bool] = True,
         zoombounding=None,
-        savename=None,
+        savepath=None,
     ) -> None:
         # Set Seaborn style
         sns.set(style="darkgrid")
@@ -236,17 +233,17 @@ class CalPlots:
         plt.setp(ax, xlim=zoombounding)
         plt.show()
 
-        if save:
+        if savepath:
             fig.savefig(
-                savename,
+                savepath,
                 bbox_inches="tight",
-                dpi=1200,
+                dpi=200,
                 facecolor="none",
                 transparent=True,
             )
         return None
 
-    def plot_cells(self, save_dir: Optional[bool] = True) -> None:
+    def plot_cells(self, savepath = True) -> None:
         cells = self.cells
         if cells is None:
             cells = self.cells
@@ -256,13 +253,13 @@ class CalPlots:
             cell_index = {x: 0 for x in cells}
             cell_index.update((key, value) for value, key in enumerate(cell_index))
             currcell = cell_index[cell]
-            for stim, times in self.trial_times.items():
+            for stim, times in self.eventdata.trial_times.items():
                 ntrial = len(times)
                 minmax = []
                 # Max/mins to standardize plots
                 for it, tri in enumerate(times):
-                    temp_data_ind = np.where((self.time > tri - 2) & (self.time < tri + 5))[0]
-                    temp_signal = self.tracedata.iloc[temp_data_ind, currcell + 1]
+                    temp_data_ind = np.where((self.tracedata.time > tri - 2) & (self.tracedata.time < tri + 5))[0]
+                    temp_signal = self.tracedata.signals.iloc[temp_data_ind, currcell + 1]
                     norm_min = min(temp_signal)
                     norm_max = max(temp_signal)
                     minmax.append(norm_min)
@@ -274,9 +271,9 @@ class CalPlots:
                     xaxs.flatten()
                 for iteration, trial in enumerate(times):
                     i = int(iteration)
-                    data_ind = np.where((self.time > trial - 2) & (self.time < trial + 4))[0]
-                    this_time = self.time[data_ind]
-                    signal = list(self.tracedata.iloc[data_ind, currcell + 1])
+                    data_ind = np.where((self.tracedata.time > trial - 2) & (self.tracedata.time < trial + 4))[0]
+                    this_time = self.tracedata.time[data_ind]
+                    signal = list(self.tracedata.signals.iloc[data_ind, currcell + 1])
                     signal[:] = [number - stim_min for number in signal]
                     l_bound = min(signal)
                     u_bound = max(signal)
@@ -298,9 +295,9 @@ class CalPlots:
                     xaxs[i, 0].set_ylim(bottom=0, top=max(signal))
                     xaxs[i, 0].axhspan(0, 0, color="k", ls=":")
                     # Add shading for licks, rinses  tastant delivery
-                    for stimmy in ["Lick", "Rinse", stim]:
+                    for stimmy in ["Lick", stim]:
                         done = 0
-                        timey = self.timestamps[stimmy]
+                        timey = self.eventdata.timestamps[stimmy]
                         for ts in timey:
                             if trial - 1.5 < ts < trial + 5:
                                 if done == 0:
@@ -327,6 +324,6 @@ class CalPlots:
                 )
                 xaxs[-1, 0].spines["bottom"].set_bounds(False)
                 plt.legend(loc=(1.02, 3))
-        if save_dir:
-            plt.savefig(str(save_dir) + ".png", bbox_inches="tight", dpi=600)
+        if savepath:
+            plt.savefig(savepath, bbox_inches="tight", dpi=200)
         return None
