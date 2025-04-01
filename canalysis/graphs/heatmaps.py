@@ -133,7 +133,7 @@ class EatingHeatmap(_base_heatmap.BaseHeatmap):
             self.set_tastemap_lines()
             self.set_taste_axislabel()
         self.ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, labeltop=False)
-        self.ax.xaxis.set_ticklabels(ticklabels=self.ax.get_xticklabels(), rotation=45)
+        self.ax.xaxis.set_ticklabels(labels=self.ax.get_xticklabels(), rotation=45)
         self.ax.set_yticks(list(i + 0.5 for i in range(0, self.data.shape[0])))
         self.ax.set_yticklabels(list(self.data.index.values))
         if maptype == "eating":

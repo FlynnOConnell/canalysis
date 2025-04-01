@@ -259,7 +259,8 @@ class CalPlots:
                 # Max/mins to standardize plots
                 for it, tri in enumerate(times):
                     temp_data_ind = np.where((self.tracedata.time > tri - 2) & (self.tracedata.time < tri + 5))[0]
-                    temp_signal = self.tracedata.signals.iloc[temp_data_ind, currcell + 1]
+                    temp_signal = self.tracedata.signals.iloc[temp_data_ind, currcell]
+
                     norm_min = min(temp_signal)
                     norm_max = max(temp_signal)
                     minmax.append(norm_min)
@@ -271,9 +272,11 @@ class CalPlots:
                     xaxs.flatten()
                 for iteration, trial in enumerate(times):
                     i = int(iteration)
-                    data_ind = np.where((self.tracedata.time > trial - 2) & (self.tracedata.time < trial + 4))[0]
+                    # data_ind = np.where((self.tracedata.time > trial - 2) & (self.tracedata.time < trial + 4))[0]
+                    data_ind = np.where((self.tracedata.time > trial - 2) & (self.tracedata.time < trial + 5))[0]
+
                     this_time = self.tracedata.time[data_ind]
-                    signal = list(self.tracedata.signals.iloc[data_ind, currcell + 1])
+                    signal = list(self.tracedata.signals.iloc[data_ind, currcell])
                     signal[:] = [number - stim_min for number in signal]
                     l_bound = min(signal)
                     u_bound = max(signal)

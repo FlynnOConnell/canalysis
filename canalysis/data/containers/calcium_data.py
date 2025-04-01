@@ -42,6 +42,7 @@ class CalciumData(Mixins.CalPlots):
     alldata: ClassVar[AllData] = AllData.Instance()
 
     def __post_init__(self):
+        print("post init called")
         # Instance info
         self.date = self.__filehandler.date
         self.animal = self.__filehandler.animal
@@ -65,7 +66,9 @@ class CalciumData(Mixins.CalPlots):
         else:
             logging.info("skipping events")
         if self.doeating is True:
+            print('doeating true')
             if self.__filehandler.eatingname is not None:
+                print('doing eating')
                 self.eatingdata: EatingData = EatingData(
                     self.__filehandler, self.tracedata, self.color_dict, self.adjust
                 )

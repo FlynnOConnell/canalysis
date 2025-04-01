@@ -15,7 +15,7 @@ ops = np.load(fpath.joinpath("ops.npy"), allow_pickle=True).item()
 iscell = np.load(fpath.joinpath("iscell.npy"), allow_pickle=True)[:, 0].astype("bool")
 spks = np.load(fpath.joinpath("spks.npy"), allow_pickle=True)
 
-savepath = fpath.joinpath("./outputs")
+savepath = fpath.parent.parent.joinpath("./outputs")
 savepath.mkdir(exist_ok=True)
 
 #%%
